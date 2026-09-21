@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Join · CampusOS</title>
+    <link rel="icon" href="/static/icon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #3867f4; --primary-hover: #2858e7; --dark: #171f3a; --bg: #f7f8fb; --card-bg: #ffffff; --border: #e8ebf1; --muted: #6b7280; --shadow: 0 18px 45px rgba(27,39,73,.12); }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { min-height: 100vh; background: var(--bg); color: var(--dark); font-family: "DM Sans", sans-serif; display: flex; flex-direction: column; }
+        
+        .topbar { height: 76px; background: rgba(255,255,255,0.88); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(225,229,237,0.85); display: flex; align-items: center; justify-content: center; padding: 0 28px; }
+        .brand-group { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--dark); }
+        .brand-mark { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg,#486ff6,#795ce4); color: #fff; display: grid; place-items: center; font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; font-size: 16px; box-shadow: 0 7px 16px rgba(67,101,240,.28); }
+        .brand-text { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; font-size: 18px; }
+
+        .page-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+        .card-container { display: grid; grid-template-columns: 1fr 220px; gap: 28px; width: 100%; max-width: 680px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); padding: 36px; }
+        @media(max-width: 640px) { .card-container { grid-template-columns: 1fr; padding: 24px; } }
+
+        .form-section h1 { font-family: "Plus Jakarta Sans", sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+        .form-section p { color: var(--muted); font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+        
+        .info-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .info-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 10px; background: #eef2ff; color: var(--primary); font-size: 12px; font-weight: 700; }
+
+        .message { padding: 12px 14px; border-radius: 10px; margin-bottom: 16px; font-size: 13px; font-weight: 600; }
+        .message.error { background: #fff0f1; color: #d85165; border: 1px solid #ffdfe2; }
+        .message.success { background: #ebfbf2; color: #19734e; border: 1px solid #d4f4e2; }
+
+        .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 12px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.04em; }
+        .form-group input { padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; outline: none; transition: 0.2s; background: #fbfcfe; }
+        .form-group input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px #eaf0ff; }
+
+        .btn-row { display: flex; gap: 10px; margin-top: 22px; }
+        .btn { flex: 1; padding: 12px 18px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s ease; text-decoration: none; text-align: center; }
+        .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 6px 14px rgba(56,103,244,.22); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-secondary { background: #f1f3f7; color: #536078; border: 1px solid #e1e5ec; }
+        .btn-secondary:hover { background: #e5e8f0; }
+
+        .qr-section { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border: 1px dashed #cfd6e4; border-radius: 16px; background: #fafbfe; text-align: center; }
+        .qr-section img { width: 150px; height: 150px; border-radius: 10px; border: 1px solid var(--border); background: #fff; padding: 6px; }
+        .qr-section span { margin-top: 10px; font-size: 11px; font-weight: 700; color: var(--muted); }
+
+        .campusos-footer { margin-top: auto; border-top: 1px solid var(--border); padding: 18px 28px; background: #fff; }
+        .campusos-footer-inner { max-width: 1380px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: #8c95a7; font-size: 11px; }
+        .campusos-footer-brand { font: 800 13px "Plus Jakarta Sans", sans-serif; color: #59647c; }
+
+        .scroll-reveal { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform, opacity, filter; }
+        .scroll-reveal.below { opacity: 0; transform: translateY(40px) scale(0.96); filter: blur(6px); }
+        .scroll-reveal.above { opacity: 0; transform: translateY(-40px) scale(0.96); filter: blur(6px); }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand-group" href="/">
+            <div class="brand-mark">C</div>
+            <span class="brand-text">CampusOS</span>
+        </a>
+    </header>
+
+    <div class="page-wrap">
+        <div class="card-container">
+            <div class="form-section">
+                <h1>Student Registration</h1>
+                <p>Fill in your details to join your classroom on CampusOS.</p>
+
+                <div class="info-pills">
+                    <span class="info-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2"/></svg>College ID: {{ college_id }}</span>
+                    <span class="info-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Classroom: {{ classroom_id }}</span>
+                </div>
+
+                {% if error %}
+                    <div class="message error">{{ error }}</div>
+                {% endif %}
+
+                {% if success %}
+                    <div class="message success">{{ success }}</div>
+                {% endif %}
+
+                <form action="/student/invite/{{ college_id }}/{{ classroom_id }}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="student_name">Full Name</label>
+                        <input type="text" id="student_name" name="student_name" placeholder="John Smith" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prn">PRN / Roll No</label>
+                        <input type="text" id="prn" name="prn" placeholder="e.g. 202610928" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Student Email</label>
+                        <input type="email" id="email" name="email" placeholder="student@college.edu" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Create password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image">Student Photo (for AI verification)</label>
+                        <input type="file" id="image" name="image" accept=".png,.jpg,.jpeg" required>
+                    </div>
+
+                    <div class="btn-row">
+                        <button type="submit" class="btn btn-primary">Join Classroom</button>
+                        <a href="/" class="btn btn-secondary">Back</a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="qr-section">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=CampusOS-Classroom-{{ classroom_id }}" alt="Classroom Join QR Code">
+                <span>Scan with phone to join classroom</span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="campusos-footer">
+        <div class="campusos-footer-inner">
+            <span class="campusos-footer-brand">CampusOS</span>
+            <span>© 2026 CampusOS</span>
+        </div>
+    </footer>
+
+    <script>
+        (function initBidirectionalScroll() {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const elements = document.querySelectorAll('.card-container');
+            elements.forEach(el => el.classList.add('scroll-reveal', 'below'));
+            
+            function updateReveals() {
+                const vh = window.innerHeight;
+                elements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.bottom < 0) {
+                        el.classList.remove('below');
+                        el.classList.add('above');
+                    } else if (rect.top > vh) {
+                        el.classList.add('below');
+                        el.classList.remove('above');
+                    } else {
+                        el.classList.remove('below', 'above');
+                    }
+                });
+            }
+
+            window.addEventListener('scroll', () => requestAnimationFrame(updateReveals), { passive: true });
+            updateReveals();
+        })();
+    </script>
+</body>
+</html>
