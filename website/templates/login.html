@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#09090B">
+  <title>Login — CampusOS</title>
+  <link rel="icon" href="/static/icon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="/static/css/login.css">
+  <link rel="stylesheet" href="/static/css/login-portal.css">
+</head>
+<body>
+  <canvas id="loginWebgl" class="webgl-canvas" aria-hidden="true"></canvas>
+  <div class="ambient" aria-hidden="true"><i></i><i></i><i></i><div class="grid"></div><div class="rays"></div></div>
+  <div class="noise" aria-hidden="true"></div><div class="cursor-glow" aria-hidden="true"></div>
+  <main class="auth-shell">
+    <nav class="topbar" aria-label="Primary navigation">
+      <a class="brand page-brand" href="/" aria-label="CampusOS home"><span class="brand-mark">C</span> Campus<span>OS</span></a>
+      <a class="back-link" href="/"><span aria-hidden="true">←</span> Back to overview</a>
+    </nav>
+    <div class="portal-layout">
+      <section class="portal-intro" aria-labelledby="portal-title">
+        <p class="system-badge"><i></i> CAMPUSOS IDENTITY LAYER</p>
+        <h1 id="portal-title">Your campus,<br><em>in sync.</em></h1>
+        <p>One secure workspace for the people, context, and intelligent systems that move your campus forward.</p>
+        <div class="orbit-legend"><span><i class="blue-dot"></i> AttendMate</span><span><i class="violet-dot"></i> Synapse</span><span><i class="green-dot"></i> Resume-IQ</span></div>
+        <div class="intro-status"><span class="status-pulse"></span><span>All systems operational</span><b>SECURE ACCESS</b></div>
+      </section>
+      <section class="auth-card" data-tilt aria-labelledby="login-title">
+      <div class="card-shine" aria-hidden="true"></div>
+      <header class="auth-header">
+        <p class="eyebrow"><i></i> Secure workspace access</p>
+        <h1 id="login-title">Welcome back</h1>
+        <p>Choose your access profile to continue.</p>
+      </header>
+
+      {% if error %}<div class="notice error" role="alert"><span>!</span><p>{{ error }}</p><button type="button" aria-label="Dismiss message">×</button></div>{% endif %}
+      {% if success %}<div class="notice success" role="status"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg><p>{{ success }}</p><button type="button" aria-label="Dismiss message">×</button></div>{% endif %}
+
+      <div class="role-selector" role="tablist" aria-label="Select your account type">
+        <button type="button" class="role-option" id="studentRole" data-role="student" role="tab" aria-selected="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg><span>Student</span></button>
+        <button type="button" class="role-option" id="teacherRole" data-role="teacher" role="tab" aria-selected="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>Faculty</span></button>
+        <button type="button" class="role-option" id="hodRole" data-role="hod" role="tab" aria-selected="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2"></path></svg><span>HOD / Admin</span></button>
+      </div>
+
+      <div class="mode-selector" id="modeBoxes" role="tablist" aria-label="Admin access type">
+        <span class="mode-pill" aria-hidden="true"></span>
+        <button type="button" id="loginMode" data-mode="login" role="tab">Login</button>
+        <button type="button" id="signupMode" data-mode="signup" role="tab">Create College</button>
+      </div>
+
+      <form method="post" action="/auth" id="authForm" novalidate>
+        <input type="hidden" name="role" id="role" value="{{ active_role or 'student' }}">
+        <input type="hidden" name="mode" id="mode" value="{{ active_mode or 'login' }}">
+        <div id="studentFields" class="field-group" role="tabpanel">
+          <label class="field"><span>Student Name</span><input type="text" name="student_name" autocomplete="name" placeholder="Your full name"></label>
+          <label class="field"><span>Email</span><input type="email" name="student_email" autocomplete="email" placeholder="you@college.edu"></label>
+          <label class="field"><span>Password</span><input type="password" name="student_password" autocomplete="current-password" placeholder="Your password"></label>
+          <div class="field-row"><label class="field"><span>College ID</span><input type="number" name="student_college_id" inputmode="numeric" placeholder="e.g. 101"></label><label class="field"><span>Class ID</span><input type="number" name="student_classroom_id" inputmode="numeric" placeholder="e.g. 12"></label></div>
+          <aside class="info-note"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Students can log in only after they have been added to their classroom.</aside>
+        </div>
+        <div id="teacherFields" class="field-group is-hidden" role="tabpanel">
+          <label class="field"><span>College ID</span><input type="number" name="teacher_college_id" inputmode="numeric" placeholder="Your college ID"></label>
+          <label class="field"><span>Faculty Name</span><input type="text" name="teacher_name" autocomplete="name" placeholder="Your full name"></label>
+          <label class="field"><span>Email</span><input type="email" name="teacher_email" autocomplete="email" placeholder="you@college.edu"></label>
+          <label class="field"><span>Password</span><input type="password" name="teacher_password" autocomplete="current-password" placeholder="Your password"></label>
+        </div>
+        <div id="hodLoginFields" class="field-group is-hidden" role="tabpanel">
+          <label class="field"><span>Name</span><input type="text" name="hod_login_name" autocomplete="name" placeholder="Your full name"></label>
+          <label class="field"><span>College Name</span><input type="text" name="hod_login_college_name" placeholder="Your college name"></label>
+          <label class="field"><span>Email</span><input type="email" name="hod_login_email" autocomplete="email" placeholder="you@college.edu"></label>
+          <label class="field"><span>Password</span><input type="password" name="hod_login_password" autocomplete="current-password" placeholder="Your password"></label>
+        </div>
+        <div id="hodSignupFields" class="field-group is-hidden" role="tabpanel">
+          <label class="field"><span>Name</span><input type="text" name="hod_signup_name" autocomplete="name" placeholder="Your full name"></label>
+          <label class="field"><span>College Name</span><input type="text" name="hod_signup_college_name" placeholder="Your college name"></label>
+          <label class="field"><span>Email</span><input type="email" name="hod_signup_email" autocomplete="email" placeholder="you@college.edu"></label>
+          <label class="field"><span>Create Password</span><input type="password" name="hod_signup_password" autocomplete="new-password" placeholder="Create a password"></label>
+        </div>
+        <button class="submit-button" type="submit" id="submitBtn"><span>Continue to Dashboard</span><i aria-hidden="true">→</i></button>
+      </form>
+      </section>
+    </div>
+    <p class="privacy">Protected by CampusOS security · <a href="/">Learn more</a></p>
+  </main>
+  <script src="/static/js/login.js" defer></script>
+</body>
+</html>
