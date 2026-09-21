@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en" class="story-html">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050508">
+  <meta name="description" content="CampusOS — The Interactive Multi-Agent Cinematic Story. Discover how four autonomous AI agents unite into one seamless campus operating system.">
+  <title>CampusOS — Interactive Multi-Agent Story & Architecture</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="/static/icon.ico" type="image/x-icon">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lenis Smooth Scroll CDN -->
+  <script src="https://unpkg.com/lenis@1.1.9/dist/lenis.min.js"></script>
+  
+  <!-- GSAP & ScrollTrigger CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  
+  <!-- Three.js 3D WebGL Engine CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <!-- Landing CSS -->
+  <link rel="stylesheet" href="/static/css/landing.css">
+</head>
+<body class="story-body">
+
+  <!-- 3D Three.js WebGL Interactive Universe Canvas -->
+  <canvas id="webglCanvas" class="webgl-canvas" aria-hidden="true"></canvas>
+  
+  <!-- Ambient Atmosphere Shaders & Noise -->
+  <div class="noise-overlay" aria-hidden="true"></div>
+  <div class="cursor-spotlight" id="cursorSpotlight" aria-hidden="true"></div>
+  <div class="ambient-vignette" aria-hidden="true"></div>
+
+  <!-- Dynamic Section Mood Spotlight (Transitions with scroll) -->
+  <div class="mood-light" id="moodLight" aria-hidden="true"></div>
+
+  <!-- Top Scroll Progress Bar -->
+  <div class="scroll-progress-line" aria-hidden="true">
+    <div class="scroll-progress-fill" id="scrollProgressFill"></div>
+  </div>
+
+  <!-- Global HUD: Telemetry Bar & Audio Control -->
+  <header class="cinematic-header" id="cinematicHeader">
+    <div class="header-inner">
+      <a href="#hero" class="brand-unit" aria-label="CampusOS Home">
+        <div class="brand-gem"><span class="gem-glyph">C</span></div>
+        <div class="brand-text-block">
+          <span class="brand-title">Campus<span>OS</span></span>
+          <span class="brand-sub">NEURAL CORE v3.0</span>
+        </div>
+      </a>
+
+      <!-- Story Navigation Chapters (Removed for clean header layout) -->
+
+      <div class="header-right-actions">
+        <!-- Web Audio Synthesizer Toggle -->
+        <button type="button" class="audio-toggle-btn" id="audioToggleBtn" title="Toggle Cybernetic Audio Atmosphere">
+          <div class="equalizer-bars">
+            <span class="eq-bar bar-1"></span>
+            <span class="eq-bar bar-2"></span>
+            <span class="eq-bar bar-3"></span>
+          </div>
+          <span class="audio-label" id="audioLabel">AUDIO: OFF</span>
+        </button>
+
+        <a href="/agent/campus/" class="live-telemetry-badge" title="Public Virtual Desk">
+          <span class="pulse-beacon"></span>
+          <span class="badge-label">Live Campus AI</span>
+        </a>
+        <a href="/login" class="portal-cta-btn">
+          <span>Portal Access</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Right Floating HUD: Live Pipeline Telemetry Widget (Expand / Contract) -->
+  <aside class="pipeline-status-hud expanded" id="pipelineStatusHud" aria-label="System Pipeline State">
+    <div class="hud-mini-header" id="hudHeaderToggle" role="button" tabindex="0" title="Click to collapse telemetry">
+      <div class="hud-header-left">
+        <span class="hud-dot"></span>
+        <span class="hud-status-text">PIPELINE TELEMETRY</span>
+      </div>
+      <button type="button" class="hud-toggle-btn" id="hudToggleBtn" aria-label="Toggle pipeline HUD">
+        <svg class="toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+
+    <!-- Collapsed Compact Preview (visible when contracted) -->
+    <div class="hud-collapsed-preview" id="hudCollapsedPreview" role="button" tabindex="0" title="Click to expand telemetry">
+      <span class="collapsed-pulse-dot"></span>
+      <span class="collapsed-tag">PIPELINE</span>
+      <span class="collapsed-title" id="collapsedActiveAgent">01 AttendMate</span>
+      <span class="collapsed-expand-arrow">⤢</span>
+    </div>
+
+    <!-- Expanded Body (visible when expanded) -->
+    <div class="hud-expanded-body" id="hudExpandedBody">
+      <div class="hud-agent-pills">
+        <div class="agent-pill-state active" data-pill-agent="1">
+          <span class="pill-id">01</span>
+          <span class="pill-title">AttendMate</span>
+          <span class="pill-dot"></span>
+        </div>
+        <div class="agent-pill-state" data-pill-agent="2">
+          <span class="pill-id">02</span>
+          <span class="pill-title">Synapse</span>
+          <span class="pill-dot"></span>
+        </div>
+        <div class="agent-pill-state" data-pill-agent="3">
+          <span class="pill-id">03</span>
+          <span class="pill-title">Resume-IQ</span>
+          <span class="pill-dot"></span>
+        </div>
+        <div class="agent-pill-state" data-pill-agent="4">
+          <span class="pill-id">04</span>
+          <span class="pill-title">Campus-Desk</span>
+          <span class="pill-dot"></span>
+        </div>
+      </div>
+      <div class="hud-live-metrics">
+        <div class="metric-row">
+          <span class="m-key">Data Packet:</span>
+          <span class="m-val" id="hudActivePacket">Alex_Vance_092.presence</span>
+        </div>
+        <div class="metric-row">
+          <span class="m-key">Latency:</span>
+          <span class="m-val neon-green">0.24s</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="storyMain">
+
+    <!-- ================================================================= -->
+    <!-- 1. HERO THEATER: CINEMATIC INITIATION -->
+    <!-- ================================================================= -->
+    <section class="hero-theater" id="hero">
+      <div class="theater-stage">
+        
+        <div class="hero-eyebrow-container">
+          <div class="hero-tech-badge">
+            <span class="live-core-indicator"></span>
+            <span class="badge-code">AUTONOMOUS MULTI-AGENT RUNTIME v3.0</span>
+          </div>
+        </div>
+
+        <h1 class="hero-epic-title">
+          <span class="hero-title-word">Four</span>
+          <span class="hero-title-word">Autonomous</span>
+          <span class="hero-title-word">AI</span>
+          <span class="hero-title-word">Agents.</span>
+          <span class="hero-title-word gradient-glow">One</span>
+          <span class="hero-title-word gradient-glow">Living</span>
+          <span class="hero-title-word gradient-glow">Campus.</span>
+        </h1>
+
+        <p class="hero-epic-subheading">
+          Universities don’t need more isolated tools. They need an interconnected nervous system. Scroll to experience how 4 specialized AI agents pass live student context from biometric perception to high-tier placement offers.
+        </p>
+
+        <!-- Role-Based Perspective Switcher -->
+        <div class="perspective-switcher-deck">
+          <span class="ps-label">CHOOSE PERSPECTIVE:</span>
+          <div class="ps-buttons-cluster" role="tablist">
+            <button type="button" class="ps-tab-btn active" data-perspective="student">Student View</button>
+            <button type="button" class="ps-tab-btn" data-perspective="faculty">Faculty View</button>
+            <button type="button" class="ps-tab-btn" data-perspective="admin">HOD / Admin View</button>
+          </div>
+          <div class="ps-dynamic-insight" id="psDynamicInsight">
+            <span class="ps-insight-title">For Students:</span>
+            <span class="ps-insight-text">Personalized Tutoring, Touchless Attendance &amp; Guaranteed Placement Readiness</span>
+          </div>
+        </div>
+
+        <div class="hero-actions-dock">
+          <a href="/login" class="btn-glow-primary">
+            <span>Launch Campus Workspace</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#problem" class="btn-glass-secondary">
+            <span>Enter The 3D Story</span>
+            <span class="key-indicator">↓</span>
+          </a>
+        </div>
+
+        <!-- Central 3D Reactor & Orbital Constellation -->
+        <div class="hero-reactor-stage" id="heroReactor">
+          <div class="reactor-halo halo-1"></div>
+          <div class="reactor-halo halo-2"></div>
+          <div class="reactor-halo halo-3"></div>
+          
+          <div class="reactor-core-orb">
+            <div class="orb-inner-plasma"></div>
+            <div class="orb-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+            <span class="orb-label">CampusOS Central Bus</span>
+          </div>
+
+          <!-- 4 Orbital Agent Monoliths -->
+          <div class="orbit-satellite sat-1" data-target-sec="#agent-1">
+            <div class="satellite-card">
+              <span class="sat-badge" style="color: #38bdf8;">01 / PERCEPTION</span>
+              <span class="sat-name">AttendMate AI</span>
+              <span class="sat-desc">Biometric Face &amp; Presence</span>
+            </div>
+          </div>
+
+          <div class="orbit-satellite sat-2" data-target-sec="#agent-2">
+            <div class="satellite-card">
+              <span class="sat-badge" style="color: #818cf8;">02 / COGNITIVE</span>
+              <span class="sat-name">Synapse AI</span>
+              <span class="sat-desc">Personalized Adaptive Tutor</span>
+            </div>
+          </div>
+
+          <div class="orbit-satellite sat-3" data-target-sec="#agent-3">
+            <div class="satellite-card">
+              <span class="sat-badge" style="color: #38bdf8;">03 / TALENT</span>
+              <span class="sat-name">Resume-IQ</span>
+              <span class="sat-desc">ATS &amp; Career Matching</span>
+            </div>
+          </div>
+
+          <div class="orbit-satellite sat-4" data-target-sec="#agent-4">
+            <div class="satellite-card">
+              <span class="sat-badge" style="color: #34d399;">04 / OPERATIONS</span>
+              <span class="sat-name">Campus-Desk</span>
+              <span class="sat-desc">24/7 Inquiry &amp; Automation</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scroll Down Command -->
+        <div class="scroll-down-cue">
+          <div class="cue-mouse">
+            <div class="cue-dot"></div>
+          </div>
+          <span class="cue-label">SCROLL TO INITIATE 3D PIPELINE</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 2. THE PROBLEM / BEFORE CAMPUSOS: THE DISCONNECTED CAMPUS -->
+    <!-- ================================================================= -->
+    <section class="section-manifesto" id="problem">
+      <div class="manifesto-inner-wrap">
+        <div class="manifesto-grid">
+          
+          <div class="manifesto-col before-col">
+            <div class="col-kicker">BEFORE CAMPUSOS</div>
+            <h3 class="col-title">The Fragmented Campus</h3>
+            <p class="col-sub">Traditional universities run on 8+ disconnected tools, creating administrative friction, manual errors, and lost student potential.</p>
+            
+            <div class="chaos-nodes-cluster">
+              <div class="chaos-node">
+                <span class="cn-icon">✕</span>
+                <div>
+                  <strong>Manual Attendance Sheets</strong>
+                  <span>15 minutes lost per lecture marked on paper rolls</span>
+                </div>
+              </div>
+              <div class="chaos-node">
+                <span class="cn-icon">✕</span>
+                <div>
+                  <strong>One-Size-Fits-All Lectures</strong>
+                  <span>Students falling behind with zero personalized feedback</span>
+                </div>
+              </div>
+              <div class="chaos-node">
+                <span class="cn-icon">✕</span>
+                <div>
+                  <strong>62% Average ATS Resume Score</strong>
+                  <span>Lack of keyword alignment causing 80% automated rejections</span>
+                </div>
+              </div>
+              <div class="chaos-node">
+                <span class="cn-icon">✕</span>
+                <div>
+                  <strong>Overwhelmed Inquiry Desks</strong>
+                  <span>Long physical queues for routine bonafides and circulars</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="manifesto-col after-col">
+            <div class="col-kicker text-cyan">WITH CAMPUSOS</div>
+            <h3 class="col-title">The Autonomous Campus</h3>
+            <p class="col-sub">Four specialized agents communicate via a high-speed telemetry bus, creating an uninterrupted ecosystem from day one to placement.</p>
+            
+            <div class="harmony-nodes-cluster">
+              <div class="harmony-node">
+                <span class="hn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <div>
+                  <strong>0.3s Touchless Face Telemetry</strong>
+                  <span>Passive verification with zero lecture disruption</span>
+                </div>
+              </div>
+              <div class="harmony-node">
+                <span class="hn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <div>
+                  <strong>Cognitive Concept Synthesis</strong>
+                  <span>Real-time dynamic analogies &amp; personalized roadmaps</span>
+                </div>
+              </div>
+              <div class="harmony-node">
+                <span class="hn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <div>
+                  <strong>96.4% ATS Placement Readiness</strong>
+                  <span>Auto-formatted resumes with certified course achievements</span>
+                </div>
+              </div>
+              <div class="harmony-node">
+                <span class="hn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <div>
+                  <strong>24/7 AI Desk &amp; Instant Bonafides</strong>
+                  <span>Zero-wait automated document issuance &amp; regulation answers</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 3. AGENT 1: ATTENDMATE AI (BIOMETRICS & PERCEPTION LAYER) -->
+    <!-- ================================================================= -->
+    <section class="pinned-agent-stage" id="agent-1" data-agent-stage="1" style="--stage-accent: #38bdf8; --stage-glow: rgba(56, 189, 248, 0.25);">
+      <div class="stage-sticky-viewport">
+        
+        <div class="stage-cinema-grid">
+          
+          <!-- Narrative Column -->
+          <div class="stage-story-pane">
+            <div class="agent-identity-badge">
+              <span class="agent-index-badge">AGENT 01</span>
+              <span class="agent-layer-title">PERCEPTION &amp; TELEMETRY LAYER</span>
+            </div>
+
+            <h2 class="agent-mega-heading">AttendMate AI</h2>
+            <p class="agent-tagline-text">Zero-friction biometric attendance. Automatic, passive &amp; tamper-proof.</p>
+
+            <div class="scrubbed-story-steps">
+              <div class="story-step-item active" data-step="0">
+                <div class="step-bullet"><span class="bullet-inner"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 1 / INGESTION</span>
+                  <h4 class="step-title">Multi-Modal RTSP Stream Ingestion</h4>
+                  <p class="step-desc">Classroom optical sensors stream 1080p feeds at 30 FPS. Geospatial anchor ties presence to active timetable slots.</p>
+                </div>
+              </div>
+
+              <div class="story-step-item" data-step="1">
+                <div class="step-bullet"><span class="bullet-inner"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 2 / NEURAL RECOGNITION</span>
+                  <h4 class="step-title">0.3s Face Distance Vectorization</h4>
+                  <p class="step-desc">Anti-spoof liveness check executes instantly. Facial vector matches 128D encrypted embeddings with 99.8% confidence.</p>
+                </div>
+              </div>
+
+              <div class="story-step-item" data-step="2">
+                <div class="step-bullet"><span class="bullet-inner"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 3 / CONTEXT COMPILED</span>
+                  <h4 class="step-title">Verified Student Context Packet Generated</h4>
+                  <p class="step-desc">Attendance logged in cloud Supabase vault and live context stream prepared for handover to Agent 02.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="stage-portal-cta">
+              <a href="/login?redirect=/agent/attendance/" class="btn-stage-access">
+                <span>Access AttendMate Portal</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+
+          </div>
+
+          <!-- Interactive Holographic Visual Centerpiece -->
+          <div class="stage-visual-pane">
+            <div class="hologram-hud-monolith" id="hudAgent1">
+              
+              <div class="monolith-top-bar">
+                <div class="window-trio">
+                  <span class="w-dot red"></span>
+                  <span class="w-dot yellow"></span>
+                  <span class="w-dot green"></span>
+                </div>
+                <span class="monolith-hud-title">ATTENDMATE-AI // NEURAL STREAM [CAM-04 AUDITORIUM]</span>
+                <span class="monolith-status-pill"><span class="live-dot"></span> 30 FPS LIVE</span>
+              </div>
+
+              <!-- Visual Phase 1: Camera Feed + Interactive Scan Simulation Trigger -->
+              <div class="monolith-view-frame view-phase-0 active">
+                <div class="biometric-camera-feed">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=700&q=80" alt="Biometric Face Target" class="camera-bg-img">
+                  
+                  <div class="biometric-scan-matrix"></div>
+                  
+                  <!-- Target Box with Reticles -->
+                  <div class="face-target-reticle" id="faceTargetReticle">
+                    <div class="ret-corner tl"></div>
+                    <div class="ret-corner tr"></div>
+                    <div class="ret-corner bl"></div>
+                    <div class="ret-corner br"></div>
+                    <div class="hologram-laser-line"></div>
+                    <div class="reticle-id-badge" id="reticleIdBadge">Alex Vance • CS-2026-892</div>
+                  </div>
+
+                  <div class="camera-hud-badge">
+                    <span>TIMETABLE MATCH: CS402 MACHINE LEARNING</span>
+                  </div>
+
+                  <!-- Live Interactive Simulation Button -->
+                  <button type="button" class="sim-scan-trigger-btn" id="btnSimulateScan">
+                    <span class="sim-scan-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+                    <span>Trigger Live Biometric Scan</span>
+                  </button>
+                </div>
+
+                <div class="telemetry-twin-row">
+                  <div class="telem-badge-box">
+                    <span class="tb-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span>
+                    <div>
+                      <span class="tb-title">RTSP Live Stream</span>
+                      <span class="tb-val">1080p @ 30 FPS</span>
+                    </div>
+                  </div>
+                  <div class="telem-badge-box">
+                    <span class="tb-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                    <div>
+                      <span class="tb-title">Geospatial Anchor</span>
+                      <span class="tb-val">Hall B • Slot 09:00 AM</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Visual Phase 2: Neural Metrics & Vector Distances -->
+              <div class="monolith-view-frame view-phase-1">
+                <div class="neural-telemetry-screen">
+                  <div class="cosine-score-card">
+                    <span class="cs-label">VECTOR COSINE SIMILARITY SCORE</span>
+                    <span class="cs-value" id="attendmateScore">99.8%</span>
+                    <div class="cs-progress-bar"><div class="cs-progress-fill" id="cosineProgressFill" style="width: 99.8%;"></div></div>
+                  </div>
+
+                  <div class="telem-quad-grid">
+                    <div class="quad-cell">
+                      <span class="qc-label">Inference Time</span>
+                      <span class="qc-val" id="qcInference">0.28s</span>
+                    </div>
+                    <div class="quad-cell">
+                      <span class="qc-label">Liveness Check</span>
+                      <span class="qc-val text-green">PASS (100%)</span>
+                    </div>
+                    <div class="quad-cell">
+                      <span class="qc-label">Embeddings</span>
+                      <span class="qc-val">128-D Vector</span>
+                    </div>
+                    <div class="quad-cell">
+                      <span class="qc-label">Status</span>
+                      <span class="qc-val text-cyan">VERIFIED PRESENT</span>
+                    </div>
+                  </div>
+
+                  <div class="monolith-terminal-log">
+                    <div class="t-line"><span>09:02:11.402</span> [ATTENDMATE] Frame grabbed from Cam 04</div>
+                    <div class="t-line"><span>09:02:11.520</span> [NEURAL] Face vector extracted at bbox [340, 180]</div>
+                    <div class="t-line text-green"><span>09:02:11.680</span> [AUTH] Matched PRN CS-2026-892 (Confidence: 0.9984)</div>
+                    <div class="t-line text-cyan"><span>09:02:11.710</span> [BUS] Compiling context handover for Agent 02...</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Visual Phase 3: Structured Context Packet Ready for Handover -->
+              <div class="monolith-view-frame view-phase-2">
+                <div class="payload-dispatch-card">
+                  <div class="dispatch-header">
+                    <div class="dispatch-title">
+                      <span class="f-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+                      <span class="f-name">Verified_Student_Context_Packet.json</span>
+                    </div>
+                    <span class="dispatch-badge">READY FOR HANDOVER</span>
+                  </div>
+
+                  <div class="dispatch-code-box">
+                    <pre><code>{
+  <span class="c-key">"student_id"</span>: <span class="c-str">"CS-2026-892"</span>,
+  <span class="c-key">"name"</span>: <span class="c-str">"Alex Vance"</span>,
+  <span class="c-key">"status"</span>: <span class="c-str">"VERIFIED_PRESENT"</span>,
+  <span class="c-key">"active_subject"</span>: <span class="c-str">"Neural Networks &amp; Backpropagation"</span>,
+  <span class="c-key">"classroom"</span>: <span class="c-str">"Hall B - Slot 1"</span>,
+  <span class="c-key">"handover_target"</span>: <span class="c-str">"synapse_agent_v3"</span>
+}</code></pre>
+                  </div>
+
+                  <div class="dispatch-beam-cue">
+                    <span class="cue-pulse-ring"></span>
+                    <span>Injecting verified student presence into <strong>Agent 02 (Synapse AI)</strong>...</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 4. TRANSITION CONDUIT 1 ➔ 2: DATA CAPSULE HIGH-SPEED TRAVEL -->
+    <!-- ================================================================= -->
+    <div class="conduit-stream-highway" id="conduit1to2">
+      <div class="highway-tunnel">
+        <div class="highway-laser-line" style="background: linear-gradient(180deg, #38bdf8, #818cf8);"></div>
+        <div class="traveling-data-capsule" id="capsule1to2">
+          <div class="capsule-core">
+            <span class="cap-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+            <span class="cap-text">Verified_Student_Context.json</span>
+          </div>
+          <div class="capsule-trail"></div>
+        </div>
+      </div>
+      <div class="highway-status-badge">
+        <span class="hw-step">DATA CONDUIT 01 ➔ 02</span>
+        <span class="hw-desc">Biometric Telemetry Injected into Cognitive Tutoring Engine</span>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- 5. AGENT 2: SYNAPSE AI (ADAPTIVE LEARNING & COGNITIVE TUTOR) -->
+    <!-- ================================================================= -->
+    <section class="pinned-agent-stage" id="agent-2" data-agent-stage="2" style="--stage-accent: #818cf8; --stage-glow: rgba(129, 140, 248, 0.25);">
+      <div class="stage-sticky-viewport">
+        
+        <div class="stage-cinema-grid reverse-grid">
+          
+          <!-- Narrative Column -->
+          <div class="stage-story-pane">
+            <div class="agent-identity-badge">
+              <span class="agent-index-badge" style="border-color: #818cf8; color: #818cf8;">AGENT 02</span>
+              <span class="agent-layer-title">COGNITIVE SYNTHESIS LAYER</span>
+            </div>
+
+            <h2 class="agent-mega-heading">Synapse AI</h2>
+            <p class="agent-tagline-text">Hyper-personalized curriculum adapting to individual cognitive styles.</p>
+
+            <div class="scrubbed-story-steps">
+              <div class="story-step-item active" data-step="0">
+                <div class="step-bullet"><span class="bullet-inner" style="background: #818cf8;"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 1 / CONTEXT INGESTION</span>
+                  <h4 class="step-title">Inherits Student Profile &amp; Lecture Topic</h4>
+                  <p class="step-desc">Receives Alex Vance's active session data from AttendMate and connects to university syllabus knowledge graph.</p>
+                </div>
+              </div>
+
+              <div class="story-step-item" data-step="1">
+                <div class="step-bullet"><span class="bullet-inner" style="background: #818cf8;"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 2 / COGNITIVE GENERATION</span>
+                  <h4 class="step-title">Dynamic Analogy &amp; Adaptive Roadmap</h4>
+                  <p class="step-desc">Synthesizes intuitive mental models and generates a 3-step adaptive roadmap with live micro-quizzes.</p>
+                </div>
+              </div>
+
+              <div class="story-step-item" data-step="2">
+                <div class="step-bullet"><span class="bullet-inner" style="background: #818cf8;"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 3 / SKILL CERTIFIED</span>
+                  <h4 class="step-title">Mastery Milestone Dossier Generated</h4>
+                  <p class="step-desc">Alex completes 5/5 quiz items. Verified PyTorch &amp; optimization credentials compiled for the career engine.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="stage-portal-cta">
+              <a href="/login?redirect=/agent/study/" class="btn-stage-access" style="--stage-glow: rgba(129, 140, 248, 0.35);">
+                <span>Access Synapse Tutor</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Visual Column with Interactive Topic Switcher -->
+          <div class="stage-visual-pane">
+            <div class="hologram-hud-monolith" id="hudAgent2">
+              
+              <div class="monolith-top-bar">
+                <div class="window-trio">
+                  <span class="w-dot red"></span>
+                  <span class="w-dot yellow"></span>
+                  <span class="w-dot green"></span>
+                </div>
+                <span class="monolith-hud-title">SYNAPSE-AI // COGNITIVE TUTOR ENGINE v2.4</span>
+                <span class="monolith-status-pill"><span class="live-dot" style="background: #818cf8;"></span> SYNTHESIZER ACTIVE</span>
+              </div>
+
+              <!-- Interactive Topic Switcher Chips -->
+              <div class="interactive-topic-strip">
+                <span class="its-label">TRY TOPIC:</span>
+                <button type="button" class="topic-chip-btn active" data-topic="Neural Networks"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Neural Networks</button>
+                <button type="button" class="topic-chip-btn" data-topic="Distributed Systems"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Distributed Systems</button>
+                <button type="button" class="topic-chip-btn" data-topic="Database Indexing"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>B+ Tree Indexing</button>
+              </div>
+
+              <!-- Phase 1: Inherited Context Input -->
+              <div class="monolith-view-frame view-phase-0 active">
+                <div class="inherited-context-banner">
+                  <span class="ic-tag">INHERITED FROM ATTENDMATE AI</span>
+                  <div class="ic-profile-row">
+                    <span class="ic-avatar">AV</span>
+                    <div>
+                      <span class="ic-name">Alex Vance (CS-2026-892)</span>
+                      <span class="ic-sub" id="synapseTopicSub">Active Subject: CS402 Neural Networks &amp; Loss Optimization</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="chat-prompt-card">
+                  <div class="user-query-bubble">
+                    <span class="bubble-tag">STUDENT INQUIRY</span>
+                    <p id="synapseQueryText">"Explain Backpropagation and gradient descent with a simple intuitive mental model."</p>
+                  </div>
+                  <div class="ai-thinking-indicator">
+                    <span class="thinking-spinner"></span>
+                    <span>Analyzing learner cognitive profile &amp; prerequisite math vectors...</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Phase 2: Dynamic Analogy & Milestone Roadmap -->
+              <div class="monolith-view-frame view-phase-1">
+                <div class="cognitive-output-wrapper">
+                  <div class="tutor-speech-bubble">
+                    <div class="ts-header">
+                      <span class="ts-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+                      <span class="ts-title">Synapse AI Tutor</span>
+                    </div>
+                    <p class="ts-body" id="synapseAnalogyText">
+                      "Think of Backpropagation like an <strong>archery coach</strong> pointing out your exact angle errors after each shot, allowing you to fine-tune your muscle memory with each round."
+                    </p>
+                    <div class="math-formula-box" id="synapseMathFormula">
+                      <span>∇L = (∂L/∂W) = a^(l-1) · (δ^l)^T</span>
+                    </div>
+                  </div>
+
+                  <!-- 3-Step Milestone Roadmap -->
+                  <div class="roadmap-milestones-tree" id="synapseRoadmapTree">
+                    <div class="milestone-item done">
+                      <span class="m-dot"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      <div class="m-meta">
+                        <span class="m-name" id="rmStep1">1. Intuitive Mental Model</span>
+                        <span class="m-status">Mastered in 4 mins</span>
+                      </div>
+                    </div>
+                    <div class="milestone-item current">
+                      <span class="m-dot"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+                      <div class="m-meta">
+                        <span class="m-name" id="rmStep2">2. Calculus Partial Derivatives</span>
+                        <span class="m-status">Adaptive Quiz Completed (5/5 Correct)</span>
+                      </div>
+                    </div>
+                    <div class="milestone-item ready">
+                      <span class="m-dot">3</span>
+                      <div class="m-meta">
+                        <span class="m-name" id="rmStep3">3. PyTorch Custom Loss Function</span>
+                        <span class="m-status">Ready to Deploy</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="comprehension-score-strip">
+                    <span>Comprehension Lift: <strong class="text-green" id="synapseCompLift">+44%</strong></span>
+                    <span>Active Retention Score: <strong class="text-indigo">94.2%</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Phase 3: Mastery Milestone Dossier Output -->
+              <div class="monolith-view-frame view-phase-2">
+                <div class="payload-dispatch-card">
+                  <div class="dispatch-header">
+                    <div class="dispatch-title">
+                      <span class="f-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+                      <span class="f-name">Mastery_Milestone_Dossier.json</span>
+                    </div>
+                    <span class="dispatch-badge" style="background: rgba(129, 140, 248, 0.2); color: #818cf8;">SKILL VERIFIED</span>
+                  </div>
+
+                  <div class="dispatch-code-box">
+                    <pre><code>{
+  <span class="c-key">"student_id"</span>: <span class="c-str">"CS-2026-892"</span>,
+  <span class="c-key">"topic_mastered"</span>: <span class="c-str">"Backpropagation &amp; Loss Functions"</span>,
+  <span class="c-key">"quiz_score"</span>: <span class="c-str">"5/5 (100%)"</span>,
+  <span class="c-key">"verified_skills"</span>: [<span class="c-str">"PyTorch"</span>, <span class="c-str">"Loss Functions"</span>, <span class="c-str">"Optimization"</span>],
+  <span class="c-key">"handover_target"</span>: <span class="c-str">"career_agent_v3"</span>
+}</code></pre>
+                  </div>
+
+                  <div class="dispatch-beam-cue">
+                    <span class="cue-pulse-ring" style="background: #818cf8;"></span>
+                    <span>Streaming verified PyTorch mastery into <strong>Agent 03 (Resume-IQ)</strong>...</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 6. TRANSITION CONDUIT 2 ➔ 3: SKILL STREAMING -->
+    <!-- ================================================================= -->
+    <div class="conduit-stream-highway" id="conduit2to3">
+      <div class="highway-tunnel">
+        <div class="highway-laser-line" style="background: linear-gradient(180deg, #818cf8, #38bdf8);"></div>
+        <div class="traveling-data-capsule" id="capsule2to3">
+          <div class="capsule-core">
+            <span class="cap-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+            <span class="cap-text">Mastery_Milestone_Dossier.json</span>
+          </div>
+          <div class="capsule-trail"></div>
+        </div>
+      </div>
+      <div class="highway-status-badge">
+        <span class="hw-step">DATA CONDUIT 02 ➔ 03</span>
+        <span class="hw-desc">Verified Skills Streamed into Career Placement Engine</span>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- 7. AGENT 3: RESUME-IQ (CAREER & ATS PLACEMENT ACCELERATION) -->
+    <!-- ================================================================= -->
+    <section class="pinned-agent-stage" id="agent-3" data-agent-stage="3" style="--stage-accent: #38bdf8; --stage-glow: rgba(56, 189, 248, 0.25);">
+      <div class="stage-sticky-viewport">
+        
+        <div class="stage-cinema-grid">
+          
+          <!-- Narrative Column -->
+          <div class="stage-story-pane">
+            <div class="agent-identity-badge">
+              <span class="agent-index-badge">AGENT 03</span>
+              <span class="agent-layer-title">TALENT &amp; PLACEMENT LAYER</span>
+            </div>
+
+            <h2 class="agent-mega-heading">Resume-IQ</h2>
+            <p class="agent-tagline-text">Transforming verified academic growth into top-tier placement offers.</p>
+
+            <div class="scrubbed-story-steps">
+              <div class="story-step-item active" data-step="0">
+                <div class="step-bullet"><span class="bullet-inner"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 1 / CREDENTIAL INGESTION</span>
+                  <h4 class="step-title">Inherits PyTorch Credentials &amp; Resume Draft</h4>
+                  <p class="step-desc">Receives verified machine learning milestone artifacts and cross-references against live hiring partner ATS filters.</p>
+                </div>
+              </div>
+
+              <div class="story-step-item" data-step="1">
+                <div class="step-bullet"><span class="bullet-inner"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 2 / ATS RE-SCORING</span>
+                  <h4 class="step-title">Match Index Surges from 62% to 96.4%</h4>
+                  <p class="step-desc">Rewrites bullet points with quantifiable impact metrics. Candidate rank ascends into the top 2% tier.</p>
+                </div>
+              </div>
+
+              <div class="story-step-item" data-step="2">
+                <div class="step-bullet"><span class="bullet-inner"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 3 / PLACEMENT MATCH</span>
+                  <h4 class="step-title">12 Active High-Fit Roles Matched</h4>
+                  <p class="step-desc">Alex is matched with Tier-1 Machine Learning Engineer openings and institutional telemetry is prepared for dispatch.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="stage-portal-cta">
+              <a href="/login?redirect=/agent/career/" class="btn-stage-access">
+                <span>Access Career Engine</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Visual Centerpiece (ATS Radar with Interactive Before/After Toggle) -->
+          <div class="stage-visual-pane">
+            <div class="hologram-hud-monolith" id="hudAgent3">
+              
+              <div class="monolith-top-bar">
+                <div class="window-trio">
+                  <span class="w-dot red"></span>
+                  <span class="w-dot yellow"></span>
+                  <span class="w-dot green"></span>
+                </div>
+                <span class="monolith-hud-title">RESUME-IQ // ATS PLACEMENT MATRIX</span>
+                <span class="monolith-status-pill"><span class="live-dot"></span> REAL-TIME SCORER</span>
+              </div>
+
+              <!-- Interactive Before vs After ATS Comparison Selector -->
+              <div class="ats-before-after-toggle">
+                <span class="abat-label">COMPARISON:</span>
+                <div class="abat-controls">
+                  <button type="button" class="abat-btn" data-ats-mode="before">Unoptimized Draft (62%)</button>
+                  <button type="button" class="abat-btn active" data-ats-mode="after">ATS Optimized (96.4%)</button>
+                </div>
+              </div>
+
+              <!-- Phase 1: Input Resume & Injected Skill Badges -->
+              <div class="monolith-view-frame view-phase-0 active">
+                <div class="inherited-context-banner">
+                  <span class="ic-tag">INHERITED FROM SYNAPSE AI</span>
+                  <div class="ic-profile-row">
+                    <span class="ic-avatar">AV</span>
+                    <div>
+                      <span class="ic-name">Alex Vance</span>
+                      <span class="ic-sub">New Credential: PyTorch Deep Learning &amp; Math Optimization</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="resume-matrix-mock">
+                  <div class="rm-header">
+                    <div class="rm-avatar"></div>
+                    <div class="rm-lines">
+                      <div class="rm-line w-40"></div>
+                      <div class="rm-line w-70"></div>
+                    </div>
+                  </div>
+                  <div class="injected-skills-cluster">
+                    <span class="skill-pill new">+ PyTorch (Verified)</span>
+                    <span class="skill-pill new">+ Backprop Optimization</span>
+                    <span class="skill-pill">Python</span>
+                    <span class="skill-pill">Algorithms</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Phase 2: Dynamic Animated ATS Gauge & Live Bullet Comparison -->
+              <div class="monolith-view-frame view-phase-1">
+                <div class="ats-hud-theater">
+                  <div class="ats-dial-container">
+                    <svg viewBox="0 0 120 120" class="ats-svg-dial">
+                      <circle class="dial-bg-ring" cx="60" cy="60" r="50"></circle>
+                      <circle class="dial-meter-ring" id="atsDialMeter" cx="60" cy="60" r="50"></circle>
+                    </svg>
+                    <div class="dial-content">
+                      <span class="dial-score-num" id="atsScoreVal">96.4%</span>
+                      <span class="dial-score-lbl" id="atsRankLbl">TOP 2% ELITE</span>
+                    </div>
+                  </div>
+
+                  <div class="ats-bullets-showcase">
+                    <span class="abs-title">LIVE BULLET REWRITE:</span>
+                    <ul class="abs-list" id="atsBulletsList">
+                      <li>Architected real-time PyTorch neural backprop engine achieving 99.8% verification accuracy.</li>
+                      <li>Engineered distributed RTSP video telemetry pipeline reducing classroom latency by 73%.</li>
+                      <li>Automated ATS resume parsing across 500+ requisitions, boosting interview callback rate by 3.8x.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Phase 3: Role Matches & Output Packet -->
+              <div class="monolith-view-frame view-phase-2">
+                <div class="payload-dispatch-card">
+                  <div class="dispatch-header">
+                    <div class="dispatch-title">
+                      <span class="f-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+                      <span class="f-name">ATS_Optimized_Career_Profile.json</span>
+                    </div>
+                    <span class="dispatch-badge">PLACEMENT CLEARED</span>
+                  </div>
+
+                  <div class="role-match-cards-list">
+                    <div class="role-card-item">
+                      <div class="rc-head">
+                        <span class="rc-title">Machine Learning Engineer</span>
+                        <span class="rc-score">98% Match</span>
+                      </div>
+                      <span class="rc-pkg">₹18 - ₹24 LPA • Top Hiring Partner</span>
+                    </div>
+                    <div class="role-card-item">
+                      <div class="rc-head">
+                        <span class="rc-title">AI Platform Developer</span>
+                        <span class="rc-score">95% Match</span>
+                      </div>
+                      <span class="rc-pkg">₹15 - ₹20 LPA • Campus Recruiter</span>
+                    </div>
+                  </div>
+
+                  <div class="dispatch-beam-cue">
+                    <span class="cue-pulse-ring"></span>
+                    <span>Dispatched student readiness to <strong>Agent 04 (Campus Operations)</strong>...</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 8. TRANSITION CONDUIT 3 ➔ 4: TELEMETRY DISPATCH -->
+    <!-- ================================================================= -->
+    <div class="conduit-stream-highway" id="conduit3to4">
+      <div class="highway-tunnel">
+        <div class="highway-laser-line" style="background: linear-gradient(180deg, #38bdf8, #34d399);"></div>
+        <div class="traveling-data-capsule" id="capsule3to4">
+          <div class="capsule-core">
+            <span class="cap-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+            <span class="cap-text">Career_Readiness_Dossier.json</span>
+          </div>
+          <div class="capsule-trail"></div>
+        </div>
+      </div>
+      <div class="highway-status-badge">
+        <span class="hw-step">DATA CONDUIT 03 ➔ 04</span>
+        <span class="hw-desc">Placement &amp; Student Telemetry Dispatched to Campus Desk</span>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- 9. AGENT 4: CAMPUS-DESK (24/7 INQUIRY & OPERATIONS DESK) -->
+    <!-- ================================================================= -->
+    <section class="pinned-agent-stage" id="agent-4" data-agent-stage="4" style="--stage-accent: #34d399; --stage-glow: rgba(52, 211, 153, 0.25);">
+      <div class="stage-sticky-viewport">
+        
+        <div class="stage-cinema-grid reverse-grid">
+          
+          <!-- Narrative Column -->
+          <div class="stage-story-pane">
+            <div class="agent-identity-badge">
+              <span class="agent-index-badge" style="border-color: #34d399; color: #34d399;">AGENT 04</span>
+              <span class="agent-layer-title">CAMPUS INQUIRIES &amp; OPERATIONS</span>
+            </div>
+
+            <h2 class="agent-mega-heading">Campus-Desk AI</h2>
+            <p class="agent-tagline-text">Instant answers for visitors, parents &amp; automated institutional resolutions.</p>
+
+            <div class="scrubbed-story-steps">
+              <div class="story-step-item active" data-step="0">
+                <div class="step-bullet"><span class="bullet-inner" style="background: #34d399;"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 1 / INQUIRY INGESTION</span>
+                  <h4 class="step-title">Public Ingestion &amp; Ecosystem Telemetry</h4>
+                  <p class="step-desc">Receives real-time inquiries from students, parents, and prospective visitors 24/7 without login requirements.</p>
+                </div>
+              </div>
+
+              <div class="story-step-item" data-step="1">
+                <div class="step-bullet"><span class="bullet-inner" style="background: #34d399;"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 2 / RETRIEVAL &amp; AUTO-SIGNING</span>
+                  <h4 class="step-title">Handbook Vector Search &amp; Document Generation</h4>
+                  <p class="step-desc">Auto-generates cryptographically signed Bonafide Certificates and answers regulation queries in &lt; 0.05s.</p>
+                </div>
+              </div>
+
+              <div class="story-step-item" data-step="2">
+                <div class="step-bullet"><span class="bullet-inner" style="background: #34d399;"></span></div>
+                <div class="step-content">
+                  <span class="step-phase-tag">STEP 3 / TOTAL CONVERGENCE</span>
+                  <h4 class="step-title">All 4 Agents Complete the Pipeline Cycle</h4>
+                  <p class="step-desc">From biometric entry to course mastery to job offer and campus support—zero manual friction experienced.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="stage-portal-cta">
+              <a href="/agent/campus/" class="btn-stage-access" style="--stage-glow: rgba(52, 211, 153, 0.4); background: linear-gradient(135deg, #059669, #10b981);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Ask Campus Inquiry AI (Instant Access)</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Visual Centerpiece with Interactive Prompt Buttons -->
+          <div class="stage-visual-pane">
+            <div class="hologram-hud-monolith" id="hudAgent4">
+              
+              <div class="monolith-top-bar">
+                <div class="window-trio">
+                  <span class="w-dot red"></span>
+                  <span class="w-dot yellow"></span>
+                  <span class="w-dot green"></span>
+                </div>
+                <span class="monolith-hud-title">CAMPUS-DESK // 24/7 VIRTUAL INFORMATION ENGINE</span>
+                <span class="monolith-status-pill"><span class="live-dot" style="background: #34d399;"></span> PUBLIC DESK LIVE</span>
+              </div>
+
+              <!-- Interactive Prompt Selector Chips -->
+              <div class="interactive-prompt-strip">
+                <span class="ips-label">TEST QUERY:</span>
+                <button type="button" class="prompt-chip-btn active" data-inquiry="Bonafide Certificate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2"/></svg>Bonafide Certificate</button>
+                <button type="button" class="prompt-chip-btn" data-inquiry="Exam Guidelines"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Exam Schedule</button>
+                <button type="button" class="prompt-chip-btn" data-inquiry="Hostel Policy"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/><line x1="9" y1="18" x2="9" y2="18.01"/><line x1="15" y1="18" x2="15" y2="18.01"/></svg>Hostel Out-Pass</button>
+              </div>
+
+              <!-- Phase 1: Natural Language Query -->
+              <div class="monolith-view-frame view-phase-0 active">
+                <div class="public-chat-viewport">
+                  <div class="pc-header">
+                    <span class="pc-bot-avatar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4M8 15h.01M16 15h.01"></path></svg></span>
+                    <div>
+                      <span class="pc-title">Campus Inquiry Assistant</span>
+                      <span class="pc-sub text-green">Online • Instant Institutional Desk</span>
+                    </div>
+                  </div>
+                  <div class="pc-messages-stream">
+                    <div class="msg-bubble-user">
+                      <p id="campusUserQueryText">"How do I obtain my official Bonafide Certificate and when do semester examinations start?"</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Phase 2: Instant Auto-Signed Document & Resolution -->
+              <div class="monolith-view-frame view-phase-1">
+                <div class="public-chat-viewport">
+                  <div class="pc-messages-stream">
+                    <div class="msg-bubble-bot">
+                      <p id="campusBotAnswerText">
+                        "Your Bonafide Certificate has been <strong>auto-generated &amp; digitally signed</strong> from your verified student record. Semester examinations commence on <strong>December 10, 2026</strong>."
+                      </p>
+                      <div class="auto-doc-badge">
+                        <span class="doc-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2"/></svg></span>
+                        <div>
+                          <span class="doc-file-name" id="campusDocFileName">Bonafide_Certificate_CS-2026-892.pdf</span>
+                          <span class="doc-crypto-sign">Verified by CampusOS Institutional Vault</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="auto-telemetry-strip">
+                    <span class="at-chip">Lookup: <strong id="campusLookupTime">&lt; 0.05s</strong></span>
+                    <span class="at-chip">Auto-Signed: Yes</span>
+                    <span class="at-chip">Admin Drag: 0%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Phase 3: Final Ecosystem Resolution Output -->
+              <div class="monolith-view-frame view-phase-2">
+                <div class="payload-dispatch-card">
+                  <div class="dispatch-header">
+                    <div class="dispatch-title">
+                      <span class="f-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+                      <span class="f-name">Campus_Ecosystem_Resolution.json</span>
+                    </div>
+                    <span class="dispatch-badge" style="background: rgba(52, 211, 153, 0.2); color: #34d399;">CYCLE COMPLETE</span>
+                  </div>
+
+                  <div class="dispatch-code-box">
+                    <pre><code>{
+  <span class="c-key">"pipeline_cycle"</span>: <span class="c-str">"COMPLETE_SUCCESS"</span>,
+  <span class="c-key">"agents_orchestrated"</span>: [
+    <span class="c-str">"01_ATTENDMATE_BIOMETRICS"</span>,
+    <span class="c-str">"02_SYNAPSE_TUTORING"</span>,
+    <span class="c-str">"03_RESUME_IQ_CAREERS"</span>,
+    <span class="c-str">"04_CAMPUS_DESK_OPS"</span>
+  ],
+  <span class="c-key">"student_profile"</span>: <span class="c-str">"ALEX_VANCE_OPTIMIZED"</span>,
+  <span class="c-key">"institutional_roi"</span>: <span class="c-str">"65%_COST_REDUCTION"</span>
+}</code></pre>
+                  </div>
+
+                  <div class="dispatch-beam-cue">
+                    <span class="cue-pulse-ring" style="background: #34d399;"></span>
+                    <span>All 4 agents synchronized. Continuous campus intelligence active.</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 9.5 "DAY IN THE LIFE" INTERACTIVE CAMPUS TIMELINE -->
+    <!-- ================================================================= -->
+    <section class="day-in-life-theater">
+      <div class="day-journey-container">
+        <div class="story-chapter-header">
+          <span class="chapter-tag">24-HOUR AUTONOMOUS PIPELINE</span>
+          <h3 class="chapter-mega-title">A Day in the Life on CampusOS</h3>
+          <p class="section-subtitle">How a single student's day flows across all 4 agents in seamless synchronization.</p>
+        </div>
+
+        <div class="journey-cards-grid">
+          <div class="journey-step-card" data-j-step="0">
+            <span class="j-time">09:00 AM</span>
+            <span class="j-agent text-cyan">01. AttendMate AI</span>
+            <h4 class="j-title">Touchless Class Entry</h4>
+            <p class="j-desc">Biometric face telemetry verifies Alex in Lecture Hall B in 0.3s without roll-call interruptions.</p>
+          </div>
+
+          <div class="journey-step-card" data-j-step="1">
+            <span class="j-time">11:30 AM</span>
+            <span class="j-agent text-indigo">02. Synapse AI</span>
+            <h4 class="j-title">Adaptive Study Session</h4>
+            <p class="j-desc">Synapse breaks down neural backprop calculus into visual analogies with custom PyTorch quizzes.</p>
+          </div>
+
+          <div class="journey-step-card" data-j-step="2">
+            <span class="j-time">03:00 PM</span>
+            <span class="j-agent text-cyan">03. Resume-IQ</span>
+            <h4 class="j-title">Career &amp; ATS Matching</h4>
+            <p class="j-desc">New PyTorch skill credential automatically added to resume; ATS score surges to 96.4%.</p>
+          </div>
+
+          <div class="journey-step-card" data-j-step="3">
+            <span class="j-time">06:00 PM</span>
+            <span class="j-agent text-green">04. Campus-Desk</span>
+            <h4 class="j-title">Instant Services &amp; Vault</h4>
+            <p class="j-desc">Alex requests an official Bonafide Certificate—cryptographically signed and issued in &lt; 0.05s.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 10. THE COMPLETE SYSTEM: FULL-SCALE 4-AGENT ORCHESTRATION -->
+    <!-- ================================================================= -->
+    <section class="pinned-orchestration-theater" id="orchestration">
+      <div class="orchestration-viewport">
+        
+        <div class="orch-header-block">
+          <div class="hero-tech-badge">
+            <span class="live-core-indicator"></span>
+            <span class="badge-code">THE UNIFIED ORCHESTRATION MATRIX</span>
+          </div>
+          <h2 class="orch-mega-heading">All Four Agents. One Continuous Symphony.</h2>
+          <p class="orch-subheading">
+            When biometric perception, adaptive tutoring, placement acceleration, and campus operations communicate through a unified memory bus, friction drops to zero.
+          </p>
+        </div>
+
+        <!-- 4-Agent Interconnected Matrix Bus -->
+        <div class="orchestration-bus-matrix" id="orchMatrixGrid">
+          
+          <div class="orch-node-card node-1-card">
+            <div class="onc-header">
+              <span class="onc-num" style="color: #38bdf8;">01</span>
+              <span class="onc-name">AttendMate AI</span>
+            </div>
+            <span class="onc-tag">Biometric Perception</span>
+            <p class="onc-action">0.3s Face Telemetry &amp; Presence Ingestion</p>
+            <div class="onc-beam-connector">➔</div>
+          </div>
+
+          <div class="orch-node-card node-2-card">
+            <div class="onc-header">
+              <span class="onc-num" style="color: #818cf8;">02</span>
+              <span class="onc-name">Synapse AI</span>
+            </div>
+            <span class="onc-tag">Cognitive Tutoring</span>
+            <p class="onc-action">Adaptive Roadmaps &amp; Concept Mastery</p>
+            <div class="onc-beam-connector">➔</div>
+          </div>
+
+          <div class="orch-node-card node-3-card">
+            <div class="onc-header">
+              <span class="onc-num" style="color: #38bdf8;">03</span>
+              <span class="onc-name">Resume-IQ</span>
+            </div>
+            <span class="onc-tag">Career Readiness</span>
+            <p class="onc-action">96.4% ATS Optimization &amp; Role Matching</p>
+            <div class="onc-beam-connector">➔</div>
+          </div>
+
+          <div class="orch-node-card node-4-card">
+            <div class="onc-header">
+              <span class="onc-num" style="color: #34d399;">04</span>
+              <span class="onc-name">Campus-Desk</span>
+            </div>
+            <span class="onc-tag">Institutional Desk</span>
+            <p class="onc-action">24/7 Inquiry Resolution &amp; Admin Sync</p>
+            <div class="onc-beam-connector"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+          </div>
+
+        </div>
+
+        <!-- Holistic Institutional Outcome HUD -->
+        <div class="holistic-impact-hud">
+          <div class="hi-header">
+            <span class="hi-tag">MEASURABLE INSTITUTIONAL OUTCOME</span>
+            <h3 class="hi-title">The Zero-Friction Intelligent Campus</h3>
+          </div>
+
+          <div class="hi-metrics-quad">
+            <div class="hi-box">
+              <span class="hi-val" data-counter="240000">240,000+</span>
+              <span class="hi-lbl">Daily Autonomous Actions</span>
+            </div>
+            <div class="hi-box">
+              <span class="hi-val text-cyan">0.25s</span>
+              <span class="hi-lbl">Average System Latency</span>
+            </div>
+            <div class="hi-box">
+              <span class="hi-val text-indigo">18 hrs/wk</span>
+              <span class="hi-lbl">Faculty Admin Time Saved</span>
+            </div>
+            <div class="hi-box">
+              <span class="hi-val text-green">+38%</span>
+              <span class="hi-lbl">Placement Success Lift</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 11. FINAL CALL TO ACTION -->
+    <!-- ================================================================= -->
+    <section class="final-cta-theater" id="cta">
+      <div class="cta-plasma-glow"></div>
+      
+      <div class="cta-monolith-card">
+        <div class="hero-tech-badge">
+          <span class="live-core-indicator"></span>
+          <span class="badge-code">READY FOR THE NEXT GENERATION?</span>
+        </div>
+
+        <h2 class="cta-epic-heading">
+          Transform Your Campus With Intelligent Multi-Agent Autonomy.
+        </h2>
+
+        <p class="cta-epic-subheading">
+          Join leading institutions leveraging CampusOS for touchless biometric attendance, personalized learning journeys, accelerated career placements, and 24/7 campus operations.
+        </p>
+
+        <div class="cta-actions-dock">
+          <a href="/login" class="btn-glow-primary">
+            <span>Sign In to Campus Portal</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="/agent/campus/" class="btn-glass-secondary" style="border-color: rgba(52, 211, 153, 0.4); color: #34d399;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Test Campus Inquiry AI</span>
+          </a>
+        </div>
+
+        <div class="cta-guarantees-row">
+          <span>Role-Based Workspaces (Student / Faculty / HOD)</span>
+          <span>4 Integrated AI Agents</span>
+          <span>Instant Cloud Sync</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- 12. SITE FOOTER -->
+  <!-- ================================================================= -->
+  <footer class="cinematic-footer">
+    <div class="footer-core-wrap">
+      
+      <div class="footer-top-grid">
+        <div class="footer-brand-pane">
+          <a href="#hero" class="brand-unit">
+            <div class="brand-gem"><span class="gem-glyph">C</span></div>
+            <span class="brand-title">Campus<span>OS</span></span>
+          </a>
+          <p class="footer-statement">
+            One unified intelligence engine orchestrating personalized learning, placement acceleration, biometric attendance, and 24/7 campus inquiries.
+          </p>
+        </div>
+
+        <div class="footer-links-pane">
+          <span class="fl-header">THE FOUR AGENTS</span>
+          <ul class="fl-list">
+            <li><a href="/login?redirect=/agent/attendance/">01. AttendMate AI (Biometrics)</a></li>
+            <li><a href="/login?redirect=/agent/study/">02. Synapse AI (Learning)</a></li>
+            <li><a href="/login?redirect=/agent/career/">03. Resume-IQ (Careers)</a></li>
+            <li><a href="/agent/campus/" style="color: #34d399;">04. Campus-Desk AI (Public Desk) ↗</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links-pane">
+          <span class="fl-header">WORKSPACE ACCESS</span>
+          <ul class="fl-list">
+            <li><a href="/login">Student Workspace</a></li>
+            <li><a href="/login">Faculty Dashboard</a></li>
+            <li><a href="/login">HOD &amp; Admin Panel</a></li>
+            <li><a href="/login">Create College Workspace</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom-bar">
+        <span>© 2026 CampusOS. Built with production-oriented multi-agent systems.</span>
+        
+        <div class="footer-runtime-status">
+          <span class="fr-dot"></span>
+          <span>CAMPUS INTELLIGENCE RUNTIME ONLINE</span>
+        </div>
+
+        <a href="#hero" class="back-to-crest">Back to top ↑</a>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Story Scripts -->
+  <script src="/static/js/landing-data.js"></script>
+  <script src="/static/js/landing.js"></script>
+
+</body>
+</html>
