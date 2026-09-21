@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Management · CampusOS</title>
+    <link rel="icon" href="/static/icon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --ink:#172033; --muted:#6b7280; --line:#e8ebf1; --surface:#fff; --canvas:#f7f8fb; --navy:#171f3a; --blue:#3867f4; --violet:#7656df; --green:#1f9d6a; --shadow:0 14px 42px rgba(19,30,62,.08); }
+        * { box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        body { margin:0; background:var(--canvas); color:var(--ink); font-family:"DM Sans",sans-serif; font-size:14px; }
+        button,input,select { font:inherit; }
+        button { cursor:pointer; }
+        .topbar { position:sticky; top:0; z-index:100; height:76px; display:flex; align-items:center; padding:0 max(24px,calc((100vw - 1440px)/2)); background:rgba(255,255,255,.86); backdrop-filter:blur(18px); border-bottom:1px solid rgba(225,229,237,.85); }
+        .nav-inner { width:100%; display:flex; align-items:center; gap:28px; }
+        .brand { display:flex; align-items:center; gap:10px; color:var(--navy); font-family:"Plus Jakarta Sans",sans-serif; font-weight:800; font-size:18px; white-space:nowrap; text-decoration:none; }
+        .brand-mark { width:32px; height:32px; border-radius:10px; display:grid; place-items:center; color:#fff; background:linear-gradient(135deg,#486ff6,#795ce4); box-shadow:0 7px 16px rgba(67,101,240,.28); }
+        .nav-links { display:flex; align-items:center; gap:3px; }
+        .nav-links a { padding:9px 12px; color:#768096; border-radius:8px; text-decoration:none; font-weight:600; }
+        .nav-links a:hover,.nav-links a.active { color:var(--blue); background:#eef2ff; }
+        .global-search { flex:1; max-width:375px; margin-left:auto; position:relative; }
+        .global-search svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#99a2b5; }
+        .global-search input { width:100%; height:38px; padding:0 13px 0 37px; border:1px solid var(--line); border-radius:9px; background:#f8f9fc; color:var(--ink); outline:none; transition:.2s; }
+        .global-search input:focus { background:#fff; border-color:#aabcfb; box-shadow:0 0 0 3px #eaf0ff; }
+        .nav-actions { display:flex; align-items:center; gap:8px; margin-left:auto; }
+        .icon-button { position:relative; width:38px; height:38px; border:1px solid transparent; border-radius:9px; color:#697489; background:transparent; display:grid; place-items:center; }
+        .icon-button:hover { background:#f1f3f7; color:var(--ink); }
+        .notification-dot { width:7px; height:7px; position:absolute; right:8px; top:8px; border:2px solid white; border-radius:50%; background:#ef5c70; }
+        .primary-btn,.secondary-btn,.small-btn { border:0; border-radius:9px; font-weight:700; transition:transform .2s,box-shadow .2s,background .2s; }
+        .primary-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:38px; padding:0 14px; color:#fff; background:var(--blue); box-shadow:0 6px 14px rgba(56,103,244,.22); }
+        .primary-btn:hover { transform:translateY(-1px); background:#2858e7; box-shadow:0 9px 18px rgba(56,103,244,.28); }
+        .secondary-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:38px; padding:0 14px; color:#43506a; background:#fff; border:1px solid #dde2eb; }
+        .secondary-btn:hover { background:#f8f9fb; border-color:#cbd2df; }
+        .profile-control { display:flex; align-items:center; gap:8px; padding:4px 6px 4px 4px; border:0; border-radius:10px; background:transparent; color:var(--ink); }
+        .profile-control:hover { background:#f3f5f8; }
+        .avatar { width:32px; height:32px; display:grid; place-items:center; flex:none; border-radius:10px; background:linear-gradient(135deg,#dbe6ff,#c7b9fc); color:#45518b; font-weight:800; }
+        .profile-copy { text-align:left; line-height:1.25; }
+        .profile-copy strong { display:block; font-size:12px; }.profile-copy span { display:block; color:#8b94a7; font-size:11px; }
+        .dropdown { position:absolute; right:0; top:calc(100% + 10px); min-width:260px; padding:8px; border:1px solid rgba(222,226,235,.95); border-radius:13px; background:rgba(255,255,255,.96); box-shadow:0 18px 45px rgba(27,39,73,.15); backdrop-filter:blur(16px); opacity:0; visibility:hidden; transform:translateY(-6px) scale(.98); transform-origin:top right; transition:.18s ease; }
+        .dropdown.open { opacity:1; visibility:visible; transform:none; }
+        .drop-wrap { position:relative; }
+        .profile-menu { min-width:190px; }
+        .profile-menu a { display:flex; align-items:center; gap:10px; padding:10px; color:#566075; border-radius:8px; text-decoration:none; font-weight:600; }
+        .profile-menu a:hover { background:#f3f5f9; color:var(--ink); }.profile-menu .logout { color:#d85165; }
+        .notification-menu { width:340px; padding:0; overflow:hidden; }
+        .drop-heading { display:flex; align-items:center; justify-content:space-between; padding:15px 15px 11px; border-bottom:1px solid var(--line); }
+        .drop-heading strong { font-family:"Plus Jakarta Sans",sans-serif; font-size:13px; }.text-button { border:0; padding:0; color:var(--blue); background:none; font-size:12px; font-weight:700; }
+        .notification-item { display:flex; gap:10px; padding:12px 15px; border-bottom:1px solid #f0f1f4; }.notification-item:hover { background:#fafbfe; }
+        .notice-icon { width:31px; height:31px; flex:none; display:grid; place-items:center; border-radius:9px; color:var(--blue); background:#edf2ff; }.notice-icon.green { color:var(--green); background:#e8f8f0; }
+        .notice-copy { min-width:0; flex:1; color:#4d5870; font-size:12px; line-height:1.4; }.notice-copy b { color:var(--ink); }.notice-time { display:block; margin-top:3px; color:#9ca4b4; font-size:11px; }.unread { width:6px; height:6px; margin-top:5px; border-radius:50%; background:var(--blue); }
+        .drop-footer { display:block; padding:12px; color:var(--blue); text-align:center; text-decoration:none; font-size:12px; font-weight:700; }
+        .page { max-width:1380px; margin:0 auto; padding:30px 28px 50px; }
+        .hero { position:relative; overflow:hidden; min-height:200px; padding:34px 38px; display:flex; align-items:flex-end; justify-content:space-between; border-radius:19px; color:#fff; background:linear-gradient(112deg,#18213d 0%,#263b75 62%,#4758a8 100%); box-shadow:0 18px 35px rgba(22,31,59,.17); }
+        .hero:after { content:""; position:absolute; right:-68px; top:-120px; width:360px; height:360px; border:48px solid rgba(255,255,255,.07); border-radius:50%; }.hero:before { content:""; position:absolute; right:170px; bottom:-90px; width:220px; height:220px; border-radius:50%; background:rgba(144,177,255,.12); filter:blur(2px); }
+        .eyebrow { position:relative; z-index:1; margin:0 0 10px; color:#bac9ff; font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }.hero h1 { position:relative; z-index:1; margin:0; font:700 clamp(25px,3vw,35px)/1.2 "Plus Jakarta Sans",sans-serif; letter-spacing:-.04em; }.hero p:not(.eyebrow) { position:relative; z-index:1; max-width:515px; margin:10px 0 0; color:#d4ddf7; font-size:14px; line-height:1.55; }.date-card { z-index:1; min-width:190px; padding:15px 17px; border:1px solid rgba(255,255,255,.15); border-radius:13px; background:rgba(255,255,255,.1); backdrop-filter:blur(10px); }.date-card span { display:block; color:#bac8ec; font-size:11px; font-weight:700; }.date-card strong { display:block; margin-top:3px; font-family:"Plus Jakarta Sans",sans-serif; font-size:16px; }.date-card b { display:block; margin-top:2px; color:#eff2ff; font-size:12px; font-weight:500; }
+        .section { margin-top:28px; }.section-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:14px; }.section-heading h2 { margin:0; font:700 17px "Plus Jakarta Sans",sans-serif; letter-spacing:-.02em; }.section-heading p { margin:3px 0 0; color:#8992a4; font-size:12px; }
+        .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:15px; }.stat { min-height:118px; padding:19px; border:1px solid var(--line); border-radius:14px; background:var(--surface); box-shadow:0 4px 13px rgba(24,39,78,.025); }.stat-top { display:flex; justify-content:space-between; color:#747f94; font-size:12px; font-weight:700; }.stat-icon { width:29px; height:29px; display:grid; place-items:center; border-radius:8px; color:#5670d8; background:#eef2ff; }.stat:nth-child(2) .stat-icon { color:#8c65df; background:#f4efff; }.stat:nth-child(3) .stat-icon { color:#209c72; background:#eaf8f1; }.stat:nth-child(4) .stat-icon { color:#dd8a35; background:#fff4e7; }.stat-value { margin-top:14px; font:700 27px "Plus Jakarta Sans",sans-serif; letter-spacing:-.06em; }.stat-label { margin-top:3px; color:#99a2b3; font-size:11px; }
+        .quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }.quick-card { padding:21px; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 4px 13px rgba(24,39,78,.025); }.quick-card-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; }.quick-card-header i { width:32px; height:32px; display:grid; place-items:center; border-radius:9px; color:#fff; font-style:normal; background:linear-gradient(135deg,#527af6,#7254d6); }.quick-card:nth-child(2) .quick-card-header i { background:linear-gradient(135deg,#2eaf84,#2d8db4); }.quick-card h3 { margin:0; font:700 14px "Plus Jakarta Sans",sans-serif; }.quick-card p { margin:3px 0 0; color:#939bad; font-size:11px; }.quick-links { display:flex; gap:8px; flex-wrap:wrap; }.quick-link { display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border:1px solid #e6e9f0; border-radius:8px; color:#59647a; background:#fbfcfe; text-decoration:none; font-size:12px; font-weight:700; }.quick-link:hover { color:var(--blue); border-color:#cfd9ff; background:#f4f6ff; }
+        .content-grid { display:grid; grid-template-columns:minmax(0,1.8fr) minmax(300px,.8fr); gap:20px; align-items:start; }.directory,.activity-panel { border:1px solid var(--line); border-radius:16px; background:#fff; box-shadow:0 5px 16px rgba(24,39,78,.035); }.directory-header { padding:20px 20px 16px; border-bottom:1px solid var(--line); }.toolbar { display:grid; grid-template-columns:minmax(190px,1fr) 140px 120px 125px; gap:8px; margin-top:15px; }.field { position:relative; }.field svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#98a1b2; }.field input,.field select { width:100%; height:37px; padding:0 10px; border:1px solid #e1e5ec; border-radius:8px; outline:none; color:#556075; background:#fbfcfe; font-size:12px; }.field input { padding-left:31px; }.field input:focus,.field select:focus { border-color:#9fb1fb; background:#fff; box-shadow:0 0 0 3px #eff2ff; }
+        .faculty-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; padding:17px; }.faculty-card { position:relative; min-width:0; padding:16px; border:1px solid #e8ebf0; border-radius:12px; background:#fff; transition:.22s ease; }.faculty-card:hover { transform:translateY(-3px); border-color:#d4dcf7; box-shadow:0 12px 24px rgba(31,55,111,.09); }.faculty-top { display:flex; align-items:flex-start; gap:10px; }.faculty-avatar { width:39px; height:39px; display:grid; place-items:center; flex:none; border-radius:11px; color:#4f55a1; background:linear-gradient(135deg,#e8edff,#eee9ff); font-weight:800; }.faculty-info { min-width:0; flex:1; }.faculty-info h3 { overflow:hidden; margin:1px 0 4px; color:#263047; text-overflow:ellipsis; white-space:nowrap; font:700 13px "Plus Jakarta Sans",sans-serif; }.faculty-info p { overflow:hidden; margin:0; color:#8891a3; text-overflow:ellipsis; white-space:nowrap; font-size:11px; }.role-badge { display:inline-block; margin-top:13px; padding:5px 8px; border-radius:20px; color:#6252ae; background:#f0edff; font-size:10px; font-weight:800; letter-spacing:.035em; }.faculty-meta { display:flex; align-items:center; justify-content:space-between; gap:7px; margin-top:13px; padding-top:11px; border-top:1px solid #f0f1f4; color:#7f899c; font-size:11px; }.faculty-meta span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.view-button { flex:none; border:0; padding:0; color:var(--blue); background:none; font-size:11px; font-weight:800; }.view-button:hover { color:#244aca; }.empty-box { grid-column:1/-1; padding:45px 20px; color:#8992a3; text-align:center; }
+        .activity-panel { overflow:hidden; }.activity-header { display:flex; justify-content:space-between; align-items:center; padding:20px 18px 14px; border-bottom:1px solid var(--line); }.activity-header h2 { margin:0; font:700 15px "Plus Jakarta Sans",sans-serif; }.activity-scroll { height:376px; padding:8px 18px 16px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#cbd3e3 transparent; }.activity-scroll::-webkit-scrollbar { width:5px; }.activity-scroll::-webkit-scrollbar-thumb { border-radius:5px; background:#cbd3e3; }.timeline-item { position:relative; display:flex; gap:10px; padding:12px 0; }.timeline-item:not(:last-child):after { content:""; position:absolute; left:14px; top:43px; bottom:-2px; width:1px; background:#e6eaf1; }.timeline-icon { width:29px; height:29px; z-index:1; flex:none; display:grid; place-items:center; border-radius:50%; color:#4c69d8; background:#edf1ff; }.timeline-icon.green { color:#1e9b70; background:#e8f8f0; }.timeline-icon.orange { color:#dc8d37; background:#fff3e4; }.timeline-content { padding-top:1px; color:#536076; font-size:12px; line-height:1.45; }.timeline-content b { color:#263047; }.timeline-content time { display:block; margin-top:3px; color:#a0a8b7; font-size:10px; }
+        .footer { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:30px 3px 0; color:#8c95a7; font-size:11px; }.footer-brand { color:#59647c; font-family:"Plus Jakarta Sans",sans-serif; font-weight:800; }.footer-links { display:flex; gap:17px; }.footer a { color:inherit; text-decoration:none; }.footer a:hover { color:var(--blue); }
+        .message { margin-top:18px; padding:13px 15px; border-radius:10px; font-size:13px; font-weight:700; }.message.error { color:#ad3d4f; background:#fff0f1; border:1px solid #ffdfe2; }.message.success { color:#19734e; background:#ebfbf2; border:1px solid #d4f4e2; }
+        .modal-backdrop { position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(14,21,42,.42); backdrop-filter:blur(5px); opacity:0; visibility:hidden; transition:.2s; }.modal-backdrop.open { opacity:1; visibility:visible; }.modal { width:min(570px,100%); max-height:calc(100vh - 40px); overflow:auto; padding:25px; border:1px solid rgba(255,255,255,.6); border-radius:17px; background:#fff; box-shadow:0 25px 75px rgba(10,18,45,.28); transform:translateY(10px) scale(.98); transition:.2s; }.modal-backdrop.open .modal { transform:none; }.modal-head { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; }.modal-head h2 { margin:0; font:700 19px "Plus Jakarta Sans",sans-serif; }.modal-head p { margin:5px 0 0; color:#8790a3; font-size:12px; }.close-modal { width:31px; height:31px; border:0; border-radius:8px; color:#6d778a; background:#f3f5f8; font-size:19px; }.invite-body { display:grid; grid-template-columns:1fr 145px; gap:20px; margin-top:22px; }.invite-label { display:block; margin-bottom:7px; color:#69758b; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; }.invite-url { min-height:47px; padding:11px; overflow-wrap:anywhere; border:1px solid #e1e5ee; border-radius:9px; color:#4e5970; background:#fafbfe; font-size:12px; line-height:1.45; }.invite-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:9px; }.small-btn { min-height:33px; padding:0 10px; color:#536078; border:1px solid #e0e5ed; background:#fff; font-size:11px; }.small-btn:hover { background:#f5f7fb; }.small-btn.accent { color:#fff; border-color:var(--blue); background:var(--blue); }.qr { min-height:145px; display:grid; place-items:center; border:1px dashed #bdc6dc; border-radius:11px; color:#8190ac; background:linear-gradient(135deg,#f8faff,#eef2fa); text-align:center; font-size:11px; }.qr svg { display:block; margin:0 auto 6px; }.share-row { display:flex; gap:8px; margin-top:20px; padding-top:17px; border-top:1px solid var(--line); }.share-row .small-btn { flex:1; }.modal-footer { display:flex; justify-content:flex-end; margin-top:19px; }
+        #profileDetail { color:#4e5970; line-height:1.7; }.detail-name { margin:0 0 4px; color:var(--ink); font:700 18px "Plus Jakarta Sans",sans-serif; }
+        #chatbot-toggle { position:fixed; right:22px; bottom:22px; z-index:99; width:50px; height:50px; border:0; border-radius:50%; color:#fff; background:linear-gradient(135deg,#436cf4,#7559dd); box-shadow:0 12px 25px rgba(60,91,221,.35); font-size:20px; } #chatbot-container { position:fixed; right:22px; bottom:82px; z-index:99; width:340px; height:460px; display:none; flex-direction:column; overflow:hidden; border:1px solid #e4e7ef; border-radius:16px; background:#fff; box-shadow:0 20px 50px rgba(21,31,61,.22); } #chatbot-header { display:flex; justify-content:space-between; padding:14px; color:#fff; background:var(--navy); font-weight:700; } #chatbot-close { border:0; color:#fff; background:transparent; } #chatbot-messages { flex:1; display:flex; flex-direction:column; gap:8px; padding:13px; overflow:auto; } .chat-user,.chat-bot { max-width:78%; padding:9px 11px; border-radius:11px; font-size:12px; line-height:1.4; }.chat-user { align-self:flex-end; color:#fff; background:var(--blue); }.chat-bot { align-self:flex-start; background:#f1f3f8;         #chatbot-input-area { display:flex; gap:7px; padding:10px; border-top:1px solid var(--line); } #chatbot-input { min-width:0; flex:1; padding:9px; border:1px solid #dce1eb; border-radius:8px; outline:none; } #chatbot-send { padding:0 12px; border:0; border-radius:8px; color:#fff; background:var(--blue); }.typing::after { content:"..."; }
+        @media(max-width:1050px) { .nav-links { display:none; }.content-grid { grid-template-columns:1fr; }.activity-scroll { height:350px; }.profile-copy { display:none; }.stats { grid-template-columns:repeat(2,1fr); } }
+        @media(max-width:720px) { .topbar { height:66px; padding:0 16px; }.page { padding:20px 16px 35px; }.global-search { display:none; }.nav-actions { gap:3px; }.nav-actions .primary-btn { width:38px; padding:0; font-size:0; }.nav-actions .primary-btn svg { width:17px; }.hero { min-height:230px; padding:27px 23px; align-items:flex-start; flex-direction:column; }.date-card { width:100%; }.quick-grid,.faculty-grid { grid-template-columns:1fr; }.toolbar { grid-template-columns:1fr 1fr; }.toolbar .field:first-child { grid-column:1/-1; }.footer { align-items:flex-start; flex-direction:column; }.invite-body { grid-template-columns:1fr; }.qr { min-height:120px; }.notification-menu { position:fixed; right:12px; left:12px; top:69px; width:auto; }.stats { gap:10px; }.stat { min-height:105px; padding:14px; }.stat-value { margin-top:10px; font-size:23px; }.section { margin-top:22px; } }
+        @media(max-width:430px) { .brand { font-size:16px; }.profile-control { display:none; }.stats { grid-template-columns:1fr 1fr; }.share-row { flex-wrap:wrap; }.share-row .small-btn { flex:calc(50% - 4px); } }
+        
+        .scroll-reveal { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform, opacity, filter; }
+        .scroll-reveal.below { opacity: 0; transform: translateY(40px) scale(0.96); filter: blur(6px); }
+        .scroll-reveal.above { opacity: 0; transform: translateY(-40px) scale(0.96); filter: blur(6px); }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="nav-inner">
+            <a class="brand" href="/dashboard"><span class="brand-mark">C</span>CampusOS</a>
+            <nav class="nav-links" aria-label="Primary navigation"><a href="/dashboard">Dashboard</a><a class="active" href="#" aria-current="page">Staff</a><a href="#reports">Reports</a></nav>
+            <label class="global-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="globalSearch" type="search" placeholder="Search faculty, email, department..." aria-label="Global faculty search"></label>
+            <div class="nav-actions">
+                <button class="primary-btn" type="button" data-open-modal="inviteModal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Invite Teacher</button>
+                <div class="drop-wrap"><button class="icon-button" id="notificationButton" type="button" aria-label="Notifications" aria-expanded="false"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><i class="notification-dot"></i></button>
+                    <div class="dropdown notification-menu" id="notificationMenu"><div class="drop-heading"><strong>Notifications</strong><button class="text-button" id="markRead" type="button">Mark all as read</button></div>
+                        <div class="notification-item"><span class="notice-icon green">✓</span><div class="notice-copy"><b>New faculty joined</b><br>A faculty member was added to your college.<span class="notice-time">Just now</span></div><i class="unread"></i></div>
+                        <div class="notification-item"><span class="notice-icon">↗</span><div class="notice-copy"><b>Invitation ready</b><br>Your teacher join link is available to share.<span class="notice-time">Today</span></div><i class="unread"></i></div>
+                        <div class="notification-item"><span class="notice-icon">◌</span><div class="notice-copy"><b>Faculty directory updated</b><br>Review your current faculty record list.<span class="notice-time">Earlier this week</span></div></div>
+                        <a class="drop-footer" href="#activity">View all notifications</a></div>
+                </div>
+                <div class="drop-wrap"><button class="profile-control" id="profileButton" type="button" aria-expanded="false"><span class="avatar">{{ college.college_name[:1] | upper }}</span><span class="profile-copy"><strong>{{ college.college_name | title }}</strong><span>Administrator</span></span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+                    <div class="dropdown profile-menu" id="profileMenu"><a href="#profile">◉ My Profile</a><a href="#settings">⚙ Settings</a><a href="#help">? Help Center</a><a class="logout" href="/dashboard">↪ Logout</a></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page">
+        <section class="hero">
+            <div><p class="eyebrow">Faculty Management · {{ college.college_name | title }}</p><h1>Welcome back.</h1><p>Manage your faculty directory, invitation access, and staff information from one focused workspace.</p></div>
+            <div class="date-card"><span id="currentDate">Loading date…</span><strong id="currentTime">--:--</strong><b>Local campus time</b></div>
+        </section>
+
+        {% if error_message %}<div class="message error">{{ error_message }}</div>{% endif %}
+        {% if success_message %}<div class="message success">{{ success_message }}</div>{% endif %}
+
+        <section class="section">
+            <div class="section-heading"><div><h2>Faculty overview</h2><p>A concise snapshot of your people and organisation.</p></div></div>
+            <div class="stats">
+                <article class="stat"><div class="stat-top"><span>Total Staff</span><span class="stat-icon">♙</span></div><div class="stat-value">{{ teacher_count }}</div><div class="stat-label">Active faculty members</div></article>
+                <article class="stat"><div class="stat-top"><span>Professors</span><span class="stat-icon">◈</span></div><div class="stat-value" id="professorCount">0</div><div class="stat-label">Teaching faculty</div></article>
+                <article class="stat"><div class="stat-top"><span>HODs</span><span class="stat-icon">★</span></div><div class="stat-value" id="hodCount">0</div><div class="stat-label">Department leaders</div></article>
+                <article class="stat"><div class="stat-top"><span>Departments</span><span class="stat-icon">▦</span></div><div class="stat-value" id="departmentCount">0</div><div class="stat-label">Represented in directory</div></article>
+            </div>
+        </section>
+
+        <section class="section" id="reports">
+            <div class="section-heading"><div><h2>Quick actions</h2><p>Common tasks for faculty administration.</p></div></div>
+            <div class="quick-grid">
+                <article class="quick-card"><div class="quick-card-header"><i>♙</i><div><h3>Faculty management</h3><p>Invite and review your teaching staff.</p></div></div><div class="quick-links"><button class="quick-link" type="button" data-open-modal="inviteModal">＋ Add Faculty</button><a class="quick-link" href="#directory">⌘ Assign Roles</a><a class="quick-link" href="#directory">▦ Manage Departments</a></div></article>
+                <article class="quick-card"><div class="quick-card-header"><i>↗</i><div><h3>Reports &amp; utilities</h3><p>Prepare information from the active directory.</p></div></div><div class="quick-links"><button class="quick-link" type="button" id="exportFaculty">⇩ Export Faculty List</button><a class="quick-link" href="#activity">◫ Generate Reports</a><button class="quick-link" type="button" id="downloadData">⇩ Download Data</button></div></article>
+            </div>
+        </section>
+
+        <section class="section content-grid">
+            <section class="directory" id="directory">
+                <div class="directory-header"><div class="section-heading"><div><h2>Faculty directory</h2><p id="directoryResult">Browse your faculty records.</p></div><button class="secondary-btn" type="button" data-open-modal="inviteModal">＋ Invite</button></div>
+                    <div class="toolbar">
+                        <label class="field"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="facultySearch" type="search" placeholder="Search faculty..." aria-label="Search faculty"></label>
+                        <label class="field"><select id="departmentFilter" aria-label="Filter by department"><option value="">All departments</option></select></label>
+                        <label class="field"><select id="roleFilter" aria-label="Filter by role"><option value="">All roles</option></select></label>
+                        <label class="field"><select id="sortFaculty" aria-label="Sort faculty"><option value="name-asc">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="role">Role</option><option value="department">Department</option></select></label>
+                    </div>
+                </div>
+                <div class="faculty-grid" id="facultyGrid">
+                    {% if teachers %}
+                        {% for teacher in teachers %}
+                        <article class="faculty-card" data-name="{{ teacher.teacher_name | lower }}" data-email="{{ teacher.email | lower }}" data-department="{{ teacher.college_id | string | lower }}" data-role="{{ teacher.role | lower }}">
+                            <div class="faculty-top"><div class="faculty-avatar">{{ teacher.teacher_name[:1] | upper }}</div><div class="faculty-info"><h3>{{ teacher.teacher_name | title }}</h3><p>{{ teacher.email }}</p></div></div>
+                            <span class="role-badge">{{ teacher.role | upper }}</span>
+                            <div class="faculty-meta"><span title="{{ teacher.college_id }}">Department · {{ teacher.college_id }}</span><button class="view-button" type="button" data-name="{{ teacher.teacher_name | title }}" data-email="{{ teacher.email }}" data-department="{{ teacher.college_id }}" data-role="{{ teacher.role | upper }}">View →</button></div>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-box">No teachers found for this college.</div>
+                    {% endif %}
+                    <div class="empty-box" id="noResults" hidden>No faculty match your current search or filters.</div>
+                </div>
+            </section>
+            <aside class="activity-panel" id="activity">
+                <div class="activity-header"><h2>Recent activity</h2><button class="text-button" type="button">View history</button></div>
+                <div class="activity-scroll">
+                    <div class="timeline-item"><span class="timeline-icon green">✓</span><div class="timeline-content"><b>Faculty directory is ready</b><br>Your active faculty list has been loaded.<time>Just now</time></div></div>
+                    <div class="timeline-item"><span class="timeline-icon">↗</span><div class="timeline-content"><b>Teacher invitation available</b><br>Share the secure join link with new staff.<time>Today</time></div></div>
+                    <div class="timeline-item"><span class="timeline-icon orange">◌</span><div class="timeline-content"><b>Staff total updated</b><br>There are currently {{ teacher_count }} staff records.<time>Today</time></div></div>
+                    <div class="timeline-item"><span class="timeline-icon">▦</span><div class="timeline-content"><b>Directory filters enabled</b><br>Search by faculty name, email, department, or role.<time>This week</time></div></div>
+                    <div class="timeline-item"><span class="timeline-icon green">⇩</span><div class="timeline-content"><b>Exports are available</b><br>Download the current faculty directory as a CSV file.<time>This week</time></div></div>
+                    <div class="timeline-item"><span class="timeline-icon orange">★</span><div class="timeline-content"><b>CampusOS workspace active</b><br>Continue managing faculty information here.<time>Earlier</time></div></div>
+                </div>
+            </aside>
+        </section>
+        <footer class="footer"><span class="footer-brand">CampusOS</span><div class="footer-links"><a href="#privacy">Privacy</a><a href="#terms">Terms</a><a href="#help">Support</a></div><span>Version 1.0</span></footer>
+    </main>
+
+    <div class="modal-backdrop" id="inviteModal" aria-hidden="true"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="inviteTitle"><div class="modal-head"><div><h2 id="inviteTitle">Invite a teacher</h2><p>Share secure access to your CampusOS faculty workspace.</p></div><button class="close-modal" type="button" data-close-modal aria-label="Close">×</button></div><div class="invite-body"><div><span class="invite-label">Teacher join link</span><div class="invite-url" id="teacherInviteLink">{{ teacher_invite_link }}</div><div class="invite-actions"><button class="small-btn accent" type="button" onclick="copyTeacherInviteLink()">Copy link</button><button class="small-btn" type="button" id="generateLink">Generate new link</button></div></div><div><div class="qr"><div><svg width="62" height="62" viewBox="0 0 62 62" fill="none"><path fill="currentColor" d="M4 4h19v19H4zM9 9h9v9H9zM39 4h19v19H39zM44 9h9v9h-9zM4 39h19v19H4zM9 44h9v9H9zM29 28h6v6h-6zm9 0h7v6h-7zm-9 9h7v7h-7zm10 0h6v6h-6zm9 0h10v6H48zm-9 9h7v12h-7zm9 9h10v6H48z"/></svg>QR code placeholder</div></div><button class="small-btn" id="downloadQR" type="button" style="width:100%;margin-top:8px">⇩ Download QR</button></div></div><div class="share-row"><button class="small-btn" id="emailInvite" type="button">✉ Email</button><button class="small-btn" id="whatsAppInvite" type="button">◉ WhatsApp</button><button class="small-btn" type="button" onclick="copyTeacherInviteLink()">▣ Copy invitation</button></div><div class="modal-footer"><button class="secondary-btn" type="button" data-close-modal>Close</button></div></section></div>
+    <div class="modal-backdrop" id="detailModal" aria-hidden="true"><section class="modal" role="dialog" aria-modal="true"><div class="modal-head"><div><h2>Faculty profile</h2><p>Directory record preview</p></div><button class="close-modal" type="button" data-close-modal aria-label="Close">×</button></div><div id="profileDetail" style="margin-top:20px"></div><div class="modal-footer"><button class="secondary-btn" type="button" data-close-modal>Close</button></div></section></div>
+
+    <button id="chatbot-toggle" type="button" aria-label="Open CampusOS assistant">💬</button>
+    <div id="chatbot-container"><div id="chatbot-header"><span>Ask about CampusOS</span><button id="chatbot-close" type="button">✖</button></div><div id="chatbot-messages"></div><div id="chatbot-input-area"><input type="text" id="chatbot-input" placeholder="Ask something..."><button id="chatbot-send" type="button">Send</button></div></div>
+
+    <script>
+        function copyTeacherInviteLink() { const text = document.getElementById("teacherInviteLink").innerText; navigator.clipboard.writeText(text).then(function(){ showToast("Teacher invite link copied"); }).catch(function(){ showToast("Failed to copy link"); }); }
+        function showToast(message) { const toast=document.createElement("div"); toast.textContent=message; toast.style.cssText="position:fixed;left:50%;bottom:25px;z-index:500;transform:translateX(-50%);padding:10px 14px;border-radius:9px;background:#172033;color:#fff;box-shadow:0 10px 25px rgba(0,0,0,.2);font-size:12px;font-weight:700"; document.body.appendChild(toast); setTimeout(function(){toast.remove();},2200); }
+        function updateClock(){ const now=new Date(); document.getElementById("currentDate").textContent=now.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"}); document.getElementById("currentTime").textContent=now.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"}); } updateClock(); setInterval(updateClock,1000);
+        const notificationButton=document.getElementById("notificationButton"), notificationMenu=document.getElementById("notificationMenu"), profileButton=document.getElementById("profileButton"), profileMenu=document.getElementById("profileMenu");
+        function closeMenus(){ notificationMenu.classList.remove("open"); profileMenu.classList.remove("open"); notificationButton.setAttribute("aria-expanded","false"); profileButton.setAttribute("aria-expanded","false"); }
+        notificationButton.onclick=function(e){e.stopPropagation(); const open=!notificationMenu.classList.contains("open");closeMenus();if(open){notificationMenu.classList.add("open");notificationButton.setAttribute("aria-expanded","true");}};
+        profileButton.onclick=function(e){e.stopPropagation(); const open=!profileMenu.classList.contains("open");closeMenus();if(open){profileMenu.classList.add("open");profileButton.setAttribute("aria-expanded","true");}};
+        document.addEventListener("click",function(e){if(!e.target.closest(".drop-wrap"))closeMenus();}); document.getElementById("markRead").onclick=function(){document.querySelectorAll(".unread").forEach(function(el){el.remove();});document.querySelector(".notification-dot").style.display="none";showToast("All notifications marked as read");};
+        const modals=document.querySelectorAll(".modal-backdrop"); function openModal(id){const modal=document.getElementById(id);modal.classList.add("open");modal.setAttribute("aria-hidden","false");} function closeModal(modal){modal.classList.remove("open");modal.setAttribute("aria-hidden","true");}
+        document.querySelectorAll("[data-open-modal]").forEach(function(button){button.onclick=function(){openModal(button.dataset.openModal);};}); document.querySelectorAll("[data-close-modal]").forEach(function(button){button.onclick=function(){closeModal(button.closest(".modal-backdrop"));};}); modals.forEach(function(modal){modal.addEventListener("click",function(e){if(e.target===modal)closeModal(modal);});}); document.addEventListener("keydown",function(e){if(e.key==="Escape")modals.forEach(closeModal);});
+        document.getElementById("generateLink").onclick=function(){showToast("The current invite link remains active. Generate links from the existing server workflow.");};
+        document.getElementById("emailInvite").onclick=function(){const link=document.getElementById("teacherInviteLink").innerText;window.location.href="mailto:?subject="+encodeURIComponent("Join CampusOS Faculty")+ "&body="+encodeURIComponent("You are invited to join CampusOS. Use this link: "+link);};
+        document.getElementById("whatsAppInvite").onclick=function(){const link=document.getElementById("teacherInviteLink").innerText;window.open("https://wa.me/?text="+encodeURIComponent("You are invited to join CampusOS: "+link),"_blank","noopener");};
+        document.getElementById("downloadQR").onclick=function(){const svg='<svg xmlns="http://www.w3.org/2000/svg" width="420" height="420" viewBox="0 0 62 62"><rect width="62" height="62" fill="white"/><g fill="#172033"><path d="M4 4h19v19H4zM9 9h9v9H9zM39 4h19v19H39zM44 9h9v9h-9zM4 39h19v19H4zM9 44h9v9H9zM29 28h6v6h-6zm9 0h7v6h-7zm-9 9h7v7h-7zm10 0h6v6h-6zm9 0h10v6H48zm-9 9h7v12h-7zm9 9h10v6H48z"/></g></svg>';const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));a.download="campusos-teacher-invite-qr.svg";a.click();URL.revokeObjectURL(a.href);};
+        const cards=Array.from(document.querySelectorAll(".faculty-card")), facultySearch=document.getElementById("facultySearch"),globalSearch=document.getElementById("globalSearch"),departmentFilter=document.getElementById("departmentFilter"),roleFilter=document.getElementById("roleFilter"),sortFaculty=document.getElementById("sortFaculty"),facultyGrid=document.getElementById("facultyGrid"),noResults=document.getElementById("noResults"),directoryResult=document.getElementById("directoryResult");
+        function valuesFor(key){return Array.from(new Set(cards.map(function(card){return card.dataset[key];}).filter(Boolean))).sort();} function addOptions(select,values,label){values.forEach(function(value){const option=document.createElement("option");option.value=value;option.textContent=value.replace(/\b\w/g,function(c){return c.toUpperCase();});select.appendChild(option);});} addOptions(departmentFilter,valuesFor("department"));addOptions(roleFilter,valuesFor("role"));
+        function filterFaculty(){const term=facultySearch.value.trim().toLowerCase(),dept=departmentFilter.value,role=roleFilter.value,sort=sortFaculty.value;const shown=cards.filter(function(card){const matches=[card.dataset.name,card.dataset.email,card.dataset.department,card.dataset.role].join(" ").includes(term)&&(!dept||card.dataset.department===dept)&&(!role||card.dataset.role===role);card.hidden=!matches;return matches;});shown.sort(function(a,b){const [key,direction]=sort.split("-");let left=key==="name"?a.dataset.name:a.dataset[key],right=key==="name"?b.dataset.name:b.dataset[key];return (left||"").localeCompare(right||"")*(direction==="desc"?-1:1);}).forEach(function(card){facultyGrid.appendChild(card);});noResults.hidden=shown.length!==0;directoryResult.textContent=shown.length+" faculty "+(shown.length===1?"record":"records")+" shown";} [facultySearch,departmentFilter,roleFilter,sortFaculty].forEach(function(el){el.addEventListener(el===sortFaculty||el.tagName==="SELECT"?"change":"input",filterFaculty);}); globalSearch.addEventListener("input",function(){facultySearch.value=globalSearch.value;filterFaculty();document.getElementById("directory").scrollIntoView({behavior:"smooth",block:"start"});});
+        const professorCount=cards.filter(function(c){return /professor/.test(c.dataset.role);}).length,hodCount=cards.filter(function(c){return /hod|head/.test(c.dataset.role);}).length;document.getElementById("professorCount").textContent=professorCount;document.getElementById("hodCount").textContent=hodCount;document.getElementById("departmentCount").textContent=valuesFor("department").length;
+        document.querySelectorAll(".view-button").forEach(function(button){button.onclick=function(){document.getElementById("profileDetail").innerHTML="<p class='detail-name'>"+button.dataset.name+"</p><p><b>Email:</b> "+button.dataset.email+"</p><p><b>Department:</b> "+button.dataset.department+"</p><p><b>Role:</b> "+button.dataset.role+"</p>";openModal("detailModal");};});
+        function exportCSV(){const rows=[["Name","Email","Department","Role"]].concat(cards.filter(function(c){return !c.hidden;}).map(function(c){return [c.dataset.name,c.dataset.email,c.dataset.department,c.dataset.role];}));const csv=rows.map(function(row){return row.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="campusos-faculty-directory.csv";a.click();URL.revokeObjectURL(a.href);showToast("Faculty list downloaded");} document.getElementById("exportFaculty").onclick=exportCSV;document.getElementById("downloadData").onclick=exportCSV;
+        const toggle=document.getElementById("chatbot-toggle"),container=document.getElementById("chatbot-container"),closeBtn=document.getElementById("chatbot-close"),input=document.getElementById("chatbot-input"),sendBtn=document.getElementById("chatbot-send"),messages=document.getElementById("chatbot-messages");let chatHistory=[];toggle.onclick=function(){container.style.display="flex";};closeBtn.onclick=function(){container.style.display="none";};sendBtn.onclick=sendMessage;input.addEventListener("keypress",function(e){if(e.key==="Enter")sendMessage();});
+        async function sendMessage(){let text=input.value.trim();if(!text)return;addMessage(text,"user");input.value="";const botDiv=document.createElement("div");botDiv.className="chat-bot";botDiv.innerHTML='<div class="stream-text"></div>';messages.appendChild(botDiv);const streamText=botDiv.querySelector(".stream-text");messages.scrollTop=messages.scrollHeight;try{const response=await fetch("/chat/groq",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:text,file_name:"data/campusos.txt",session_id:"student"})});const data=await response.json();let fullText=data.answer||"I could not find a response.";let i=0;function stream(){if(i<fullText.length){streamText.textContent=fullText.substring(0,i)+"...";i++;messages.scrollTop=messages.scrollHeight;setTimeout(stream,8);}else{streamText.textContent=fullText;}}stream();}catch(error){streamText.textContent="Unable to connect right now.";} }
+        function addMessage(text,sender){const div=document.createElement("div");div.className=sender==="user"?"chat-user":"chat-bot";div.innerText=text;messages.appendChild(div);messages.scrollTop=messages.scrollHeight;chatHistory.push({sender:sender,text:text});}
+        dragElement(toggle);
+        function dragElement(el){let pos1=0,pos2=0,pos3=0,pos4=0;el.onmousedown=function(e){e.preventDefault();pos3=e.clientX;pos4=e.clientY;document.onmouseup=closeDrag;document.onmousemove=elementDrag;};function elementDrag(e){e.preventDefault();pos1=pos3-e.clientX;pos2=pos4-e.clientY;pos3=e.clientX;pos4=e.clientY;el.style.top=(el.offsetTop-pos2)+"px";el.style.left=(el.offsetLeft-pos1)+"px";el.style.right="auto";el.style.bottom="auto";}function closeDrag(){document.onmouseup=null;document.onmousemove=null;}}
+
+        (function initBidirectionalScroll() {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const elements = document.querySelectorAll('.hero, .stat, .quick-card, .directory, .activity-panel, .faculty-card');
+            elements.forEach(el => el.classList.add('scroll-reveal', 'below'));
+            
+            function updateReveals() {
+                const vh = window.innerHeight;
+                elements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.bottom < 0) {
+                        el.classList.remove('below');
+                        el.classList.add('above');
+                    } else if (rect.top > vh) {
+                        el.classList.add('below');
+                        el.classList.remove('above');
+                    } else {
+                        el.classList.remove('below', 'above');
+                    }
+                });
+            }
+
+            window.addEventListener('scroll', () => requestAnimationFrame(updateReveals), { passive: true });
+            updateReveals();
+        })();
+    </script>
+</body>
+</html>
