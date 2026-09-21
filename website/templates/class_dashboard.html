@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusOS • Class Dashboard</title>
+    <link rel="icon" href="/static/icon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563EB;
+            --secondary: #0F172A;
+            --accent: #38BDF8;
+            --bg: #F8FAFC;
+            --surface: rgba(255, 255, 255, 0.84);
+            --surface-strong: #FFFFFF;
+            --text: #0F172A;
+            --muted: #64748B;
+            --success: #22C55E;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --border: rgba(15, 23, 42, 0.08);
+            --shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 14px;
+            --radius-sm: 10px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0B1220;
+            --surface: rgba(15, 23, 42, 0.9);
+            --surface-strong: #111827;
+            --text: #F8FAFC;
+            --muted: #94A3B8;
+            --border: rgba(255, 255, 255, 0.08);
+            --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 24%),
+                linear-gradient(135deg, #f8fbff 0%, var(--bg) 100%);
+            min-height: 100vh;
+        }
+        [data-theme="dark"] body {
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.14), transparent 24%),
+                linear-gradient(135deg, #0B1220 0%, #0F172A 100%);
+        }
+        a { color: inherit; text-decoration: none; }
+        button, input, select { font: inherit; }
+
+        .topbar {
+            position: sticky; top: 0; z-index: 50;
+            backdrop-filter: blur(20px);
+            background: rgba(248, 250, 252, 0.8);
+            border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+        }
+        [data-theme="dark"] .topbar { background: rgba(15, 23, 42, 0.84); }
+        .topbar-inner {
+            max-width: 1440px; margin: 0 auto; padding: 12px 24px;
+            display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px;
+        }
+        .brand-group { display: flex; align-items: center; gap: 12px; }
+        .brand-mark {
+            width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
+            color: white; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent));
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.24);
+        }
+        .brand-copy strong { display: block; font-size: 0.98rem; }
+        .brand-copy span { color: var(--muted); font-size: 0.84rem; }
+        .nav-links { display: flex; align-items: center; justify-content: center; gap: 6px; overflow-x: auto; }
+        .nav-links::-webkit-scrollbar { display: none; }
+        .nav-link {
+            padding: 8px 12px; border-radius: 999px; color: var(--muted); font-weight: 600; font-size: 0.93rem;
+            white-space: nowrap; transition: all 180ms ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: linear-gradient(135deg, var(--primary), var(--accent)); color: white;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+        }
+        .searchbox {
+            display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 999px;
+            border: 1px solid var(--border); background: var(--surface); max-width: 220px; width: 100%; margin: 0 auto;
+        }
+        .notification-wrapper { position: relative; }
+        .searchbox input { border: 0; outline: 0; background: transparent; width: 100%; color: var(--text); }
+        .topbar-actions { display: flex; align-items: center; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .icon-btn, .action-pill {
+            display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid var(--border);
+            background: var(--surface); color: var(--secondary); box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+            cursor: pointer; transition: transform 180ms ease;
+        }
+        .icon-btn { width: 42px; height: 42px; }
+        .action-pill {
+            padding: 10px 16px; font-weight: 700; font-size: 0.88rem; background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white; border: none;
+        }
+        .action-pill:hover, .icon-btn:hover { transform: translateY(-1px); }
+        .profile-wrapper { position: relative; }
+        .avatar-group {
+            display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border-radius: 999px;
+            background: var(--surface); border: 1px solid var(--border); cursor: pointer;
+        }
+        .profile-menu, .notification-menu {
+            position: absolute; top: calc(100% + 10px); right: 0; min-width: 240px; padding: 12px;
+            border-radius: 18px; background: var(--surface-strong); border: 1px solid var(--border);
+            box-shadow: var(--shadow); display: none; z-index: 80;
+        }
+        .profile-menu.open, .notification-menu.open { display: block; }
+        .profile-menu-header { padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--border); font-weight: 700; }
+        .profile-info-item { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; color: var(--muted); font-size: 0.9rem; }
+        .profile-info-item strong { color: var(--text); }
+        .logout-btn {
+            display: flex; justify-content: center; margin-top: 10px; padding: 10px 12px; border-radius: 999px;
+            background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; font-weight: 700;
+        }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; display: grid; place-items: center; font-weight: 700; }
+        .avatar-meta strong { display: block; font-size: 0.94rem; }
+        .avatar-meta span { color: var(--muted); font-size: 0.8rem; }
+
+        .page-shell { max-width: 1440px; margin: 0 auto; padding: 20px 24px 54px; }
+        .hero-card, .panel, .stats-card, .ai-card, .table-card, .graphcard, .mini-card, .student-card, .timeline-card {
+            background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); border-radius: var(--radius-xl); backdrop-filter: blur(20px);
+        }
+        .hero-card { padding: 28px; position: relative; overflow: hidden; margin-bottom: 18px; }
+        .hero-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(56, 189, 248, 0.04)); pointer-events: none; }
+        .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; position: relative; z-index: 1; flex-wrap: wrap; }
+        .eyebrow {
+            display: inline-flex; padding: 8px 12px; border-radius: 999px; background: rgba(37, 99, 235, 0.12); color: var(--primary);
+            font-size: 0.82rem; font-weight: 700; text-transform: uppercase;
+        }
+        .hero-title { margin: 12px 0 8px; font-size: clamp(1.5rem, 2.4vw, 2.3rem); line-height: 1.1; }
+        .hero-subtitle { color: var(--muted); line-height: 1.6; max-width: 700px; }
+        .hero-badge { padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,0.72); border: 1px solid var(--border); min-width: 190px; }
+        [data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.06); }
+        .hero-badge .label { color: var(--muted); font-size: 0.82rem; text-transform: uppercase; }
+        .hero-badge .value { display: block; margin-top: 4px; font-weight: 700; }
+        .hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-top: 20px; position: relative; z-index: 1; }
+        .hero-grid .mini-card { padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.76); }
+        [data-theme="dark"] .hero-grid .mini-card { background: rgba(255,255,255,0.05); }
+        .hero-grid .mini-card strong { display: block; margin-bottom: 4px; }
+        .hero-grid .mini-card span { color: var(--muted); font-size: 0.88rem; }
+        .role-badge { display: inline-block; margin-top: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(37,99,235,0.1); color: var(--primary); font-weight: 700; font-size: 0.84rem; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 18px; }
+        .stats-card { padding: 20px; display: flex; flex-direction: column; gap: 10px; transition: transform 180ms ease, box-shadow 180ms ease; }
+        .stats-card:hover { transform: translateY(-4px); box-shadow: 0 28px 84px rgba(15, 23, 42, 0.1); }
+        .stats-top { display: flex; justify-content: space-between; align-items: center; }
+        .stats-icon { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: rgba(37,99,235,0.1); color: var(--primary); }
+        .stats-card strong { font-size: 1.65rem; color: var(--secondary); }
+        [data-theme="dark"] .stats-card strong { color: var(--text); }
+        .stats-card p { color: var(--muted); }
+        .stats-trend { font-size: 0.87rem; font-weight: 700; color: var(--success); }
+
+        .section-title-row { display: flex; justify-content: space-between; align-items: center; margin: 24px 0 14px; flex-wrap: wrap; gap: 10px; }
+        .section-title { font-size: 1.12rem; font-weight: 800; color: var(--secondary); }
+        [data-theme="dark"] .section-title { color: var(--text); }
+        .student-section-title { font-size: 1.12rem; font-weight: 800; margin-bottom: 14px; color: var(--secondary); }
+
+        .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+        .ai-card { padding: 22px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden; transition: transform 180ms ease; }
+        .ai-card:hover { transform: translateY(-4px); }
+        .ai-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(37,99,235,0.06), transparent 70%); pointer-events: none; }
+        .ai-card-header { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+        .ai-card h3 { font-size: 1.05rem; }
+        .ai-badge { padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,0.78); color: var(--primary); font-size: 0.82rem; font-weight: 700; }
+        .feature-list { list-style: none; display: grid; gap: 8px; position: relative; z-index: 1; }
+        .feature-list li { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.95rem; }
+        .feature-list li::before { content: "•"; color: var(--primary); }
+        .chip-row { display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+        .chip { padding: 7px 10px; font-size: 0.82rem; border-radius: 999px; background: rgba(37,99,235,0.08); color: var(--primary); font-weight: 700; }
+
+        .content-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 18px; }
+        .panel { padding: 20px; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); }
+        .list-item:first-child { border-top: 0; padding-top: 0; }
+        .status-pill { padding: 6px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+        .status-pill.up-next { background: rgba(34,197,94,0.12); color: var(--success); }
+        .status-pill.in-progress { background: rgba(56,189,248,0.12); color: var(--primary); }
+        .status-pill.delayed { background: rgba(245,158,11,0.12); color: var(--warning); }
+        .metrics-panel { display: grid; gap: 12px; }
+        .mini-stat { padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,0.64); border: 1px solid var(--border); }
+        [data-theme="dark"] .mini-stat { background: rgba(255,255,255,0.04); }
+        .mini-stat strong { display: block; margin-bottom: 4px; }
+        .mini-stat span { color: var(--muted); font-size: 0.9rem; }
+
+        .mgmt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .info-list { display: grid; gap: 10px; }
+        .info-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .info-row span { color: var(--muted); font-size: 0.9rem; }
+        .info-row strong { text-align: right; word-break: break-word; }
+        .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .quick-btn {
+            padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface-strong); color: var(--text);
+            font-weight: 600; cursor: pointer; transition: transform 180ms ease, box-shadow 180ms ease; text-align: center;
+        }
+        .quick-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(15,23,42,0.08); }
+        .quick-btn.primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; }
+
+        .graph-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+        .graphcard {
+            min-height: 320px; height: 360px; padding: 20px; display: flex; flex-direction: column;
+            transition: transform 180ms ease;
+        }
+        .attention-row {
+            display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 18px; align-items: start;
+        }
+        .graphcard:hover { transform: translateY(-4px); }
+        .chart-title { font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--secondary); }
+        [data-theme="dark"] .chart-title { color: var(--text); }
+        .graphcard canvas { width: 100% !important; height: 240px !important; flex: 1; }
+
+        .table-card { padding: 20px; overflow-x: auto; }
+        .table-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .toolbar-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .toolbar-controls input, .toolbar-controls select {
+            padding: 9px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--muted); font-weight: 700; font-size: 0.84rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .risk-badge { display: inline-flex; padding: 6px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; }
+        .risk-badge.high, .risk-badge.defaulter { background: rgba(239,68,68,0.12); color: var(--danger); }
+        .risk-badge.medium, .risk-badge.warning { background: rgba(245,158,11,0.12); color: var(--warning); }
+        .risk-badge.low, .risk-badge.safe { background: rgba(34,197,94,0.12); color: var(--success); }
+
+        .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+        .student-card { background: var(--surface-strong); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-align: center; transition: transform 180ms ease, box-shadow 180ms ease; display: block; color: inherit; }
+        .student-card:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(15,23,42,0.1); }
+        .student-card img { width: 110px; height: 110px; object-fit: cover; border-radius: 50%; margin-bottom: 12px; border: 3px solid rgba(37,99,235,0.2); }
+        .student-card h3 { margin-bottom: 8px; font-size: 1.05rem; color: var(--primary); }
+        .student-card p { margin: 5px 0; color: var(--muted); font-size: 0.88rem; word-break: break-word; }
+        .view-text { margin-top: 10px; font-weight: 700; color: var(--text); font-size: 0.88rem; }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+        .page-pill { min-width: 36px; height: 36px; padding: 0 10px; border-radius: 12px; border: 1px solid var(--border); display: grid; place-items: center; color: var(--muted); background: var(--surface); cursor: pointer; font-weight: 600; }
+        .page-pill.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; }
+        .page-pill:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .timeline-grid { display: grid; gap: 14px; }
+        .activity-scroll { max-height: 280px; overflow-y: auto; padding-right: 6px; }
+        .timeline-item { display: grid; grid-template-columns: 10px 1fr; gap: 12px; align-items: start; }
+        .timeline-dot { width: 10px; height: 10px; margin-top: 8px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 0 0 5px rgba(37,99,235,0.12); }
+        .timeline-content strong { display: block; margin-bottom: 4px; }
+        .timeline-content span { color: var(--muted); font-size: 0.92rem; }
+
+        .message { padding: 14px 16px; border-radius: 14px; margin-bottom: 18px; font-weight: 600; }
+        .message.error { background: rgba(239,68,68,0.12); color: var(--danger); }
+        .message.success { background: rgba(34,197,94,0.12); color: var(--success); }
+        .empty-box { padding: 40px; text-align: center; color: var(--muted); background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); }
+        .section { margin-top: 18px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; border-radius: 999px; font-weight: 700; border: none; cursor: pointer; transition: transform 180ms ease; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-secondary { background: rgba(15,23,42,0.08); color: var(--text); }
+        .btn-dark { background: var(--secondary); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-info { background: var(--accent); color: white; }
+        .btn:hover { transform: translateY(-1px); }
+
+        .form-box, .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 200; background: rgba(15,23,42,0.45); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px;
+        }
+        .form-box.active, .modal-overlay.active { display: flex; }
+        .form-box-inner, .modal-card {
+            width: min(560px, 100%); max-height: 90vh; overflow-y: auto; background: var(--surface-strong); border-radius: var(--radius-xl); padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); position: relative;
+        }
+        .form-box h2, .modal-card h2 { margin-bottom: 6px; }
+        .form-subtitle, .modal-sub { color: var(--muted); margin-bottom: 14px; font-size: 0.9rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-weight: 600; }
+        .form-group input, .form-group select {
+            padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); outline: none;
+        }
+        .form-actions { margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap; }
+        .modal-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: grid; place-items: center; }
+        .link-box { background: rgba(15,23,42,0.04); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 0.88rem; word-break: break-all; margin-bottom: 12px; }
+        .qr-box { width: 180px; height: 180px; margin: 16px auto; border-radius: 16px; border: 1px dashed var(--border); display: grid; place-items: center; background: rgba(255,255,255,0.5); overflow: hidden; }
+        .qr-box img { width: 100%; height: 100%; object-fit: contain; }
+        .share-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+        .footer { text-align: center; font-size: 0.78rem; color: var(--muted); padding: 20px; opacity: 0.7; }
+
+        @media (max-width: 1024px) {
+            .topbar-inner { grid-template-columns: 1fr; }
+            .nav-links { justify-content: flex-start; }
+            .content-grid, .mgmt-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .page-shell { padding: 16px; }
+            .hero-top { flex-direction: column; }
+            .graph-grid { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: 1fr 1fr; }
+        }
+        /* CampusOS design system: shared with the staff and faculty workspaces. */
+        :root {
+            --primary:#3867f4; --secondary:#172033; --accent:#7656df; --bg:#f7f8fb;
+            --surface:#fff; --surface-strong:#fff; --text:#172033; --muted:#6b7280;
+            --success:#1f9d6a; --warning:#d98a35; --danger:#d85165; --border:#e8ebf1;
+            --shadow:0 5px 16px rgba(24,39,78,.035); --radius-xl:16px; --radius-lg:14px; --radius-md:12px; --radius-sm:9px;
+        }
+        [data-theme="dark"] { --bg:#10182c; --surface:#172139; --surface-strong:#172139; --text:#f4f6fc; --muted:#9da8be; --border:#293550; --shadow:0 12px 28px rgba(0,0,0,.2); }
+        body { font-family:"DM Sans",sans-serif; background:var(--bg); font-size:14px; }
+        [data-theme="dark"] body { background:#10182c; }
+        h1,h2,h3,.brand-copy strong,.section-title,.chart-title,.stats-card strong,.hero-badge .value,.profile-menu-header { font-family:"Plus Jakarta Sans",sans-serif; letter-spacing:-.025em; }
+        .topbar { height:76px; background:rgba(255,255,255,.88); border-bottom-color:rgba(225,229,237,.9); }
+        [data-theme="dark"] .topbar { background:rgba(23,33,57,.9); border-bottom-color:#293550; }
+        .topbar-inner { max-width:1380px; height:100%; padding:0 28px; gap:26px; }
+        .brand-group { gap:10px; }.brand-mark { width:32px; height:32px; border-radius:10px; background:linear-gradient(135deg,#486ff6,#795ce4); box-shadow:0 7px 16px rgba(67,101,240,.28); }
+        .brand-copy strong { font-size:17px; font-weight:800; }.brand-copy span { color:#8a93a6; font-size:11px; }
+        .nav-links { justify-content:flex-start; gap:3px; }.nav-link { padding:9px 12px; border-radius:8px; color:#768096; font-size:13px; }.nav-link:hover,.nav-link.active { color:var(--primary); background:#eef2ff; box-shadow:none; } [data-theme="dark"] .nav-link:hover,[data-theme="dark"] .nav-link.active { background:#253456; color:#b9c7ff; }
+        .topbar-actions { gap:7px; flex-wrap:nowrap; }.searchbox { min-height:38px; max-width:285px; padding:0 12px; gap:8px; border-color:#e2e6ed; border-radius:9px; background:#f8f9fc; font-size:12px; }.searchbox:focus-within { border-color:#aabcfb; background:#fff; box-shadow:0 0 0 3px #eaf0ff; } [data-theme="dark"] .searchbox { background:#202c48; border-color:#34415d; }
+        .icon-btn,.action-pill { border:1px solid transparent; border-radius:9px; background:transparent; box-shadow:none; }.icon-btn { width:38px; height:38px; }.icon-btn:hover { transform:none; background:#f1f3f7; } [data-theme="dark"] .icon-btn:hover { background:#25314d; }
+        .action-pill { min-height:38px; padding:0 14px; background:var(--primary); box-shadow:0 6px 14px rgba(56,103,244,.22); font-size:12px; }.action-pill:hover { background:#2858e7; }
+        .avatar-group { gap:8px; padding:4px 6px 4px 4px; border:0; border-radius:10px; background:transparent; }.avatar-group:hover { background:#f3f5f8; }.avatar { width:32px; height:32px; border-radius:10px; background:linear-gradient(135deg,#dbe6ff,#c7b9fc); color:#45518b; font-size:12px; font-weight:800; }.avatar-meta strong { font-size:12px; }
+        .profile-menu,.notification-menu { padding:8px; border-color:rgba(222,226,235,.95); border-radius:13px; box-shadow:0 18px 45px rgba(27,39,73,.15); }.profile-menu-header { padding:8px 8px 10px; font-size:13px; }.profile-info-item { padding:9px 8px; border-radius:8px; font-size:12px; }.profile-info-item:hover { background:#f3f5f9; }.notification-item { padding:10px 8px; font-size:12px; }.logout-btn { margin:8px 0 0; padding:9px; border-radius:8px; background:#fff0f1; color:var(--danger); font-size:12px; }
+        .page-shell { max-width:1380px; padding:30px 28px 50px; }.hero-card,.panel,.stats-card,.ai-card,.table-card,.graphcard,.mini-card,.student-card,.timeline-card { border-color:var(--border); box-shadow:var(--shadow); backdrop-filter:none; }
+        .hero-card { min-height:220px; padding:34px 38px; border:0; border-radius:19px; background:linear-gradient(112deg,#18213d 0%,#263b75 62%,#4758a8 100%); color:#fff; box-shadow:0 18px 35px rgba(22,31,59,.17); }.hero-card::before { inset:auto -68px -120px auto; width:360px; height:360px; border:48px solid rgba(255,255,255,.07); border-radius:50%; background:none; }.hero-top { align-items:flex-end; }.eyebrow { padding:0; border-radius:0; color:#bac9ff; background:none; font-size:11px; letter-spacing:.1em; }.hero-title { margin:10px 0 8px; font:700 clamp(25px,3vw,35px)/1.2 "Plus Jakarta Sans",sans-serif; letter-spacing:-.04em; }.hero-subtitle { color:#d4ddf7; font-size:14px; }.role-badge { margin-top:13px; padding:6px 9px; color:#e2e8ff; background:rgba(255,255,255,.12); font-size:10px; letter-spacing:.04em; }.hero-badge { min-width:190px; padding:15px 17px; border-color:rgba(255,255,255,.15); border-radius:13px; background:rgba(255,255,255,.1); backdrop-filter:blur(10px); }.hero-badge .label { color:#bac8ec; font-size:10px; font-weight:700; }.hero-badge .value { color:#fff; font-size:14px; }.hero-grid { gap:11px; margin-top:20px; }.hero-grid .mini-card { padding:13px; border:1px solid rgba(255,255,255,.1); border-radius:11px; background:rgba(255,255,255,.08); }.hero-grid .mini-card strong { font-size:13px; }.hero-grid .mini-card span { color:#cbd5ee; font-size:11px; }
+        .stats-grid { gap:15px; margin-bottom:19px; }.stats-card { min-height:118px; padding:19px; gap:8px; border-radius:14px; }.stats-card:hover,.ai-card:hover,.graphcard:hover,.student-card:hover { transform:translateY(-3px); box-shadow:0 12px 24px rgba(31,55,111,.08); }.stats-top p { color:#747f94; font-size:12px; font-weight:700; }.stats-card strong { font-size:27px; letter-spacing:-.06em; }.stats-icon { width:30px; height:30px; border-radius:8px; background:#eef2ff; color:#5670d8; font-size:13px; }.stats-trend { color:#99a2b3; font-size:11px; font-weight:500; }
+        .section-title-row { margin:28px 0 14px; }.section-title,.student-section-title { font-size:17px; }.section { margin-top:24px; }.ai-grid,.content-grid,.mgmt-grid,.graph-grid,.attention-row { gap:15px; }.ai-card { padding:20px; border-radius:14px; gap:15px; }.ai-card::before { background:linear-gradient(135deg,#f5f7ff,transparent 70%); }.ai-card h3 { font:700 14px "Plus Jakarta Sans",sans-serif; }.ai-badge,.chip { padding:5px 8px; border-radius:20px; background:#f0edff; color:#6252ae; font-size:10px; }.feature-list li { color:#69758b; font-size:12px; }.feature-list li::before { color:#6c72df; }
+        .panel,.table-card { padding:20px; border-radius:16px; }.panel .section-title-row { margin:0 0 15px; }.mini-stat { padding:12px 13px; border-color:#e8ebf0; border-radius:10px; background:#fbfcfe; }.mini-stat strong { font-size:12px; }.mini-stat span { font-size:11px; }.quick-btn { padding:11px 12px; border-color:#e6e9f0; border-radius:9px; background:#fbfcfe; color:#59647a; font-size:12px; }.quick-btn.primary { background:var(--primary); }.quick-btn:hover { transform:translateY(-2px); border-color:#d4dcf7; box-shadow:0 10px 20px rgba(31,55,111,.07); }
+        .graphcard { min-height:340px; height:340px; padding:19px; border-radius:14px; }.chart-title { font-size:14px; }.table-toolbar { margin-bottom:14px; }.toolbar-controls input,.toolbar-controls select { height:37px; padding:0 10px; border-color:#e1e5ec; border-radius:8px; background:#fbfcfe; font-size:12px; } table { font-size:12px; } th,td { padding:11px 10px; border-bottom-color:#eef0f4; } th { color:#8b94a7; font-size:10px; }.risk-badge,.status-pill { padding:5px 8px; font-size:10px; }
+        .student-grid { gap:12px; }.student-card { padding:16px; border-radius:12px; }.student-card img { width:72px; height:72px; margin-bottom:9px; border-width:2px; }.student-card h3 { color:#263047; font:700 13px "Plus Jakarta Sans",sans-serif; }.student-card p,.view-text { font-size:11px; }.view-text { color:var(--primary); }.page-pill { width:33px; min-width:33px; height:33px; border-radius:8px; font-size:11px; }.page-pill.active { background:var(--primary); }
+        .activity-scroll { max-height:375px; padding-right:8px; scrollbar-width:thin; scrollbar-color:#cbd3e3 transparent; }.timeline-grid { gap:0; }.timeline-item { position:relative; grid-template-columns:29px 1fr; gap:10px; padding:12px 0; }.timeline-item:not(:last-child)::after { content:""; position:absolute; left:14px; top:42px; bottom:-1px; width:1px; background:#e6eaf1; }.timeline-dot { z-index:1; width:29px; height:29px; margin:0; background:#edf1ff; box-shadow:none; }.timeline-content strong { color:#263047; font-size:12px; }.timeline-content span { font-size:11px; }
+        .message { padding:13px 15px; border-radius:10px; font-size:13px; }.empty-box { border-radius:12px; }.btn { min-height:37px; padding:0 13px; border-radius:9px; font-size:12px; }.btn-primary { background:var(--primary); }.btn-secondary { background:#f1f3f7; color:#536078; }.footer { color:#8c95a7; font-size:11px; }.form-box-inner,.modal-card { border-radius:17px; box-shadow:0 25px 75px rgba(10,18,45,.28); }
+        #chatbot-toggle { width:50px; height:50px; bottom:22px; right:22px; background:linear-gradient(135deg,#436cf4,#7559dd); box-shadow:0 12px 25px rgba(60,91,221,.35); animation:none; } #chatbot-container { bottom:82px; right:22px; border:1px solid #e4e7ef; border-radius:16px; background:#fff; box-shadow:0 20px 50px rgba(21,31,61,.22); }
+        @media(max-width:1100px) { .topbar-inner { padding:0 20px; }.nav-links { display:none; }.page-shell { padding-left:20px; padding-right:20px; } }
+        @media(max-width:760px) { .topbar { height:66px; }.topbar-inner { padding:0 16px; }.brand-copy span,.avatar-meta,.topbar-actions > .searchbox { display:none; }.action-pill { width:38px; padding:0; font-size:0; }.action-pill::before { content:"+"; font-size:19px; }.page-shell { padding:20px 16px 40px; }.hero-card { min-height:230px; padding:27px 23px; }.hero-top { align-items:flex-start; }.hero-badge { width:100%; }.hero-grid { grid-template-columns:1fr 1fr; }.stats-grid { gap:10px; }.stats-card { min-height:105px; padding:14px; }.stats-card strong { font-size:23px; }.section-title-row { margin:22px 0 12px; }.content-grid,.mgmt-grid,.attention-row { grid-template-columns:1fr; } }
+        
+        /* Shared footer */
+        .campusos-footer { margin-top:28px; padding:0 0 8px; border-top:1px solid #e8ebf1; }
+        .campusos-footer-inner { max-width:1380px; margin:0 auto; padding:18px 28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; color:#8c95a7; font-size:11px; }
+        .campusos-footer-brand { font:800 13px "Plus Jakarta Sans",sans-serif; color:#59647c; }
+        .campusos-footer-links { display:flex; gap:16px; flex-wrap:wrap; }
+        .campusos-footer-links a { color:#8c95a7; text-decoration:none; }
+        .campusos-footer-links a:hover { color:var(--primary); }
+
+        .scroll-reveal { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform, opacity, filter; }
+        .scroll-reveal.below { opacity: 0; transform: translateY(40px) scale(0.96); filter: blur(6px); }
+        .scroll-reveal.above { opacity: 0; transform: translateY(-40px) scale(0.96); filter: blur(6px); }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand-group">
+                <div class="brand-mark">C</div>
+                <div class="brand-copy">
+                    <strong>CampusOS</strong>
+                    <span>Classroom intelligence</span>
+                </div>
+            </div>
+
+            <nav class="nav-links" aria-label="Primary navigation">
+                <a class="nav-link active" href="{% if current_role in ['teacher', 'hod'] %}/dashboard{% else %}/student/dashboard{% endif %}" onclick="setActiveNav(this)">Dashboard</a>
+                <a class="nav-link" href="#analytics" onclick="setActiveNav(this)">Schedule</a>
+                <a class="nav-link" href="#students" onclick="setActiveNav(this)">Student</a>
+                <a class="nav-link" href="#quick-actions-panel" onclick="setActiveNav(this)">Actions</a>
+                <a class="nav-link" href="#analytics" onclick="setActiveNav(this)">Analytics</a>
+            </nav>
+
+            <div class="topbar-actions">
+                <div class="searchbox" role="search">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-subtle);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="Search students, PRN, email" id="globalSearchInput" />
+                </div>
+                <button class="action-pill" type="button" onclick="openInviteModal()">Invite Student</button>
+                <div class="notification-wrapper">
+                    <button class="icon-btn" type="button" id="notificationToggle" onclick="toggleNotificationMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+                    <div class="notification-menu" id="notificationMenu">
+                        <div class="profile-menu-header">Notifications</div>
+                        <div class="notification-item">Attendance submitted for the latest session.</div>
+                        <div class="notification-item">2 students are approaching the threshold.</div>
+                        <div class="notification-item">A new AI recommendation is ready.</div>
+                    </div>
+                </div>
+                <button class="icon-btn" type="button" id="themeToggle" onclick="toggleTheme()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+                <div class="profile-wrapper">
+                    <button class="avatar-group" type="button" id="profileToggle" onclick="toggleProfileMenu()">
+                        <div class="avatar">{{ current_user_name[0] | upper if current_user_name else (college.creator[0] | upper if (college and college.creator) else 'F') }}</div>
+                        <div class="avatar-meta">
+                            <strong>{{ current_user_name or (college.creator if college else None) or 'Staff' }}</strong>
+                        </div>
+                    </button>
+                    <div class="profile-menu" id="profileMenu">
+                        <div class="profile-menu-header">My Account</div>
+                        <div class="profile-info-item"><span>Name</span><strong>{{ current_user_name or (college.creator if college else None) or 'Faculty' }}</strong></div>
+                        <div class="profile-info-item"><span>Role</span><strong>{{ current_role | title }}</strong></div>
+                        <div class="profile-info-item"><span>College</span><strong>{{ (college.college_name if college else 'Campus College') }}</strong></div>
+                        {% if current_role == 'hod' %}
+                        <a class="profile-info-item" href="/staff"><span>Manage Staff</span><strong>↗</strong></a>
+                        {% endif %}
+                        <a class="profile-info-item" href="/dashboard"><span>Dashboard</span><strong>↗</strong></a>
+                        <a class="logout-btn" href="/logout">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-shell" id="overview">
+        {% if error_message %}
+        <div class="message error">{{ error_message }}</div>
+        {% endif %}
+        {% if success_message %}
+        <div class="message success">{{ success_message }}</div>
+        {% endif %}
+
+        <section class="hero-card">
+            <div class="hero-top">
+                <div>
+                    <span class="eyebrow">Live classroom overview</span>
+                    <h1 class="hero-title">{{ classroom.classroom_name | default('Classroom') }}</h1>
+                    <p class="hero-subtitle">
+                        {{ college.college_name | default('Campus College') }} • {{ classroom.department | default('Department') }} • {{ classroom.semester | default('Semester') }}
+                    </p>
+                    <div class="role-badge">Role: {{ current_role | upper }}</div>
+                </div>
+                <div class="hero-badge">
+                    <div class="label">Current status</div>
+                    <div class="value" id="liveStatus">Healthy attendance</div>
+                </div>
+            </div>
+
+            <div class="hero-grid">
+                <div class="mini-card">
+                    <strong>{{ classroom.class_teacher or 'Not assigned' }}</strong>
+                    <span>Class Teacher</span>
+                </div>
+                <div class="mini-card">
+                    <strong>{{ classroom.id }}</strong>
+                    <span>Classroom ID</span>
+                </div>
+                <div class="mini-card">
+                    <strong>{{ classroom.camera_input | default('Camera') }}</strong>
+                    <span>Camera Source</span>
+                </div>
+                <div class="mini-card">
+                    <strong id="currentDate">—</strong>
+                    <span>Current Date</span>
+                </div>
+                <div class="mini-card">
+                    <strong>{% if overall_percent >= 75 %}On track{% else %}Needs attention{% endif %}</strong>
+                    <span>Today's Status</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats-grid" aria-label="Key metrics">
+            <article class="stats-card">
+                <div class="stats-top">
+                    <div>
+                        <p>Total Students</p>
+                        <strong>{{ student_count }}</strong>
+                    </div>
+                    <div class="stats-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                </div>
+                <div class="stats-trend">+{{ student_count }} enrolled</div>
+            </article>
+            <article class="stats-card">
+                <div class="stats-top">
+                    <div>
+                        <p>Attendance %</p>
+                        <strong>{{ overall_percent }}%</strong>
+                    </div>
+                    <div class="stats-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+                </div>
+                <div class="stats-trend">{% if overall_percent >= 75 %}Healthy{% else %}Watchlist{% endif %}</div>
+            </article>
+            <article class="stats-card">
+                <div class="stats-top">
+                    <div>
+                        <p>Defaulters</p>
+                        <strong>{{ defualters_count }}</strong>
+                    </div>
+                    <div class="stats-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                </div>
+                <div class="stats-trend">Threshold {{ classroom.defualter | default(75) }}%</div>
+            </article>
+            <article class="stats-card">
+                <div class="stats-top">
+                    <div>
+                        <p>Today's Classes</p>
+                        <strong>{{ ((classroom.id % 3) + 1) if classroom.id is defined else 1 }}</strong>
+                    </div>
+                    <div class="stats-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                </div>
+                <div class="stats-trend">Live schedule</div>
+            </article>
+        </section>
+
+        <section class="section" id="ai-workspace">
+            <div class="section-title-row">
+                <h2 class="section-title">AI Workspace</h2>
+            </div>
+            <div class="ai-grid">
+                <article class="ai-card">
+                    <div class="ai-card-header">
+                        <h3>Learning Agent</h3>
+                        <span class="ai-badge">Assist</span>
+                    </div>
+                    <ul class="feature-list">
+                        <li>Summaries for each class session</li>
+                        <li>Topic insights and study guidance</li>
+                        <li>Adaptive reminders for students</li>
+                    </ul>
+                    <div class="chip-row">
+                        <a href="/agent/study/?role=teacher&return_to={{ request.url.path | default('/class_dashboard') }}&name={{ current_user_name | default('Faculty') | urlencode }}&email={{ current_user_email | default('') | urlencode }}&classroom_id={{ classroom.id if classroom else 1 }}" class="chip" style="text-decoration:none;">Open Agent ↗</a>
+                        <span class="chip">Study plans</span>
+                    </div>
+                </article>
+                <article class="ai-card">
+                    <div class="ai-card-header">
+                        <h3>Career Agent</h3>
+                        <span class="ai-badge">Guide</span>
+                    </div>
+                    <ul class="feature-list">
+                        <li>Skill gap recommendations</li>
+                        <li>Placement readiness insights</li>
+                        <li>Career milestones by semester</li>
+                    </ul>
+                    <div class="chip-row">
+                        <a href="/agent/career/?role=teacher&return_to={{ request.url.path | default('/class_dashboard') }}&name={{ current_user_name | default('Faculty') | urlencode }}&email={{ current_user_email | default('') | urlencode }}" class="chip" style="text-decoration:none;">Open Agent ↗</a>
+                        <span class="chip">Roadmaps</span>
+                    </div>
+                </article>
+                <article class="ai-card">
+                    <div class="ai-card-header">
+                        <h3>Attendance Agent</h3>
+                        <span class="ai-badge">Monitor</span>
+                    </div>
+                    <ul class="feature-list">
+                        <li>Risk flags based on attendance patterns</li>
+                        <li>Priority recommendations</li>
+                        <li>Instant summaries for teachers</li>
+                    </ul>
+                    <div class="chip-row">
+                        <a href="/agent/attendance/?role=teacher&return_to={{ request.url.path | default('/class_dashboard') }}&name={{ current_user_name | default('Faculty') | urlencode }}&email={{ current_user_email | default('') | urlencode }}&college_id={{ college.id if college else 1 }}&classroom_id={{ classroom.id if classroom else 1 }}" class="chip" style="text-decoration:none;">Open Agent ↗</a>
+                        <span class="chip">Risk tracking</span>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="content-grid">
+                <article class="panel">
+                    <div class="section-title-row">
+                        <h2 class="section-title">Today's Schedule</h2>
+                        <a href="#management" class="btn btn-secondary">Manage</a>
+                    </div>
+                    <div class="timeline-grid">
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <strong>09:00 • Attendance check-in</strong>
+                                <span>Review live presence for the morning class block</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <strong>11:00 • Review session</strong>
+                                <span>Discuss attendance trends and interventions</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <strong>15:00 • Weekly report</strong>
+                                <span>Export learning insights and student actions</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <article class="panel">
+                    <div class="section-title-row">
+                        <h2 class="section-title">AI Recommendations</h2>
+                    </div>
+                    <div class="metrics-panel">
+                        <div class="mini-stat">
+                            <strong>Focus class</strong>
+                            <span>Support {{ weak_students[0].name if weak_students else 'students' }} with a short follow-up note.</span>
+                        </div>
+                        <div class="mini-stat">
+                            <strong>Best nudge</strong>
+                            <span>Prompt a personalized reminder for low-attendance sessions.</span>
+                        </div>
+                        <div class="mini-stat">
+                            <strong>Next action</strong>
+                            <span>Share the latest attendance summary with the department.</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+
+        <section class="section" id="analytics">
+            <div class="section-title-row">
+                <h2 class="section-title">Analytics</h2>
+            </div>
+            <div class="graph-grid">
+                <article class="graphcard">
+                    <div class="chart-title">Overall Attendance</div>
+                    <canvas id="overallChart"></canvas>
+                </article>
+                <article class="graphcard">
+                    <div class="chart-title">Daily Trend</div>
+                    <canvas id="trendChart"></canvas>
+                </article>
+                <article class="graphcard">
+                    <div class="chart-title">Performance</div>
+                    <canvas id="slotChart"></canvas>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="attention-row">
+                <article class="panel">
+                    <div class="section-title-row">
+                        <h2 class="section-title" id="quick-actions-panel">Quick Actions</h2>
+                    </div>
+                    <div class="quick-actions">
+                        <button class="quick-btn primary" type="button" onclick="toggleStudentForm()">Add Student</button>
+                        <button class="quick-btn" type="button" onclick="toggleDefaulterForm()">Set Threshold</button>
+                        <button class="quick-btn" type="button" onclick="window.location.href='/classroom/{{ classroom.id }}/export/csv'">Export CSV</button>
+                        <button class="quick-btn" type="button">Generate Report</button>
+                        {% if current_role == 'hod' %}
+                        <button class="quick-btn" type="button" onclick="toggleTeacherForm()">Set Teacher</button>
+                        {% endif %}
+                    </div>
+                </article>
+                <div class="table-card">
+                    <div class="section-title-row">
+                        <h2 class="section-title">Students Requiring Attention</h2>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Attendance %</th>
+                                <th>Risk</th>
+                                <th>Recommendation</th>
+                                <th>Profile</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in weak_students %}
+                            <tr>
+                                <td>{{ student.name }}</td>
+                                <td>{{ student.percent }}%</td>
+                                <td><span class="risk-badge {% if student.percent < 70 %}high{% else %}medium{% endif %}">{{ 'Defaulter' if student.percent < 60 else 'Warning' }}</span></td>
+                                <td>Follow-up note and reminder</td>
+                                <td><a href="/student/view/{{ classroom.id }}/{{ student.prn }}" class="btn btn-secondary">Open</a></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="empty-box">No students require attention right now.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="students">
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <h2 class="section-title">Student Directory</h2>
+                    <div class="toolbar-controls">
+                        <input type="text" id="directorySearch" placeholder="Search students" />
+                        <select id="riskFilter">
+                            <option value="all">All Students</option>
+                            <option value="safe">Safe Students</option>
+                            <option value="warning">Warning Students</option>
+                            <option value="defaulter">Defaulters</option>
+                        </select>
+                        <select id="sortFilter">
+                            <option value="name-asc">Name A-Z</option>
+                            <option value="name-desc">Name Z-A</option>
+                            <option value="attendance-desc">Attendance High-Low</option>
+                            <option value="attendance-asc">Attendance Low-High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="student-grid" id="studentDirectoryGrid">
+                    {% for student in students %}
+                    <a href="/student/view/{{ classroom.id }}/{{ student.prn }}" class="student-card"
+                        data-name="{{ student.student_name | lower }}"
+                        data-prn="{{ student.prn | lower }}"
+                        data-email="{{ student.email | lower }}"
+                        data-risk="{% if student.defaulter == 'YES' %}defaulter{% elif student.attendance_percent is defined and student.attendance_percent < 75 %}warning{% else %}safe{% endif %}"
+                        data-attendance="{{ student.attendance_percent | default(0) }}">
+                        <img src="{{ student.img_url }}" alt="{{ student.student_name }}">
+                        <h3>{{ student.student_name | title }}</h3>
+                        <p><strong>PRN:</strong> {{ student.prn }}</p>
+                        <p><strong>Email:</strong> {{ student.email or '-' }}</p>
+                        <p><strong>Attendance:</strong> {{ student.attendance_percent | default('—') }}{% if student.attendance_percent is defined %}%{% endif %}</p>
+                        <span class="risk-badge {% if student.defaulter == 'YES' %}defaulter{% elif student.attendance_percent is defined and student.attendance_percent < 75 %}warning{% else %}safe{% endif %}">
+                            {% if student.defaulter == 'YES' %}Defaulter{% elif student.attendance_percent is defined and student.attendance_percent < 75 %}Warning{% else %}Safe{% endif %}
+                        </span>
+                        <p class="view-text">View Profile</p>
+                    </a>
+                    {% endfor %}
+                </div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="graphcard">
+                <div class="section-title-row">
+                    <h2 class="section-title">Recent Activity</h2>
+                </div>
+                <div class="activity-scroll">
+                    <div class="timeline-grid">
+                        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><strong>Attendance submitted</strong><span>Current class summary automatically updated.</span></div></div>
+                        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><strong>Student joined</strong><span>New entry recorded through the classroom flow.</span></div></div>
+                        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><strong>CSV export completed</strong><span>Generated for the latest attendance snapshot.</span></div></div>
+                        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><strong>Teacher changed</strong><span>Updated via the management modal.</span></div></div>
+                        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><strong>Threshold updated</strong><span>Risk rules adjusted for the class.</span></div></div>
+                        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><strong>AI recommendation generated</strong><span>New guidance prepared for follow-up.</span></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="graph-grid">
+                <article class="graphcard">
+                    <div class="chart-title">Weekly</div>
+                    <canvas id="weeklyChart"></canvas>
+                </article>
+                <article class="graphcard">
+                    <div class="chart-title">Monthly</div>
+                    <canvas id="monthlyChart"></canvas>
+                </article>
+                <article class="graphcard">
+                    <div class="chart-title">Attendance Comparison</div>
+                    <canvas id="comparisonChart"></canvas>
+                </article>
+            </div>
+        </section>
+
+        <footer class="campusos-footer">
+            <div class="campusos-footer-inner">
+                <span class="campusos-footer-brand">CampusOS</span>
+                <div class="campusos-footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Support</a>
+                </div>
+                <span>© 2026 CampusOS</span>
+            </div>
+        </footer>
+    </main>
+
+    <div class="modal-overlay" id="inviteModal">
+        <div class="modal-card">
+            <button class="modal-close" type="button" onclick="closeInviteModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            <h2>Invite Student</h2>
+            <p class="modal-sub">Share a polished join link with students for this classroom.</p>
+            <label class="form-group" style="display: flex; gap: 8px;">
+                <span>Student Join Link</span>
+                <div class="link-box" id="studentJoinLink">{{ student_join_link }}</div>
+            </label>
+            <div class="form-actions">
+                <button class="btn btn-primary" type="button" onclick="copyText('studentJoinLink')">Copy Link</button>
+                <button class="btn btn-secondary" type="button" onclick="window.location.reload()">Generate New Link</button>
+            </div>
+            <div class="qr-box">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ student_join_link }}" alt="QR code" />
+            </div>
+            <div class="share-row">
+                <button class="btn btn-dark" type="button" onclick="copyText('studentJoinLink', this)">Share</button>
+                <button class="btn btn-secondary" type="button" onclick="downloadQr()">Download QR</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-box" id="studentFormBox">
+        <div class="form-box-inner">
+            <h2>Add Student</h2>
+            <p class="form-subtitle">You can add a student manually here, or send the join link above directly.</p>
+            <form action="/classroom/{{ classroom.id }}/add-student" method="post" enctype="multipart/form-data">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="student_name">Student Name</label>
+                        <input type="text" id="student_name" name="student_name" placeholder="Enter student name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="prn">PRN</label>
+                        <input type="text" id="prn" name="prn" placeholder="Enter student PRN" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Enter student email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="text" id="password" name="password" placeholder="Enter student password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="image">Student Image</label>
+                        <input type="file" id="image" name="image" accept="image/*" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">Save Student</button>
+                    <button type="button" class="btn btn-secondary" onclick="toggleStudentForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="form-box" id="defaulterFormBox">
+        <div class="form-box-inner">
+            <h2>Set Defaulter Threshold</h2>
+            <p class="form-subtitle">Adjust the attendance threshold used to flag students.</p>
+            <form action="/classroom/{{ classroom.id }}/set-defaulter" method="post">
+                <div class="form-group">
+                    <label>Threshold (%)</label>
+                    <input type="number" name="defaulter" value="{{ classroom.defualter | default(75) }}" min="0" max="100" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">Save Threshold</button>
+                    <button type="button" class="btn btn-secondary" onclick="toggleDefaulterForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if current_role == 'hod' %}
+    <div class="form-box" id="teacherFormBox">
+        <div class="form-box-inner">
+            <h2>Set Class Teacher</h2>
+            <p class="form-subtitle">Choose the teacher assigned to this classroom.</p>
+            <form action="/classroom/{{ classroom.id }}/set-teacher" method="post">
+                <div class="form-group">
+                    <label>Class Teacher</label>
+                    <select name="class_teacher" required>
+                        <option value="">-- Select Teacher --</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.teacher_name }}" {% if teacher.teacher_name == classroom.class_teacher %}selected{% endif %}>{{ teacher.teacher_name }} ({{ teacher.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">Save Teacher</button>
+                    <button type="button" class="btn btn-secondary" onclick="toggleTeacherForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        function toggleStudentForm() {
+            document.getElementById('studentFormBox').classList.toggle('active');
+        }
+        function toggleDefaulterForm() {
+            document.getElementById('defaulterFormBox').classList.toggle('active');
+        }
+        function toggleTeacherForm() {
+            document.getElementById('teacherFormBox').classList.toggle('active');
+        }
+        function openInviteModal() {
+            document.getElementById('inviteModal').classList.add('active');
+        }
+        function closeInviteModal() {
+            document.getElementById('inviteModal').classList.remove('active');
+        }
+        function copyText(id, button) {
+            const el = document.getElementById(id);
+            const text = el ? el.innerText.trim() : '';
+            navigator.clipboard.writeText(text).then(() => {
+                const targetButton = button || null;
+                if (targetButton) {
+                    const old = targetButton.textContent;
+                    targetButton.textContent = 'Copied';
+                    setTimeout(() => targetButton.textContent = old, 1200);
+                }
+            });
+        }
+        function downloadQr() {
+            const qrImage = document.querySelector('.qr-box img');
+            if (!qrImage) return;
+            const link = document.createElement('a');
+            link.href = qrImage.getAttribute('src');
+            link.download = 'student-join-qr.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+        }
+        function setActiveNav(link) {
+            document.querySelectorAll('.nav-link').forEach((item) => item.classList.remove('active'));
+            link.classList.add('active');
+        }
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profileMenu');
+            menu.classList.toggle('open');
+        }
+        function closeProfileMenu() {
+            document.getElementById('profileMenu').classList.remove('open');
+        }
+        function toggleNotificationMenu() {
+            const menu = document.getElementById('notificationMenu');
+            menu.classList.toggle('open');
+        }
+        function closeNotificationMenu() {
+            document.getElementById('notificationMenu').classList.remove('open');
+        }
+        const now = new Date();
+        document.getElementById('currentDate').textContent = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        document.getElementById('liveStatus').textContent = {{ overall_percent }} >= 75 ? 'Healthy attendance' : 'Needs attention';
+
+        const trendLabels = {{ trend_labels | safe }};
+        const trendValues = {{ trend_values | safe }};
+        const slotLabels = {{ slot_labels | safe }};
+        const slotValues = {{ slot_values | safe }};
+
+        const overallCtx = document.getElementById('overallChart');
+        new Chart(overallCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Present', 'Absent'],
+                datasets: [{ data: [{{ overall_percent }}, 100 - {{ overall_percent }}], backgroundColor: ['#2563EB', '#E2E8F0'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        const trendCtx = document.getElementById('trendChart');
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [{ label: 'Attendance %', data: trendValues, borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,0.16)', tension: 0.35, fill: true }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        const slotCtx = document.getElementById('slotChart');
+        new Chart(slotCtx, {
+            type: 'bar',
+            data: {
+                labels: slotLabels,
+                datasets: [{ label: 'Slot Performance', data: slotValues, backgroundColor: ['#2563EB', '#38BDF8', '#F59E0B', '#22C55E'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        const weeklyCtx = document.getElementById('weeklyChart');
+        new Chart(weeklyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                datasets: [{ label: 'Weekly', data: [82, 74, 88, 79, 90], backgroundColor: '#2563EB' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        const monthlyCtx = document.getElementById('monthlyChart');
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: ['W1', 'W2', 'W3', 'W4'],
+                datasets: [{ label: 'Monthly', data: [74, 78, 82, 86], borderColor: '#38BDF8', backgroundColor: 'rgba(56,189,248,0.18)', tension: 0.35, fill: true }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        const comparisonCtx = document.getElementById('comparisonChart');
+        new Chart(comparisonCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Attendance', 'Engagement', 'Consistency', 'Participation'],
+                datasets: [{ label: 'Current', data: [{{ overall_percent }}, 80, 76, 84], backgroundColor: 'rgba(37,99,235,0.2)', borderColor: '#2563EB' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        const cards = Array.from(document.querySelectorAll('#studentDirectoryGrid .student-card'));
+        const container = document.getElementById('studentDirectoryGrid');
+        const pagination = document.getElementById('pagination');
+        const searchInput = document.getElementById('directorySearch');
+        const globalSearchInput = document.getElementById('globalSearchInput');
+        const riskFilter = document.getElementById('riskFilter');
+        const sortFilter = document.getElementById('sortFilter');
+        const pageSize = 6;
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-box';
+        emptyState.textContent = 'No student records match the current search.';
+        emptyState.style.display = 'none';
+        container.appendChild(emptyState);
+        let filteredCards = [...cards];
+
+        function applyDirectoryFilters() {
+            const query = (searchInput.value || '').trim().toLowerCase();
+            const risk = riskFilter.value;
+            const sort = sortFilter.value;
+
+            filteredCards = cards.filter((card) => {
+                const name = (card.dataset.name || '').trim();
+                const prn = (card.dataset.prn || '').trim();
+                const email = (card.dataset.email || '').trim();
+                const riskValue = card.dataset.risk || 'safe';
+                const matchesQuery = !query || name.includes(query) || prn.includes(query) || email.includes(query);
+                const matchesRisk = risk === 'all' || riskValue === risk;
+                return matchesQuery && matchesRisk;
+            });
+
+            filteredCards.sort((a, b) => {
+                const attendanceA = parseFloat(a.dataset.attendance || 0);
+                const attendanceB = parseFloat(b.dataset.attendance || 0);
+                const nameA = (a.querySelector('h3')?.textContent || '').trim().toLowerCase();
+                const nameB = (b.querySelector('h3')?.textContent || '').trim().toLowerCase();
+                if (sort === 'name-desc') return nameB.localeCompare(nameA);
+                if (sort === 'attendance-desc') return attendanceB - attendanceA;
+                if (sort === 'attendance-asc') return attendanceA - attendanceB;
+                return nameA.localeCompare(nameB);
+            });
+
+            renderDirectory();
+        }
+
+        function renderDirectory() {
+            const totalPages = Math.max(1, Math.ceil(filteredCards.length / pageSize));
+            const currentPage = Math.min(parseInt(pagination.dataset.currentPage || '1', 10), totalPages);
+            pagination.dataset.currentPage = currentPage;
+
+            cards.forEach((card) => {
+                card.style.display = 'none';
+            });
+            emptyState.style.display = 'none';
+
+            if (filteredCards.length === 0) {
+                emptyState.style.display = 'block';
+                pagination.innerHTML = '';
+                return;
+            }
+
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageCards = filteredCards.slice(start, end);
+            pageCards.forEach((card) => {
+                card.style.display = 'block';
+            });
+
+            pagination.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'page-pill' + (i === currentPage ? ' active' : '');
+                button.textContent = i;
+                button.addEventListener('click', () => {
+                    pagination.dataset.currentPage = i;
+                    renderDirectory();
+                });
+                pagination.appendChild(button);
+            }
+        }
+
+        searchInput.addEventListener('input', () => {
+            if (globalSearchInput) globalSearchInput.value = searchInput.value;
+            applyDirectoryFilters();
+        });
+        if (globalSearchInput) {
+            globalSearchInput.addEventListener('input', () => {
+                searchInput.value = globalSearchInput.value;
+                applyDirectoryFilters();
+            });
+        }
+        riskFilter.addEventListener('change', applyDirectoryFilters);
+        sortFilter.addEventListener('change', applyDirectoryFilters);
+        applyDirectoryFilters();
+
+        document.addEventListener('click', (event) => {
+            if (event.target.classList.contains('modal-overlay')) {
+                closeInviteModal();
+            }
+            if (!event.target.closest('.profile-wrapper')) {
+                closeProfileMenu();
+            }
+            if (!event.target.closest('.notification-wrapper')) {
+                closeNotificationMenu();
+            }
+        });
+
+        (function initBidirectionalScroll() {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const elements = document.querySelectorAll('.hero-card, .stats-card, .ai-card, .panel, .graphcard, .table-card, .student-card');
+            elements.forEach(el => el.classList.add('scroll-reveal', 'below'));
+            
+            function updateReveals() {
+                const vh = window.innerHeight;
+                elements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.bottom < 0) {
+                        el.classList.remove('below');
+                        el.classList.add('above');
+                    } else if (rect.top > vh) {
+                        el.classList.add('below');
+                        el.classList.remove('above');
+                    } else {
+                        el.classList.remove('below', 'above');
+                    }
+                });
+            }
+
+            window.addEventListener('scroll', () => requestAnimationFrame(updateReveals), { passive: true });
+            updateReveals();
+        })();
+    </script>
+</body>
+</html>
