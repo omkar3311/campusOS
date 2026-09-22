@@ -1,0 +1,79 @@
+  ──────
+   🎓 CampusOS StudyAgent — SaaS Product Overview 
+  ### 💡 One-Line Elevator Pitch
+
+  │ "Turn massive textbooks, lecture slides, and notes into an interactive, zero-hallucination academic
+  │ assistant."
+  ──────
+  ### 🚨 The Problem It Solves
+
+  1. Information Overload: Students drown in 500+ page textbook PDFs, messy lecture slides, and unorganized
+  notes.
+  2. Generic & Hallucinating AI: Standard chatbots give generic answers and hallucinate concepts not taught in
+  the student's curriculum.
+  3. Lack of Structure: Students struggle to build structured revision timetables, solve complex homework
+  problems step-by-step, and test themselves before exams.
+  ──────
+  ### ✨ The Solution & Core SaaS Features (Video Highlights)
+  #### 1. 📁 Universal Multi-Document Knowledge Base
+  • Upload Anything: Drag & drop multiple textbooks, lecture slides, research papers, or syllabus documents (PDF,
+  TXT, MD).
+  • Cross-Document Intelligence: Ask complex questions that synthesize information across all uploaded files at
+  once.
+  • Full Control: Add, replace, or delete study materials in real-time.
+  #### 2. ⚡ 3-in-1 Specialized Academic Engines
+
+  • 📅 Study Planner: Automatically creates structured 3-day, 5-day, or multi-week revision timetables and exam
+  roadmaps based on course material.
+  • 📝 Assignment & Problem Helper: Breaks down difficult questions with step-by-step conceptual walkthroughs
+  and structured solutions.
+  • 🎯 Quiz & MCQ Generator: Generates instant practice quizzes, multiple-choice questions, and self-assessments
+  with answer keys and explanations.
+
+  #### 3. 🛡️ Strict Academic Grounding (Zero Hallucination)
+
+  • Responses are 100% grounded strictly in the student’s uploaded study materials using deep semantic retrieval
+  and cross-encoder reranking.
+  • If a topic isn't in the uploaded notes, it explicitly informs the student rather than guessing.
+
+  #### 4. 💬 Gemini-Style Multi-Session Workspace
+
+  • Persistent Sessions: Start new chats for different subjects (e.g., Database Systems, Algorithms, Operating
+  Systems) without losing previous conversations.
+  • Instant Search & Organization: Filter past study sessions, rename topics, and export complete study notes as
+  Markdown files.
+
+  #### 5. 🚀 Modern, Fluid User Experience
+
+  • Live Streaming: Fast, natural token-streaming response animation with interactive controls (Copy, Read Aloud,
+  Export Note).
+  • Dark / Light Theme: Modern workspace designed for late-night study sessions.
+  ──────
+  ### 🎬 Recommended 60-Second Video Script / Flow
+
+   Time        | Scene                                         | Talking Point / Voiceover
+  -------------|-----------------------------------------------|------------------------------------------------
+   0:00 - 0:10 | Visual: Dragging heavy textbook PDFs into the | "Struggling to study from hundreds of pages of
+               | dropzone.                                     | textbooks and lecture slides? Meet
+               |                                               | StudyAgent."
+   0:10 - 0:25 | Visual: Document indexing + asking a question | "Upload your syllabus, lecture notes, and
+               | across multiple files.                        | textbooks. StudyAgent indexes everything to
+               |                                               | give you answers strictly grounded in your
+               |                                               | actual course materials—with zero
+               |                                               | hallucinations."
+   0:25 - 0:45 | Visual: Switching between Study Planner,      | "Need a 5-day revision timetable? Done. Stuck
+               | Assignment Helper, and Quiz Generator.        | on a tricky assignment problem? Get step-by-
+               |                                               | step academic explanations. Want to test
+               |                                               | yourself before an exam? Generate customized
+               |                                               | practice quizzes in seconds."
+   0:45 - 0:55 | Visual: Sidebar sessions list & exporting     | "Manage separate study sessions for every
+               | markdown notes.                               | subject, revisit past conversations, and
+               |                                               | export your study notes with one click."
+   0:55 - 1:00 | Visual: Logo & CTA.                           | "StudyAgent — Your intelligent academic
+               |                                               | copilot. Master your coursework faster."
+  ──────
+  ### 🎯 Key Target Audience
+
+  • College & University Students: Engineering, Medicine, Law, Business, and Science majors.
+  • Exam Candidates: Standardized test takers (GRE, GATE, USMLE, Bar Exam, etc.).
+  • Educators & Tutors: Instantly creating quizzes, revision guides, and assignment solutions.
