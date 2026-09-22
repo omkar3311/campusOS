@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusOS StudyIQ — Enterprise AI Academic Intelligence & Exam Engine</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Markdown Parser (Marked.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       CampusOS Unified Global Header Bar
+       ========================================================================== -->
+  <header class="campusos-global-header">
+    <div class="campusos-brand">
+      <a href="/" class="campusos-logo-mark">
+        <span class="campusos-icon">CO</span>
+        <span class="campusos-name">CampusOS</span>
+      </a>
+      <span class="campusos-divider">/</span>
+      <span class="campusos-agent-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>Learning Agent</span>
+    </div>
+    
+    <nav class="campusos-agent-nav" aria-label="CampusOS Agents">
+      <a href="/agent/study/" class="agent-nav-link active" data-agent="study">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg><span>Learning</span>
+      </a>
+      <a href="/agent/career/" class="agent-nav-link" data-agent="career">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg><span>Career</span>
+      </a>
+      <a href="/agent/attendance/" class="agent-nav-link" data-agent="attendance">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><span>Attendance</span>
+      </a>
+    </nav>
+
+    <div class="campusos-user-dock">
+      <div class="campusos-status-pill">
+        <span class="pulse-dot"></span>
+        <span class="status-label">Online</span>
+      </div>
+      <div class="campusos-user-badge">
+        <span class="user-role-tag" id="userRoleTag">Student</span>
+        <span class="user-display-name" id="userDisplayName">Academic</span>
+      </div>
+      <a id="backToPortalBtn" href="/main_dashboard" class="campusos-exit-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span id="backToPortalText">Portal</span>
+      </a>
+    </div>
+  </header>
+
+<div class="app-container">
+  
+  <!-- ==========================================================================
+       SIDEBAR NAVIGATION
+       ========================================================================== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-badge">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          <line x1="9" y1="7" x2="15" y2="7"></line>
+          <line x1="9" y1="11" x2="15" y2="11"></line>
+        </svg>
+      </div>
+      <div class="brand-info">
+        <div class="brand-title">
+          StudyIQ <span class="badge-pro">AI</span>
+        </div>
+        <div class="brand-subtitle">Academic Intelligence</div>
+      </div>
+    </div>
+
+    <!-- Active Study Document Selector -->
+    <div class="active-resume-card">
+      <div class="active-resume-label">
+        <span>Active Study Material</span>
+        <span id="sidebar-doc-count" style="color: var(--primary-light);">0 Loaded</span>
+      </div>
+      <div class="resume-select-wrapper">
+        <select id="sidebar-doc-select" aria-label="Select Active Study Material">
+          <option value="">No Documents Loaded</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Core Intelligence</div>
+      
+      <a href="#" class="nav-item active" data-view="chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>AI Study Copilot</span>
+        <span class="nav-badge">6 Modes</span>
+      </a>
+
+      <a href="#" class="nav-item" data-view="documents">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span>Knowledge Base & Files</span>
+      </a>
+
+      <a href="#" class="nav-item" data-view="planner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>Exam Revision Planner</span>
+      </a>
+
+      <div class="nav-section-title">Concept Mastery & Testing</div>
+
+      <a href="#" class="nav-item" data-view="quiz">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span>Smart Quiz Studio</span>
+      </a>
+
+      <a href="#" class="nav-item" data-view="flashcards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span>Key Concepts & Cards</span>
+      </a>
+
+      <a href="#" class="nav-item" data-view="audit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 6v6l4 2"></path>
+        </svg>
+        <span>Vector Chunks & Audit</span>
+      </a>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <button class="btn-upload-trigger" id="btn-open-upload">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span>Upload Study Material</span>
+      </button>
+
+      <div class="system-status-indicator">
+        <div>
+          <span class="status-dot"></span>
+          <span>Vector DB & LLM Online</span>
+        </div>
+        <span style="font-size: 10px; color: var(--text-dim);">Qwen 27B</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==========================================================================
+       MAIN CONTENT CANVAS
+       ========================================================================== -->
+  <main class="main-canvas">
+    
+    <!-- Top Navigation Header -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="page-headline">
+          <div class="page-title" id="topbar-title">AI Study Copilot & Academic Assistant</div>
+          <div class="page-desc" id="topbar-desc">Ask questions, explain complex theories, or generate revision roadmaps</div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <span id="top-doc-badge" class="tag-badge detected" style="display: none;">No File Loaded</span>
+        
+        <button class="btn btn-demo" id="btn-load-sample" title="Load sample Computer Science & AI Fundamentals guide">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Load Demo Textbook</span>
+        </button>
+
+        <button class="btn btn-secondary" id="btn-topbar-upload">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>Upload Files</span>
+        </button>
+
+        <button class="btn btn-secondary" id="btn-reset-chat" title="Clear conversation memory">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          <span>Reset Session</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ========================================================================
+         VIEW 1: Interactive Chat Copilot
+         ======================================================================== -->
+    <div class="view-container active" id="view-chat">
+      <div class="chat-layout">
+        
+        <!-- Chat History Scroll View -->
+        <div class="chat-history" id="chat-history-container">
+          <!-- Dynamically populated welcome screen or messages -->
+        </div>
+
+        <!-- Chat Input Dock -->
+        <div class="chat-dock">
+          
+          <!-- Mode Selector Pills -->
+          <div class="mode-pills-bar">
+            <button class="mode-pill active" data-mode="auto"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Auto-Infer</button>
+            <button class="mode-pill" data-mode="concept"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 3 7h8c1-2 3-4 3-7a7 7 0 0 0-7-7z"></path><line x1="9" y1="21" x2="15" y2="21"></line></svg> Concept Explainer</button>
+            <button class="mode-pill" data-mode="plan"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Revision Planner</button>
+            <button class="mode-pill" data-mode="assignment"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Assignment Helper</button>
+            <button class="mode-pill" data-mode="quiz"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Practice Quiz</button>
+            <button class="mode-pill" data-mode="cram"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Exam Crammer</button>
+          </div>
+
+          <!-- Collapsible Focus Topic / Chapter Drawer -->
+          <div class="jd-drawer" id="chat-topic-drawer">
+            <div class="jd-drawer-header">
+              <span>Attached Focus Chapter / Topic (Optional for Chapter Deep-Dives)</span>
+              <button class="btn-sample-jd" id="btn-chat-sample-topic">+ Sample Topic</button>
+            </div>
+            <textarea id="chat-topic-textarea" placeholder="Paste the target chapter name, syllabus section, or assignment prompt here..."></textarea>
+          </div>
+
+          <!-- Main Input Field -->
+          <div class="chat-input-box">
+            <textarea id="chat-input-textarea" rows="1" placeholder="Ask anything about the uploaded study materials, textbook, or syllabus..."></textarea>
+            
+            <div class="chat-input-actions">
+              <button class="btn-toggle-jd" id="btn-toggle-chat-topic" title="Attach Focus Chapter / Topic">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <span>Attach Topic</span>
+              </button>
+
+              <button class="btn-send" id="btn-chat-send" title="Send Question (Enter)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 2: Knowledge Base & Files
+         ======================================================================== -->
+    <div class="view-container" id="view-documents">
+      <div class="subview-wrapper">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h3>Study Materials & Knowledge Base</h3>
+              <p class="panel-sub">Upload textbooks, lecture notes, syllabus PDFs, and problem sets</p>
+            </div>
+            <button class="btn btn-primary" onclick="openUploadModal()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>Upload New Document</span>
+            </button>
+          </div>
+
+          <!-- Dropzone in View -->
+          <div class="dropzone-area" id="view-dropzone" style="margin-bottom: 24px;" onclick="openUploadModal()">
+            <div class="dropzone-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <div>
+              <strong style="color: var(--text-main); font-size: 14px;">Drag & Drop Study Documents Here, or Click to Browse</strong>
+              <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Supported formats: PDF, DOCX, TXT, MD • Auto-Chunked & Vector Indexed</div>
+            </div>
+          </div>
+
+          <!-- Documents Table -->
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Document Name</th>
+                  <th>Size</th>
+                  <th>Vector Chunks</th>
+                  <th>Uploaded At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="documents-table-body">
+                <!-- Dynamically populated document rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 3: Study Planner & Roadmap
+         ======================================================================== -->
+    <div class="view-container" id="view-planner">
+      <div class="subview-wrapper">
+        <div class="planner-grid">
+          
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3>Exam Revision & Schedule Generator</h3>
+                <p class="panel-sub">Custom day-by-day learning roadmap grounded in active study material</p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Focus Subject / Topic</label>
+              <input type="text" class="form-control" id="planner-topic-input" placeholder="e.g. Database Normalization & SQL Queries or Machine Learning Algorithms">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px;">
+              <div class="form-group">
+                <label class="form-label">Days to Exam / Deadline</label>
+                <input type="number" class="form-control" id="planner-days-input" value="7" min="1" max="60">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Daily Study Hours</label>
+                <input type="number" class="form-control" id="planner-hours-input" value="3" min="1" max="12">
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-generate-planner" style="width: 100%; margin-top: 20px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span>Generate Revision Roadmap</span>
+            </button>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3>Grounded Revision Plan</h3>
+                <p class="panel-sub">Structured milestones and self-test checkpoints</p>
+              </div>
+            </div>
+            <div class="planner-output" id="planner-output-content">
+              <div class="empty-placeholder">
+                <p>Click "Generate Revision Roadmap" to synthesize a daily plan based on your uploaded material.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 4: Smart Quiz Studio
+         ======================================================================== -->
+    <div class="view-container" id="view-quiz">
+      <div class="subview-wrapper">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h3>Smart Practice Quiz & MCQ Studio</h3>
+              <p class="panel-sub">Generate interactive practice questions strictly grounded in your textbook</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" class="form-control" id="quiz-topic-input" placeholder="Optional topic filter..." style="width: 220px;">
+              <button class="btn btn-primary" id="btn-generate-quiz">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Generate Practice Quiz</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="quiz-content-area" id="quiz-content-area">
+            <div class="empty-placeholder">
+              <p>Click "Generate Practice Quiz" to extract multiple-choice questions from the active document.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 5: Key Concepts & Flashcards
+         ======================================================================== -->
+    <div class="view-container" id="view-flashcards">
+      <div class="subview-wrapper">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h3>Key Concepts & Definition Flashcards</h3>
+              <p class="panel-sub">Essential terms, formulas, theorems, and exam tips</p>
+            </div>
+            <button class="btn btn-primary" id="btn-generate-flashcards">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              <span>Extract Key Concepts Deck</span>
+            </button>
+          </div>
+
+          <div class="flashcards-grid" id="flashcards-grid">
+            <div class="empty-placeholder" style="grid-column: 1 / -1;">
+              <p>Click "Extract Key Concepts Deck" to generate flashcards from your uploaded material.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 6: Vector Chunks & Audit
+         ======================================================================== -->
+    <div class="view-container" id="view-audit">
+      <div class="subview-wrapper">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h3>Vector Store Index & Chunks Telemetry</h3>
+              <p class="panel-sub">Inspect semantic retrieval parameters and chunk distribution</p>
+            </div>
+          </div>
+
+          <div class="audit-metrics-grid" id="audit-metrics-grid">
+            <div class="metric-card">
+              <div class="metric-val" id="audit-total-docs">0</div>
+              <div class="metric-lbl">Indexed Documents</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="audit-total-chunks">0</div>
+              <div class="metric-lbl">Total Vector Chunks</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="audit-embedding-model">all-MiniLM-L6-v2</div>
+              <div class="metric-lbl">Embedding Model</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val">Qwen 3.6 27B</div>
+              <div class="metric-lbl">Primary Inference LLM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ==========================================================================
+     UPLOAD MODAL
+     ========================================================================== -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Upload Study Documents</h3>
+      <button class="btn-close-modal" id="btn-close-upload" onclick="closeUploadModal()">&times;</button>
+    </div>
+
+    <p style="font-size: 13px; color: var(--text-muted);">
+      Upload study materials, textbooks, syllabus, or lecture notes in PDF, TXT, DOCX, or MD format. Documents will be chunked, embedded, and stored into vector memory.
+    </p>
+
+    <div class="dropzone-area" id="dropzone-input">
+      <div class="dropzone-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </div>
+      <div>
+        <strong style="color: var(--text-main); font-size: 13px;">Drag & Drop files here, or click to browse</strong>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Supports PDF, DOCX, TXT, MD files</div>
+      </div>
+      <input type="file" id="file-upload-element" multiple accept=".pdf,.docx,.txt,.md,.json,.csv" style="display: none;">
+    </div>
+
+    <!-- Selected files preview list -->
+    <div class="file-list-preview" id="upload-file-list"></div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+      <button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+      <button class="btn btn-primary" id="btn-submit-upload">Index Documents</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Toast Container -->
+<div class="toast-stack" id="toast-stack"></div>
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Application Script -->
+<script src="static/js/app.js"></script>
+
+</body>
+</html>
