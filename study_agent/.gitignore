@@ -8,7 +8,7 @@ dist/
 *.egg-info/
 
 data/
-
+uv.lock
 .venv/
 env/
 venv/
