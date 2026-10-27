@@ -1,0 +1,153 @@
+ CampusOS ResumeIQ (v2.0) is an Enterprise AI Resume Intelligence, ATS Scoring, Placement Eligibility & Career
+  Advisory SaaS Platform. Built for job seekers, university placement cells, and talent acquisition teams, it
+  combines deterministic ATS auditing with a LangChain multi-agent AI copilot grounded in vector memory.
+  ### 🌟 Core Value Proposition & Elevator Pitch
+  │ "Stop guessing why resumes get rejected. CampusOS ResumeIQ turns static resumes into dynamic career
+  │ intelligence: delivering sub-second ATS scores, semantic job description matching, automated placement
+  │ eligibility verdicts, and 6 specialized AI copilots grounded in candidate facts with enterprise-grade
+  │ guardrails."
+  ──────
+  ## 2. Technical Architecture & Engine Specs
+   Layer                 | Technology & Implementation                          | Code Reference
+  -----------------------|------------------------------------------------------|-------------------------------
+   Frontend & UI         | Responsive dark-mode SaaS dashboard with real-time   | index.html
+                         | radial gauges, skill pill tagging, multi-view tabs,  |
+                         | and markdown rendering.                              |
+   Backend API           | High-performance FastAPI server with modular REST    | app.py
+                         | endpoints for chat, batch upload, ATS audit, JD      |
+                         | match, and leaderboards.                             |
+   AI Agent Orchestrator | LangChain multi-agent framework with middleware retry    | agent.py
+                         | retry logic and strict tool limits.                  |
+   LLM Gateway           | Hybrid routing with Groq LLaMA-3.3-70B and Gemini    | llm_gateway.py
+                         | Flash fallbacks.                                         |
+   Vector Database & RAG | ChromaDB with HuggingFace MiniLM embeddings (all-MiniLM- | store.py, loader.py
+                         | L6-v2) for grounded semantic chunk retrieval.            |
+   Scoring & NLP Engine  | 60/40 Weighted scoring combining normalized skill set    | ats_utils.py, jd_utils.py
+                         | coverage and TF-IDF Cosine Similarity.                   |
+   Enterprise Guardrails | Prompt injection filters, PII auto-redaction             | guardrails.py
+                         | (email/phone/SSN), input length limits, and anti-        |
+                         | hallucination policies.                                  |
+   Dual Memory System    | Long-term candidate Profile Memory + conversational      | memory.py
+                         | Session Memory summarization.                            |
+  ──────
+  ## 3. Core SaaS Features to Highlight in the Video
+
+                                   ┌─────────────────────────────────────────┐
+                                   │       CampusOS ResumeIQ Platform        │
+                                   └────────────────────┬────────────────────┘
+                                                        │
+             ┌──────────────────────────┬───────────────┴───────────────┬──────────────────────────┐
+             ▼                          ▼                               ▼                          ▼
+    ┌──────────────────┐      ┌──────────────────┐            ┌──────────────────┐       ┌──────────────────┐
+    │   ATS Scanner    │      │  Semantic Match  │            │ 6 AI Sub-Agents  │       │ Multi-Candidate  │
+    │  & Audit Engine  │      │ & Eligibility    │            │    Copilots      │       │   Leaderboard    │
+    ├──────────────────┤      ├──────────────────┤            ├──────────────────┤       ├──────────────────┤
+    │• 0-100 Gauge     │      │• 60/40 Weighted  │            │1. Resume Review  │       │• Batch Ranking   │
+    │• Letter Grades   │      │• Skill Tag Diff  │            │2. Placement Auto │       │• Recruiter Grid  │
+    │• Section Audit   │      │• Eligibility Tag │            │3. Skill Gap Map  │       │• Benchmark Match │
+    │• PII & Structure │      │• Live Feedback   │            │4. Interview Prep │       │• Candidate Filter│
+    └──────────────────┘      └──────────────────┘            │5. DSA & Coding   │       └──────────────────┘
+                                                              │6. Career Traject │
+                                                              └──────────────────┘
+
+  ### 1. Instant ATS Scanner & Structural Audit
+
+  • Real-time 0–100 ATS Score Gauge with letter grades (A+ to D).
+  • Automated checklist: Contact verification, graduation year detection, project count & depth.
+  • Identifies missing critical sections (Skills, Projects, Experience, Objective, Education).
+  • "Ask AI to Fix" one-click prompt integration.
+
+  ### 2. Semantic JD Matching & Placement Eligibility
+
+  • Side-by-side Job Description input with built-in presets (Full Stack SDE, AI/ML Engineer, Frontend).
+  • Automated Eligibility Verdict: Eligible (>=70%), Borderline (40–69%), Not Eligible (<40%).
+  • Visual Skill Tags: Green (Matched on Resume) vs Red (Missing / Priority Learning Gap).
+  • Comprehensive natural language feedback and recommendations.
+
+  ### 3. The 6 Specialized AI Copilots
+
+  1. Resume Review Agent: In-depth audit and impact-driven bullet point enhancements.
+  2. Placement Eligibility Checker: Source-of-truth criteria validation against company requirements.
+  3. Skill Gap Analyzer: Prioritized roadmap to close missing technical competencies.
+  4. Interview Preparation Studio: Project-grounded technical questions and STAR-method behavioral scenarios.
+  5. Coding & DSA Practice Engine: 4-week structured algorithmic mastery roadmap (LeetCode patterns).
+  6. Career Trajectory & Role Advisor: Long-term career paths, transitions, and growth analysis.
+
+  ### 4. Multi-Candidate Leaderboard (Enterprise / Recruiter View)
+
+  • Batch upload multiple PDF/DOCX resumes.
+  • Instantly ranks all candidates against any target JD or ATS benchmark.
+  • Displays coverage percentages, matched vs missing counts, and ranked leaderboard tables.
+
+  ### 5. Enterprise Guardrails & Anti-Hallucination
+
+  • Strict grounding in vector chunks — never invents resume facts.
+  • Automatic PII redaction on output to protect candidate privacy.
+  • Robust prompt injection mitigation.
+  ──────
+  ## 4. SaaS Product Video Script & Storyboard (2-Minute Format)
+
+  ### Act 1: The Problem & The Hook (0:00 – 0:20)
+
+  • Visual: Fast-paced montage showing candidate resumes getting lost in Applicant Tracking Systems and
+  recruiters sorting through stacks of unranked PDFs.
+  • Voiceover: "75% of qualified resumes get filtered out before a recruiter ever sees them. Students don't know
+  why they're rejected, and placement teams spend hundreds of hours manually screening candidates. What if you
+  had an enterprise AI engine that analyzes, audits, and coaches every resume in seconds?"
+  • On-Screen Text: Tired of the ATS Black Box? Meet CampusOS ResumeIQ.
+  ──────
+  ### Act 2: Dashboard & 1-Click ATS Audit (0:20 – 0:45)
+
+  • Visual: Screen recording showing the sleek dark-mode UI. Click "Load Demo Resume" or drag-and-drop a PDF.
+  Navigate to the ATS Scanner & Audit view. The radial gauge animates to score 85 (Grade A). Show detected
+  contact badges, graduation year, and section architecture.
+  • Voiceover: "Welcome to CampusOS ResumeIQ. Simply drop in any PDF or Word resume. Instantly, our
+  deterministic ATS engine runs a deep structural audit — scoring contact info, graduation timelines, project
+  depth, and essential sections with zero guesswork."
+  • On-Screen Text: Comprehensive ATS Audit • Real-Time Scoring • Section Architecture
+  ──────
+  ### Act 3: Semantic JD Match & Placement Eligibility (0:45 – 1:10)
+
+  • Visual: Switch to JD Match & Eligibility view. Click "+ Sample SDE JD" and hit "Run Semantic Match Analysis".
+  Show the eligibility badge update to "Eligible (78%)", alongside color-coded green matched skill chips and red
+  missing skill chips.
+  • Voiceover: "Targeting a specific role? Paste any Job Description. ResumeIQ uses hybrid semantic TF-IDF and
+  normalized skill mapping to calculate placement eligibility. You see exactly what matched, what's missing, and
+  what to learn next."
+  • On-Screen Text: Hybrid Semantic Matching • Automated Placement Eligibility • Instant Skill Gap Analysis
+  ──────
+  ### Act 4: The 6 AI Copilots & Interview Studio (1:10 – 1:35)
+
+  • Visual: Switch to AI Copilot & Chat. Show mode switching pills (1. Review, 2. Eligibility, 3. Skill Gap, 4.
+  Interview Prep, 5. Coding Roadmap, 6. Career). Click the Interview Studio prompt chip: "Generate deep-dive
+  technical questions about my project architecture." The AI responds with structured questions referencing
+  actual resume projects.
+  • Voiceover: "Need more than just a score? ResumeIQ deploys 6 specialized sub-agents powered by ChromaDB
+  vector memory. Generate project-grounded interview questions, build custom 4-week DSA coding roadmaps, and
+  receive career advisory — strictly fact-checked with zero hallucinations."
+  • On-Screen Text: 6 Specialized Sub-Agents • Vector-Grounded RAG • Interactive Interview Studio
+  ──────
+  ### Act 5: Multi-Candidate Leaderboard & Enterprise Power (1:35 – 1:55)
+
+  • Visual: Switch to Candidate Leaderboard. Show a list of candidates ranked #1 to #5 with score bars, matched
+  skill counts, and instant comparison against the job description. Highlight the PII redaction and enterprise
+  guardrails.
+  • Voiceover: "For colleges and recruitment teams, our multi-candidate leaderboard ranks entire candidate pools
+  against job benchmarks in a single click — protected by enterprise guardrails and automated PII redaction."
+  • On-Screen Text: Multi-Candidate Ranking • University Placement Ready • Enterprise Guardrails & Privacy
+  ──────
+  ### Act 6: Call to Action (1:55 – 2:10)
+
+  • Visual: High-energy showcase of the logo, full dashboard view, and CTA button.
+  • Voiceover: "Accelerate placements. Optimize every application. Experience CampusOS ResumeIQ today."
+  • On-Screen Text: CampusOS ResumeIQ — Elevate Your Career Intelligence.
+  ──────
+  ## 5. Production & Recording Checklist
+
+  [ ] Launch Server: Run uv run uvicorn web.app:app --reload --port 8000 (or python -m web.app) to start the web
+  app at http://localhost:8000.
+  [ ] Resolution: Record in 1920x1080 (16:9) or 4K with browser zoom at 100% or 110% for crisp typography.
+  [ ] Audio/Music: Upbeat, modern tech/corporate SaaS background track (lo-fi tech / electronic ambient at -22dB
+  under voiceover).
+  [ ] Captions/Motion Graphics: Use smooth zoom-ins on the radial score gauge, green/red skill pill tags, and
+  leaderboard ranking badges.
