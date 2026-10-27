@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusOS ResumeIQ — Enterprise AI Resume Intelligence & Placement Engine</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Markdown Parser (Marked.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- SaaS Stylesheet -->
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       CampusOS Unified Global Header Bar
+       ========================================================================== -->
+  <header class="campusos-global-header">
+    <div class="campusos-brand">
+      <a href="/" class="campusos-logo-mark">
+        <span class="campusos-icon">CO</span>
+        <span class="campusos-name">CampusOS</span>
+      </a>
+      <span class="campusos-divider">/</span>
+      <span class="campusos-agent-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>Career Agent</span>
+    </div>
+    
+    <nav class="campusos-agent-nav" aria-label="CampusOS Agents">
+      <a href="/agent/study/" class="agent-nav-link" data-agent="study">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg><span>Learning</span>
+      </a>
+      <a href="/agent/career/" class="agent-nav-link active" data-agent="career">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg><span>Career</span>
+      </a>
+      <a href="/agent/attendance/" class="agent-nav-link" data-agent="attendance">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><span>Attendance</span>
+      </a>
+    </nav>
+
+    <div class="campusos-user-dock">
+      <div class="campusos-status-pill">
+        <span class="pulse-dot"></span>
+        <span class="status-label">Online</span>
+      </div>
+      <div class="campusos-user-badge">
+        <span class="user-role-tag" id="userRoleTag">Student</span>
+        <span class="user-display-name" id="userDisplayName">Candidate</span>
+      </div>
+      <a id="backToPortalBtn" href="/main_dashboard" class="campusos-exit-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span id="backToPortalText">Portal</span>
+      </a>
+    </div>
+  </header>
+
+<div class="app-container">
+  
+  <!-- ==========================================================================
+       SIDEBAR NAVIGATION
+       ========================================================================== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-badge">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <path d="M12 18v-6"></path>
+          <path d="M9 15l3 3 3-3"></path>
+        </svg>
+      </div>
+      <div class="brand-info">
+        <div class="brand-title">
+          ResumeIQ <span class="badge-pro">AI</span>
+        </div>
+        <div class="brand-subtitle">Career Intelligence</div>
+      </div>
+    </div>
+
+    <!-- Active Resume Selector -->
+    <div class="active-resume-card">
+      <div class="active-resume-label">
+        <span>Active Candidate</span>
+        <span id="sidebar-resume-count" style="color: var(--primary-light);">0 Loaded</span>
+      </div>
+      <div class="resume-select-wrapper">
+        <select id="sidebar-resume-select" aria-label="Select Active Resume">
+          <option value="">No Resumes Loaded</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Core Intelligence</div>
+      
+      <a href="#" class="nav-item active" data-view="chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>AI Copilot & Chat</span>
+        <span class="nav-badge">6 Agents</span>
+      </a>
+
+      <a href="#" class="nav-item" data-view="ats">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 6v6l4 2"></path>
+        </svg>
+        <span>ATS Scanner & Audit</span>
+      </a>
+
+      <a href="#" class="nav-item" data-view="jd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          <path d="M9 14l2 2 4-4"></path>
+        </svg>
+        <span>JD Match & Eligibility</span>
+      </a>
+
+      <div class="nav-section-title">Career Acceleration</div>
+
+      <a href="#" class="nav-item" data-view="interview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
+        <span>Interview Studio</span>
+      </a>
+
+      <a href="#" class="nav-item" data-view="coding">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <span>Coding & DSA Roadmap</span>
+      </a>
+
+      <a href="#" class="nav-item" data-view="career">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span>Career Trajectory</span>
+      </a>
+
+      <div class="nav-section-title">Multi-Candidate Analytics</div>
+
+      <a href="#" class="nav-item" data-view="compare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span>Candidate Leaderboard</span>
+      </a>
+
+      <a href="#" class="nav-item" data-view="profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>Resume Memory & Raw</span>
+      </a>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <button class="btn-upload-trigger" id="btn-open-upload">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span>Upload Resumes</span>
+      </button>
+
+      <div class="system-status-indicator">
+        <div>
+          <span class="status-dot"></span>
+          <span>Vector DB & LLM Online</span>
+        </div>
+        <span style="font-size: 10px; color: var(--text-dim);">v2.0</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==========================================================================
+       MAIN CONTENT CANVAS
+       ========================================================================== -->
+  <main class="main-canvas">
+    
+    <!-- Top Navigation Header -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="page-headline">
+          <div class="page-title" id="topbar-title">AI Copilot & Multi-Agent Assistant</div>
+          <div class="page-desc" id="topbar-desc">Ask any question, audit content, or prepare for interviews</div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <span id="top-resume-badge" class="tag-badge detected" style="display: none;">omkar2.pdf</span>
+        
+        <button class="btn btn-demo" id="btn-load-sample" title="Load sample omkar2.pdf resume">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <span>Load Demo Resume</span>
+        </button>
+
+        <button class="btn btn-secondary" id="btn-reset-chat" title="Clear conversation memory">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          <span>Reset Session</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ========================================================================
+         VIEW 1: AI Copilot Chat
+         ======================================================================== -->
+    <div class="view-container active" id="view-chat">
+      <div class="chat-layout">
+        
+        <!-- Chat Message History -->
+        <div class="chat-history" id="chat-history-container">
+          
+          <!-- Default Welcome Screen -->
+          <div class="chat-welcome" id="chat-welcome-screen">
+            <div class="welcome-icon-box">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
+            <h2>What would you like to analyze?</h2>
+            <p>CampusOS ResumeIQ leverages 6 specialized AI sub-agents with strict guardrails, ATS metrics, and vector memory grounding.</p>
+            
+            <div class="prompt-chips-grid">
+              <div class="prompt-chip" data-prompt="Give me a comprehensive professional review of my resume and identify top improvements." data-mode="1">
+                <div class="chip-tag">Resume Review</div>
+                <div class="chip-title">Comprehensive Resume Review</div>
+                <div class="chip-desc">Detailed strengths, weaknesses, and structure check</div>
+              </div>
+
+              <div class="prompt-chip" data-prompt="Am I eligible for this role? Check my match percentage, matched skills, and missing skills." data-mode="2">
+                <div class="chip-tag">Eligibility Check</div>
+                <div class="chip-title">Placement Eligibility Audit</div>
+                <div class="chip-desc">Evaluate criteria against Job Description</div>
+              </div>
+
+              <div class="prompt-chip" data-prompt="What are my critical skill gaps for the provided job description, and how should I prioritize learning them?" data-mode="3">
+                <div class="chip-tag">Skill Gap</div>
+                <div class="chip-title">Skill Gap & Learning Roadmap</div>
+                <div class="chip-desc">Pinpoint missing technologies & action plan</div>
+              </div>
+
+              <div class="prompt-chip" data-prompt="Generate tailored technical and behavioral interview questions based strictly on my resume projects." data-mode="4">
+                <div class="chip-tag">Interview Prep</div>
+                <div class="chip-title">Tailored Interview Questions</div>
+                <div class="chip-desc">Project architecture & domain deep-dives</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Chat Input Dock -->
+        <div class="chat-dock">
+          
+          <!-- Mode Selector Pills -->
+          <div class="mode-pills-bar">
+            <button class="mode-pill active" data-mode="auto"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Auto-Infer</button>
+            <button class="mode-pill" data-mode="1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> 1. Resume Review</button>
+            <button class="mode-pill" data-mode="2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg> 2. Placement Eligibility</button>
+            <button class="mode-pill" data-mode="3"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> 3. Skill Gap Analysis</button>
+            <button class="mode-pill" data-mode="4"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg> 4. Interview Prep</button>
+            <button class="mode-pill" data-mode="5"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> 5. Coding Practice</button>
+            <button class="mode-pill" data-mode="6"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> 6. Career Guidance</button>
+          </div>
+
+          <!-- Collapsible JD Drawer -->
+          <div class="jd-drawer" id="chat-jd-drawer">
+            <div class="jd-drawer-header">
+              <span>Attached Job Description (Optional for JD-matching & Placement)</span>
+              <button class="btn-sample-jd" id="btn-chat-sample-jd">+ Sample SDE JD</button>
+            </div>
+            <textarea id="chat-jd-textarea" placeholder="Paste the target job description here..."></textarea>
+          </div>
+
+          <!-- Main Input Field -->
+          <div class="chat-input-box">
+            <textarea id="chat-input-textarea" rows="1" placeholder="Ask anything about your resume, placement eligibility, interview questions, or skills..."></textarea>
+            
+            <div class="chat-input-actions">
+              <button class="btn-toggle-jd" id="btn-toggle-chat-jd" title="Attach Job Description">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                </svg>
+                <span>Attach JD</span>
+              </button>
+
+              <button class="btn-send" id="btn-chat-send" title="Send Message">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 2: ATS Scanner & Structural Audit
+         ======================================================================== -->
+    <div class="view-container" id="view-ats">
+      <div class="dashboard-grid" id="ats-results-container">
+        
+        <!-- ATS Hero Banner with Radial Gauge -->
+        <div class="ats-hero-banner">
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 160 160">
+              <circle class="gauge-bg" cx="80" cy="80" r="70"></circle>
+              <circle class="gauge-progress" id="ats-gauge-circle" cx="80" cy="80" r="70"></circle>
+            </svg>
+            <div class="gauge-center-text">
+              <span class="gauge-score-value" id="ats-score-display">0</span>
+              <span class="gauge-score-label">ATS Score</span>
+            </div>
+          </div>
+
+          <div class="ats-summary-info">
+            <div class="ats-grade-pill blue" id="ats-grade-pill">Grade: Evaluating...</div>
+            <h3 id="ats-grade-headline">Comprehensive ATS Audit</h3>
+            <p id="ats-grade-desc">Scanning structural formatting, essential section headers, contact information, graduation year, and project depth.</p>
+            
+            <div class="ats-quick-stats">
+              <div class="quick-stat-item" id="stat-email"><span class="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></span> Checking Email...</div>
+              <div class="quick-stat-item" id="stat-phone"><span class="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></span> Checking Phone...</div>
+              <div class="quick-stat-item" id="stat-grad"><span class="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg></span> Checking Graduation...</div>
+              <div class="quick-stat-item" id="stat-projects"><span class="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></span> Projects: 0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Column Section Checklist & Actionable Suggestions -->
+        <div class="two-col-grid">
+          
+          <!-- Sections Detection Card -->
+          <div class="saas-card">
+            <div class="saas-card-header">
+              <div class="card-title-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 11 12 14 22 4"></polyline>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+                <h4>Section Architecture Checklist</h4>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px;">Detected Sections</div>
+                <div class="section-tags-list" id="ats-detected-sections">
+                  <span class="tag-badge detected">Loading sections...</span>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px;">Missing / Incomplete Sections</div>
+                <div class="section-tags-list" id="ats-missing-sections">
+                  <span class="tag-badge missing">None</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Improvement Suggestions Card -->
+          <div class="saas-card">
+            <div class="saas-card-header">
+              <div class="card-title-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <h4>High-Impact Optimization Tips</h4>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="triggerStudioPrompt('1', 'Explain the top ATS improvements I should make to my resume and write optimized bullet points.')">
+                Ask AI to Fix
+              </button>
+            </div>
+            
+            <div class="suggestions-list" id="ats-suggestions-list">
+              <div class="suggestion-item">
+                <div class="suggestion-bullet"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+                <div>Analyzing resume structure...</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 3: Job Description Match & Placement Eligibility
+         ======================================================================== -->
+    <div class="view-container" id="view-jd">
+      <div class="jd-split-layout">
+        
+        <!-- Left: JD Input Editor -->
+        <div class="jd-input-panel">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <strong style="font-size: 14px; color: #fff;">Target Job Description</strong>
+          </div>
+          
+          <div class="jd-sample-buttons">
+            <button class="btn-sample-jd" data-sample="fullstack">Full Stack SDE</button>
+            <button class="btn-sample-jd" data-sample="ai_engineer">AI/ML Engineer</button>
+            <button class="btn-sample-jd" data-sample="frontend">Frontend SDE</button>
+          </div>
+
+          <textarea class="jd-textarea-main" id="jd-main-textarea" placeholder="Paste the complete Job Description here (Skills, requirements, responsibilities)..."></textarea>
+          
+          <button class="btn btn-primary" id="btn-run-jd-match" style="width: 100%; padding: 12px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Run Semantic Match Analysis</span>
+          </button>
+        </div>
+
+        <!-- Right: Results Dashboard -->
+        <div class="jd-results-panel" id="jd-results-panel" style="display: none;">
+          
+          <!-- Eligibility Banner -->
+          <div class="saas-card" style="background: linear-gradient(135deg, #18223d 0%, #101729 100%);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; letter-spacing: 0.5px;">Placement Eligibility Verdict</div>
+                <h3 style="font-size: 22px; font-weight: 800; margin-top: 4px;" id="jd-eligibility-title">Placement Assessment</h3>
+              </div>
+              <div class="ats-grade-pill emerald" id="jd-eligibility-badge">Eligible (0%)</div>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;" id="jd-eligibility-desc">Assessment based on cosine similarity and normalized skill set coverage.</p>
+          </div>
+
+          <!-- Score Metrics Row -->
+          <div class="match-scores-row">
+            <div class="score-metric-card accent-emerald">
+              <div class="metric-label">Final Weighted Match</div>
+              <div class="metric-value" id="metric-final-match">0%</div>
+              <div class="metric-progress">
+                <div class="metric-progress-bar" id="bar-final-match" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div class="score-metric-card accent-cyan">
+              <div class="metric-label">Skills Keyword Match</div>
+              <div class="metric-value" id="metric-skills-match">0%</div>
+              <div class="metric-progress">
+                <div class="metric-progress-bar" id="bar-skills-match" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div class="score-metric-card">
+              <div class="metric-label">Semantic TF-IDF Match</div>
+              <div class="metric-value" id="metric-overall-match">0%</div>
+              <div class="metric-progress">
+                <div class="metric-progress-bar" id="bar-overall-match" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Skill Breakdown Grid -->
+          <div class="skills-comparison-grid">
+            <div class="skills-box">
+              <div class="skills-box-title" style="color: var(--success);">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Matched Skills (Verified on Resume)
+              </div>
+              <div class="skills-pill-wrap" id="jd-matched-skills-list"></div>
+            </div>
+
+            <div class="skills-box">
+              <div class="skills-box-title" style="color: var(--danger);">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block;vertical-align:middle;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Missing Skills (Learning Priority)
+              </div>
+              <div class="skills-pill-wrap" id="jd-missing-skills-list"></div>
+            </div>
+          </div>
+
+          <!-- Structured Feedback Card -->
+          <div class="saas-card">
+            <div class="saas-card-header">
+              <div class="card-title-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <div>
+                  <h3>AI Placement Optimization Feedback</h3>
+                  <p style="color: var(--text-muted); font-size: 13px;">Actionable suggestions to improve eligibility for this job description</p>
+                </div>
+              </div>
+            </div>
+            <div class="jd-feedback-card" id="jd-feedback-text">
+              Run JD match analysis to view detailed alignment recommendations.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 4: Technical & Behavioral Interview Prep
+         ======================================================================== -->
+    <div class="view-container" id="view-interview">
+      <div class="dashboard-grid">
+        <div class="saas-card" style="background: linear-gradient(135deg, #181d33 0%, #0e1424 100%);">
+          <div class="card-title-group">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+            <div>
+              <h3>AI Technical & Behavioral Interview Studio</h3>
+              <p style="color: var(--text-muted); font-size: 13px;">Simulates rigorous interview questions tailored specifically to your projects, technology stack, and leadership examples.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="prompt-chips-grid" style="max-width: 100%;">
+          <div class="prompt-chip" onclick="triggerStudioPrompt('4', 'Generate 5 deep-dive technical questions about the architecture, choices, and tradeoffs in my resume projects.')">
+            <div class="chip-tag">Technical Deep-Dive</div>
+            <div class="chip-title">Project Architecture Questions</div>
+            <div class="chip-desc">System design, database decisions & scaling challenges</div>
+          </div>
+
+          <div class="prompt-chip" onclick="triggerStudioPrompt('4', 'Generate 4 STAR-method behavioral interview questions based on the team/leadership experience on my resume.')">
+            <div class="chip-tag">Behavioral & STAR</div>
+            <div class="chip-title">Leadership & Conflict Scenarios</div>
+            <div class="chip-desc">Structured STAR format questions and answer strategies</div>
+          </div>
+
+          <div class="prompt-chip" onclick="triggerStudioPrompt('4', 'Conduct a mock interview: Ask me 1 challenging question about my strongest skills and evaluate my answers.')">
+            <div class="chip-tag">Mock Interview</div>
+            <div class="chip-title">Interactive Mock Interviewer</div>
+            <div class="chip-desc">Step-by-step interactive question and evaluation flow</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 5: Coding & DSA Practice Roadmap
+         ======================================================================== -->
+    <div class="view-container" id="view-coding">
+      <div class="dashboard-grid">
+        <div class="saas-card" style="background: linear-gradient(135deg, #181d33 0%, #0e1424 100%);">
+          <div class="card-title-group">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            <div>
+              <h3>Personalized Coding & DSA Practice Engine</h3>
+              <p style="color: var(--text-muted); font-size: 13px;">Curates LeetCode patterns, algorithmic topics, and coding challenges customized to your demonstrated skills.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="prompt-chips-grid" style="max-width: 100%;">
+          <div class="prompt-chip" onclick="triggerStudioPrompt('5', 'Based on my programming skills and projects, recommend a 4-week structured DSA practice roadmap with specific LeetCode problem patterns.')">
+            <div class="chip-tag">4-Week Roadmap</div>
+            <div class="chip-title">DSA Mastery Schedule</div>
+            <div class="chip-desc">Two Pointers, Sliding Window, DP, Graphs & Trees</div>
+          </div>
+
+          <div class="prompt-chip" onclick="triggerStudioPrompt('5', 'What specific data structures and system design topics should I practice for Tier-1 product company interviews?')">
+            <div class="chip-tag">FAANG & Tier-1 Prep</div>
+            <div class="chip-title">High-Yield Algorithmic Patterns</div>
+            <div class="chip-desc">Targeted practice based on candidate profile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 6: Career Trajectory & Role Advisor
+         ======================================================================== -->
+    <div class="view-container" id="view-career">
+      <div class="dashboard-grid">
+        <div class="saas-card" style="background: linear-gradient(135deg, #181d33 0%, #0e1424 100%);">
+          <div class="card-title-group">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <div>
+              <h3>Career Trajectory & Role Recommendation</h3>
+              <p style="color: var(--text-muted); font-size: 13px;">Explores high-match career paths, emerging roles, and promotion pathways supported by your verified experience.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="prompt-chips-grid" style="max-width: 100%;">
+          <div class="prompt-chip" onclick="triggerStudioPrompt('6', 'What are the top 3 job roles best suited for my current profile, and what is the growth trajectory for each?')">
+            <div class="chip-tag">Role Suitability</div>
+            <div class="chip-title">Top 3 Career Matches</div>
+            <div class="chip-desc">Role alignment grounded in skills, education & projects</div>
+          </div>
+
+          <div class="prompt-chip" onclick="triggerStudioPrompt('6', 'How can I transition into an AI/ML Engineer or Senior Fullstack role from my current background?')">
+            <div class="chip-tag">Career Transition</div>
+            <div class="chip-title">Transition Feasibility & Plan</div>
+            <div class="chip-desc">Gap analysis and certification roadmap</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 7: Multi-Candidate Leaderboard & Comparison
+         ======================================================================== -->
+    <div class="view-container" id="view-compare">
+      <div class="dashboard-grid">
+        <div class="saas-card">
+          <div class="saas-card-header">
+            <div class="card-title-group">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <h4>Candidate Leaderboard & Benchmark Matrix</h4>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="runResumeComparison()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              <span>Refresh Ranks</span>
+            </button>
+          </div>
+
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Candidate & File</th>
+                <th>Match / Score</th>
+                <th>Coverage</th>
+                <th>Skill Gaps</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="compare-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-dim);">
+                  Loading candidates...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         VIEW 8: Resume Memory & Raw Vector Knowledge
+         ======================================================================== -->
+    <div class="view-container" id="view-profile">
+      <div class="dashboard-grid">
+        <div class="two-col-grid">
+          
+          <!-- Profile Memory Card -->
+          <div class="saas-card">
+            <div class="saas-card-header">
+              <div class="card-title-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <h4 id="profile-candidate-name">Candidate Profile</h4>
+              </div>
+              <span class="tag-badge detected" id="profile-filename">Filename</span>
+            </div>
+
+            <div style="display: flex; gap: 16px; font-size: 12px; color: var(--text-dim);">
+              <span id="profile-words">0 words</span> • <span id="profile-chars">0 characters</span>
+            </div>
+
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">Profile Memory Fact Base</div>
+              <div style="background: var(--bg-card-subtle); border-radius: var(--radius-sm); padding: 14px; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; white-space: pre-wrap;" id="profile-memory-summary">
+                No profile memory loaded.
+              </div>
+            </div>
+          </div>
+
+          <!-- Raw Extracted Text Preview -->
+          <div class="saas-card">
+            <div class="saas-card-header">
+              <div class="card-title-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                  <line x1="9" y1="20" x2="15" y2="20"></line>
+                  <line x1="12" y1="4" x2="12" y2="20"></line>
+                </svg>
+                <h4>Parsed Resume Text Preview</h4>
+              </div>
+            </div>
+
+            <div style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 14px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; color: var(--text-muted); max-height: 420px; overflow-y: auto; white-space: pre-wrap;" id="profile-raw-text">
+              Loading text...
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ==========================================================================
+     UPLOAD MODAL
+     ========================================================================== -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Upload Candidate Resumes</h3>
+      <button class="btn-close-modal" id="btn-close-upload">&times;</button>
+    </div>
+
+    <p style="font-size: 13px; color: var(--text-muted);">
+      Upload single or multiple resumes in PDF or DOCX format. Resumes will be chunked, embedded via SentenceTransformers, and stored into ChromaDB vector memory.
+    </p>
+
+    <div class="dropzone-area" id="dropzone-input">
+      <div class="dropzone-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </div>
+      <div>
+        <strong style="color: #fff; font-size: 13px;">Drag & Drop files here, or click to browse</strong>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Supports PDF and DOCX files</div>
+      </div>
+      <input type="file" id="file-upload-element" multiple accept=".pdf,.docx" style="display: none;">
+    </div>
+
+    <!-- Selected files preview list -->
+    <div class="file-list-preview" id="upload-file-list"></div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+      <button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+      <button class="btn btn-primary" id="btn-submit-upload">Index Documents</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Toast Container -->
+<div class="toast-stack" id="toast-stack"></div>
+
+<!-- SaaS Frontend Engine Script -->
+<script src="static/js/app.js"></script>
+
+</body>
+</html>
