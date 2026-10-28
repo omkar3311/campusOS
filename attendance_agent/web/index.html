@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusOS • Attendance AI SaaS</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ==========================================================================
+       CampusOS Unified Global Header Bar
+       ========================================================================== -->
+  <header class="campusos-global-header">
+    <div class="campusos-brand">
+      <a href="/" class="campusos-logo-mark">
+        <span class="campusos-icon">CO</span>
+        <span class="campusos-name">CampusOS</span>
+      </a>
+      <span class="campusos-divider">/</span>
+      <span class="campusos-agent-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:4px;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>Attendance Agent</span>
+    </div>
+    
+    <nav class="campusos-agent-nav" aria-label="CampusOS Agents">
+      <a href="/agent/study/" class="agent-nav-link" data-agent="study">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg><span>Learning</span>
+      </a>
+      <a href="/agent/career/" class="agent-nav-link" data-agent="career">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg><span>Career</span>
+      </a>
+      <a href="/agent/attendance/" class="agent-nav-link active" data-agent="attendance">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><span>Attendance</span>
+      </a>
+    </nav>
+
+    <div class="campusos-user-dock">
+      <div class="campusos-status-pill">
+        <span class="pulse-dot"></span>
+        <span class="status-label">Live Sync</span>
+      </div>
+      <div class="campusos-user-badge">
+        <span class="user-role-tag" id="userRoleTag">Student</span>
+        <span class="user-display-name" id="userDisplayName">Analytics</span>
+      </div>
+      <a id="backToPortalBtn" href="/main_dashboard" class="campusos-exit-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span id="backToPortalText">Portal</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="app-container">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <div class="brand-title">
+            Attendance <span class="brand-badge">AI</span>
+          </div>
+          <span class="brand-subtitle">Attendance Intelligence</span>
+        </div>
+      </div>
+
+      <div class="nav-section-title">Navigation</div>
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a class="nav-link active" data-view="overview">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            <span>Overview</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-view="chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>AI Assistant</span>
+            <span class="nav-badge">Live</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-view="calendar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span>Slot Matrix</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-view="analytics">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            <span>Analytics</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-view="simulator">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>Target Planner</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-view="records">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <span>Audit & Records</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Student Profile Card in Sidebar (Read-Only) -->
+      <div class="sidebar-footer">
+        <div class="student-profile-card readonly" title="Student Profile (Verified)">
+          <div class="avatar student-avatar-initial">S</div>
+          <div class="student-meta">
+            <div class="student-name student-name-display">Student</div>
+            <div class="student-details">
+              <span class="student-prn-display">PRN: 1234</span>
+            </div>
+          </div>
+          <div class="profile-verified-badge" title="Active CampusOS Identity">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #2563eb;">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="menu-toggle-btn" id="mobile-menu-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <h1 class="view-heading" id="view-header-title">Attendance Overview & Analytics</h1>
+        </div>
+
+        <div class="header-right">
+          <!-- Attendance Status Pill -->
+          <div class="status-pill good" id="header-status-pill">
+            <span class="pulse-dot"></span>
+            <span id="header-status-text">78.12% Attendance</span>
+          </div>
+
+          <!-- Quick Action: Refresh -->
+          <button class="header-action-btn" onclick="loadApplicationData()" title="Sync live Supabase data">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            <span>Sync</span>
+          </button>
+
+          <!-- Quick Action: AI Query Shortcut (Cmd+K) -->
+          <button class="header-action-btn primary" onclick="switchView('chat')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Ask AI</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Views Container -->
+      <main class="content-scrollable">
+
+        <!-- ================================================================
+             View 1: Overview & Dashboard
+             ================================================================ -->
+        <section class="view-section active" id="view-overview">
+          <div class="overview-grid">
+
+            <!-- Hero Banner Card with Radial Gauge -->
+            <div class="hero-card">
+              <div class="hero-left">
+                <div class="hero-tag">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Verified Attendance Status
+                </div>
+                <h2 class="hero-title">
+                  Welcome back, <span class="student-name-display">demo</span>
+                </h2>
+                <p class="hero-desc">
+                  You are enrolled in <strong class="student-class-display">class_a</strong>. 
+                  Your attendance is currently above the <strong>75% minimum criteria</strong>.
+                </p>
+                <div class="hero-actions">
+                  <button class="header-action-btn primary" onclick="switchView('chat')">
+                    Chat with Attendance AI
+                  </button>
+                  <button class="header-action-btn" onclick="switchView('simulator')">
+                    Simulate Target Goals
+                  </button>
+                </div>
+              </div>
+
+              <!-- Circular Progress Dial -->
+              <div class="gauge-container">
+                <svg class="gauge-svg" viewBox="0 0 140 140">
+                  <circle class="gauge-bg" cx="70" cy="70" r="60"></circle>
+                  <circle class="gauge-fill" id="hero-gauge-fill" cx="70" cy="70" r="60"></circle>
+                </svg>
+                <div class="gauge-center-text">
+                  <span class="gauge-value" id="hero-gauge-value">78.1%</span>
+                  <span class="gauge-label">Marked Ratio</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Assistant Quick Launch Card -->
+            <div class="ai-quick-card">
+              <div class="ai-card-header">
+                <div class="ai-icon-bubble">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="ai-card-title">Attendance AI Agent</h3>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">LangChain Multi-Turn Agent</span>
+                </div>
+              </div>
+
+              <div class="quick-prompts-list">
+                <button class="quick-prompt-btn" onclick="sendChatQuery('What is my attendance summary and percentage?')">
+                  <span>Overall percentage & stats</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <button class="quick-prompt-btn" onclick="sendChatQuery('Was I absent on any days in March 2026?')">
+                  <span>Check absent days this month</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <button class="quick-prompt-btn" onclick="sendChatQuery('Who is my class teacher and which faculties took my classes?')">
+                  <span>List teachers & faculties</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+
+              <button class="header-action-btn" style="width: 100%; justify-content: center;" onclick="switchView('chat')">
+                Open Full AI Workspace →
+              </button>
+            </div>
+
+            <!-- KPI Metric Cards Row -->
+            <div class="kpi-row">
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <span class="kpi-title">Present Slots</span>
+                  <div class="kpi-icon present">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                </div>
+                <div class="kpi-value" id="kpi-present-count">25</div>
+                <div class="kpi-subtext" style="color: var(--present);">Attended sessions</div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <span class="kpi-title">Absent Slots</span>
+                  <div class="kpi-icon absent">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </div>
+                </div>
+                <div class="kpi-value" id="kpi-absent-count">7</div>
+                <div class="kpi-subtext" style="color: var(--absent);">Missed sessions</div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <span class="kpi-title">Total Marked Slots</span>
+                  <div class="kpi-icon streak">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  </div>
+                </div>
+                <div class="kpi-value" id="kpi-total-count">32</div>
+                <div class="kpi-subtext">16 Recorded Days</div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <span class="kpi-title">Safe Skips Left</span>
+                  <div class="kpi-icon bunk">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                  </div>
+                </div>
+                <div class="kpi-value" id="kpi-safe-bunks">1 Slot</div>
+                <div class="kpi-subtext">Before reaching 75% threshold</div>
+              </div>
+            </div>
+
+            <!-- Recent 5 Attendance Days -->
+            <div class="recent-days-card">
+              <div class="card-header-flex">
+                <h3 class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  Recent Attendance Logs
+                </h3>
+                <button class="header-action-btn" style="padding: 4px 10px; font-size: 0.75rem;" onclick="switchView('calendar')">
+                  View Calendar →
+                </button>
+              </div>
+              <div class="recent-list" id="recent-days-container">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+
+            <!-- Top Faculty Distribution -->
+            <div class="teachers-card">
+              <div class="card-header-flex">
+                <h3 class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  Faculty Attendance
+                </h3>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Attended / Total</span>
+              </div>
+              <div class="teacher-progress-list" id="analytics-teacher-list">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ================================================================
+             View 2: Dedicated AI Query Agent Workspace
+             ================================================================ -->
+        <section class="view-section" id="view-chat">
+          <div class="chat-workspace-layout">
+            
+            <!-- Main Chat Box -->
+            <div class="chat-card">
+              <div class="chat-header">
+                <div class="chat-header-info">
+                  <div class="chat-avatar-ai">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  </div>
+                  <div>
+                    <span class="chat-title">Attendance AI Copilot</span>
+                    <span class="chat-status-text">● Ready for natural language queries</span>
+                  </div>
+                </div>
+
+                <button class="chat-clear-btn" onclick="clearChatHistory()" title="Clear conversation history">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  <span>Clear Chat</span>
+                </button>
+              </div>
+
+              <!-- Message Stream -->
+              <div class="chat-messages-container" id="chat-messages-stream">
+                <!-- Dynamically populated via JS -->
+              </div>
+
+              <!-- Input Area -->
+              <div class="chat-input-container">
+                <div class="suggested-chips-scroll">
+                  <button class="chip-btn" onclick="sendChatQuery('What is my attendance percentage?')">
+                    Attendance %
+                  </button>
+                  <button class="chip-btn" onclick="sendChatQuery('Was I present or absent on March 20, 2026?')">
+                    Check March 20
+                  </button>
+                  <button class="chip-btn" onclick="sendChatQuery('Who was the faculty for the 01:00 - 02:00 slot on March 19?')">
+                    Slot 01:00 - 02:00 Teacher
+                  </button>
+                  <button class="chip-btn" onclick="sendChatQuery('What is my monthly attendance summary for March 2026?')">
+                    March 2026 Summary
+                  </button>
+                  <button class="chip-btn" onclick="sendChatQuery('Am I in danger of attendance shortage?')">
+                    Shortage Risk
+                  </button>
+                </div>
+
+                <form class="chat-input-form" id="chat-input-form">
+                  <input type="text" class="chat-input" id="chat-input-field" placeholder="Ask anything about your attendance, dates, slots, or teachers..." autocomplete="off" />
+                  <button type="submit" class="send-btn" id="chat-send-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Chat Sidebar Helper (Date Inspector & Prompts) -->
+            <div class="chat-sidebar-card">
+              <div class="chat-sidebar-section">
+                <span class="chat-sidebar-title">Date Inspector</span>
+                <div class="date-query-picker-box">
+                  <label class="form-label" style="font-size: 0.72rem;">Pick Date to Query:</label>
+                  <input type="date" class="date-input" id="chat-date-picker-input" value="2026-03-20" />
+                  <button type="button" class="date-query-btn" onclick="handleDateSidebarQuery()">
+                    Ask Agent about this Date
+                  </button>
+                </div>
+              </div>
+
+              <div class="chat-sidebar-section">
+                <span class="chat-sidebar-title">Prompt Library</span>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <button class="quick-prompt-btn" onclick="sendChatQuery('How many classes did I attend with bob?')">
+                    <span>Classes with Bob</span>
+                  </button>
+                  <button class="quick-prompt-btn" onclick="sendChatQuery('List all dates where I was absent')">
+                    <span>All Absent Dates</span>
+                  </button>
+                  <button class="quick-prompt-btn" onclick="sendChatQuery('Explain my audit history for March 20')">
+                    <span>Audit Log Details</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="chat-sidebar-section">
+                <span class="chat-sidebar-title">Student Context</span>
+                <div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6; background: var(--bg-card-elevated); padding: 10px; border-radius: var(--radius-md);">
+                  <div><strong>Student:</strong> <span class="student-name-display">demo</span></div>
+                  <div><strong>PRN:</strong> <span class="student-prn-display">1234</span></div>
+                  <div><strong>Class:</strong> <span class="student-class-display">class_a</span></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ================================================================
+             View 3: Calendar & Slot Matrix
+             ================================================================ -->
+        <section class="view-section" id="view-calendar">
+          <div class="calendar-view-grid">
+
+            <div class="calendar-card">
+              <div class="calendar-header">
+                <h2 class="cal-month-title" id="cal-month-title">March 2026</h2>
+                <div class="cal-nav-btns">
+                  <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)">‹ Previous</button>
+                  <button class="cal-nav-btn" onclick="changeCalendarMonth(1)">Next ›</button>
+                </div>
+              </div>
+
+              <!-- Day Names Header -->
+              <div class="calendar-grid" style="margin-bottom: 8px;">
+                <div class="cal-day-name">Sun</div>
+                <div class="cal-day-name">Mon</div>
+                <div class="cal-day-name">Tue</div>
+                <div class="cal-day-name">Wed</div>
+                <div class="cal-day-name">Thu</div>
+                <div class="cal-day-name">Fri</div>
+                <div class="cal-day-name">Sat</div>
+              </div>
+
+              <!-- Days Grid -->
+              <div class="calendar-grid" id="calendar-grid-days">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+
+            <!-- Date Detail Drawer -->
+            <div class="date-detail-card">
+              <h3 class="card-title" id="selected-date-title">Date Breakdown</h3>
+              <div id="selected-date-slots-container">
+                <!-- Slot cards populated on click -->
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ================================================================
+             View 4: Analytics & Insights
+             ================================================================ -->
+        <section class="view-section" id="view-analytics">
+          <div class="analytics-grid">
+
+            <!-- Day of Week Attendance Bar Chart -->
+            <div class="analytics-card-lg">
+              <div class="card-header-flex">
+                <h3 class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                  Day-of-Week Attendance Distribution
+                </h3>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Attendance Rate %</span>
+              </div>
+              <div class="chart-placeholder" id="analytics-day-bars">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+
+            <!-- Streak & Consistency Card -->
+            <div class="analytics-card-sm">
+              <h3 class="card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Consistency & Streaks
+              </h3>
+              <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 16px;">
+                <div class="kpi-card" style="border: 1px solid var(--border-subtle);">
+                  <span class="kpi-title">Current 100% Present Streak</span>
+                  <div class="kpi-value" id="analytics-streak-val" style="color: var(--primary);">2 Days</div>
+                  <span class="kpi-subtext">All slots attended continuously</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">
+                  <strong>Tip:</strong> Maintaining attendance above 80% unlocks honors eligibility and examination clearance without special approvals.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ================================================================
+             View 5: Target Simulator & Bunk Planner
+             ================================================================ -->
+        <section class="view-section" id="view-simulator">
+          <div class="simulator-grid">
+
+            <div class="simulator-card">
+              <h2 class="card-title" style="font-size: 1.2rem;">
+                Attendance Target Simulator
+              </h2>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">
+                Drag the target slider to calculate how many consecutive classes you need to attend or how many classes you can afford to skip.
+              </p>
+
+              <div class="slider-container">
+                <div class="slider-header">
+                  <span style="font-weight: 700; font-size: 0.9rem;">Target Percentage</span>
+                  <span id="sim-target-display" style="font-weight: 800; color: var(--primary); font-size: 1.1rem;">75%</span>
+                </div>
+                <input type="range" class="target-slider" id="sim-target-slider" min="50" max="98" value="75" step="1" />
+              </div>
+
+              <div class="sim-result-box">
+                <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">
+                  Required Consecutive Classes
+                </div>
+                <div class="sim-big-stat blue" id="sim-classes-needed">0 (Target Reached)</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                  Number of upcoming classes you must attend to achieve this target.
+                </div>
+              </div>
+
+              <div class="sim-result-box">
+                <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">
+                  Safe Bunks Allowed
+                </div>
+                <div class="sim-big-stat green" id="sim-safe-skips">1 Class</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                  Maximum classes you can miss while remaining above the target.
+                </div>
+              </div>
+            </div>
+
+            <div class="simulator-card">
+              <h3 class="card-title">
+                Target Milestones Table
+              </h3>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                Instant projection for standard collegiate thresholds.
+              </p>
+
+              <table class="milestones-table">
+                <thead>
+                  <tr>
+                    <th>Milestone</th>
+                    <th>Status</th>
+                    <th>Classes Needed</th>
+                    <th>Safe Skips</th>
+                  </tr>
+                </thead>
+                <tbody id="sim-milestones-body">
+                  <!-- Populated via JS -->
+                </tbody>
+              </table>
+
+              <div style="margin-top: 24px; padding: 14px; background: var(--bg-card-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 4px;">Current Standing Grade</div>
+                <div style="font-size: 1.05rem; font-weight: 800; color: var(--present);" id="sim-status-grade">Good (Above Criteria)</div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ================================================================
+             View 6: Complete Records Table & Search
+             ================================================================ -->
+        <section class="view-section" id="view-records">
+          <div class="table-card">
+            <div class="table-toolbar">
+              <div class="search-box">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" class="search-input" id="records-search-input" placeholder="Search by date, slot, teacher, or status..." />
+              </div>
+
+              <div style="display: flex; gap: 10px;">
+                <button class="header-action-btn" onclick="exportRecordsCSV()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Export CSV</span>
+                </button>
+              </div>
+            </div>
+
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Slot Interval</th>
+                  <th>Faculty</th>
+                  <th>Attendance Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="records-table-body">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+  </div>
+
+
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- App Script -->
+  <script src="js/app.js"></script>
+</body>
+</html>
