@@ -22,9 +22,15 @@ class ResumeStore:
         self.persist_directory = persist_directory
         self.collection_name = "resumes"
 
-        self._embedding_model = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+        # Original model load kept for reference and disabled to avoid repeated startup downloads.
+        # self._embedding_model = HuggingFaceEmbeddings(
+        #     model_name="sentence-transformers/all-MiniLM-L6-v2"
+        # )
+        try:
+            from main import get_shared_embedding_model
+            self._embedding_model = get_shared_embedding_model()
+        except Exception:
+            self._embedding_model = None
 
         self._store = None
 

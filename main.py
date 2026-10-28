@@ -12,6 +12,11 @@ import sys
 import os
 from pathlib import Path
 
+try:
+    from langchain_huggingface import HuggingFaceEmbeddings
+except ImportError:
+    HuggingFaceEmbeddings = None
+
 # Setup paths so website and all agents are importable
 ROOT_DIR = Path(__file__).resolve().parent
 WEBSITE_DIR = ROOT_DIR / "website"
@@ -20,6 +25,23 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 if str(WEBSITE_DIR) not in sys.path:
     sys.path.insert(0, str(WEBSITE_DIR))
+
+# Shared embedding model loaded once at startup and reused by all agents.
+SHARED_EMBEDDING_MODEL = None
+if HuggingFaceEmbeddings is not None:
+    try:
+        SHARED_EMBEDDING_MODEL = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
+        print("✅ Shared embedding model loaded once in main.py")
+    except Exception as exc:  # pragma: no cover
+        print(f"⚠️ Shared embedding model failed to load in main.py: {exc}")
+        SHARED_EMBEDDING_MODEL = None
+
+
+def get_shared_embedding_model():
+    return SHARED_EMBEDDING_MODEL
+
 
 # Expose the FastAPI application instance for ASGI servers (e.g., uvicorn main:app)
 try:

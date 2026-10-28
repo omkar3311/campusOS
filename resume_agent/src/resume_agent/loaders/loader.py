@@ -21,9 +21,15 @@ class ResumeLoader:
         self.chunk_size = 1000
         self.chunk_overlap = 150
 
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+        # Original model load kept for reference and disabled to avoid repeated startup downloads.
+        # self.embeddings = HuggingFaceEmbeddings(
+        #     model_name="sentence-transformers/all-MiniLM-L6-v2"
+        # )
+        try:
+            from main import get_shared_embedding_model
+            self.embeddings = get_shared_embedding_model()
+        except Exception:
+            self.embeddings = None
 
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=500,
