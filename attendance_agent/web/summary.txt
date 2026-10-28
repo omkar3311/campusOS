@@ -1,0 +1,123 @@
+   🚀 Product Overview: CampusOS Attendance AI 
+  CampusOS Attendance AI is an intelligent, conversational, and predictive attendance management SaaS platform
+  designed for modern higher education institutions and students.
+
+  Instead of forcing students and faculty to navigate clunky, legacy ERP portals, CampusOS pairs live database
+  records with an autonomous, guardrailed LangChain AI agent and a real-time mathematical target simulator.
+  ──────
+  ## 🎯 The Core Problem & Solution
+   The Problem in College Portals                       | CampusOS AI Solution
+  ------------------------------------------------------|-------------------------------------------------------
+   Clunky ERPs: Hard to check specific slot-by-slot or  | Natural Language AI: Ask "Was I present on March 20
+   teacher attendance on mobile.                        | for slot 1-2 PM?" and get instant answers.
+   Debarment Anxiety: Students don't know how many      | Target Simulator & Bunk Planner: Interactive slider
+   classes they can afford to miss or need to recover   | showing exact consecutive classes needed or safe
+   75%.                                                 | skips left.
+   Hallucination & Accuracy Risks: Standard LLMs make   | Strictly Guardrailed Multi-Tier LLMs: Groq (LLaMA 3.3
+   up numbers.                                          | 70B) + Gemini Fallback with zero-hallucination tool
+                                                        | calling.
+   Dispute & Audit Friction: Unclear if attendance was  | Slot-Level Audit Logs & CSV Export: Complete
+   marked or altered later.                             | transparency with teacher names and timestamped
+                                                        | audits.
+  ──────
+  ## 🧩 6 Core SaaS Modules (What to Show on Screen)
+    graph TD
+        A[CampusOS Attendance SaaS] --> B[1. Live Dashboard & KPIs]
+        A --> C[2. Conversational AI Agent]
+        A --> D[3. Interactive Slot Matrix Calendar]
+        A --> E[4. Attendance Target Simulator]
+        A --> F[5. Faculty & Day Analytics]
+        A --> G[6. Audit Trail & CSV Export]
+
+  1. Live Overview Dashboard:
+      • Real-time circular radial attendance gauge (e.g., 78.12% Marked Ratio).
+      • Quick KPI cards: Present Slots (25), Absent Slots (7), Total Slots (32), Safe Skips Left (1).
+      • Instant quick-prompt launcher buttons.
+  2. Autonomous Attendance AI Workspace:
+      • Multi-turn conversational interface powered by LangChain & LangGraph checkpointer memory.
+      • Built-in Date Inspector tool to pick any date and ask questions in 1 click.
+      • Strict guardrails preventing off-topic drift; answers queries about dates, monthly aggregates, absent
+      history, and professor attendance.
+  3. Interactive Calendar & Slot Matrix:
+      • Visual calendar grid with attendance color tags (Green for present, Red for absent, Yellow for pending).
+      • Side drawer breaking down individual time slots (e.g., 01:00 - 02:00), status, and assigned faculty name.
+  4. Predictive Target Simulator & Bunk Planner:
+      • Interactive percentage target slider (50% to 98%).
+      • Real-time mathematical calculation:
+          • Required Consecutive Classes to reach goal.
+          • Safe Skips / Bunks Allowed before dropping below the criteria.
+      • Standard collegiate milestone table (75%, 80%, 85%, 90%, 95%).
+  5. Faculty & Day-of-Week Analytics:
+      • Day-of-week attendance distribution bar charts (identifying peak absence days like Mondays/Fridays).
+      • Professor-wise breakdown showing attendance rate per faculty member.
+      • 100% Present consistency streak tracker.
+  6. Audit & Records Explorer:
+      • Searchable, filterable table for all recorded sessions.
+      • Instant 1-click CSV export for reports and administration.
+
+  ──────
+   🎬 SaaS Product Video Script & Storyboard (60–75 Seconds) 
+
+  Ideal format for Product Hunt, LinkedIn, YouTube Shorts, or SaaS Launch Landing Page.
+
+  ### Scene 1: The Hook (0:00 - 0:10)
+
+  • Visual: Quick fast-paced shot of a frustrated student staring at a slow, confusing traditional college
+  portal table. Quick glitch transition into a sleek, dark-mode CampusOS AI Dashboard with glowing radial dials.
+  • On-Screen Text: College attendance tracking is broken. We fixed it.
+  • Voiceover (VO): "Every semester, students struggle with clunky college portals just to figure out if they’re
+  safe from attendance shortages. What if checking your attendance was as simple as chatting with an AI?"
+  ──────
+  ### Scene 2: Introducing CampusOS (0:10 - 0:22)
+
+  • Visual: Smooth zoom into the Overview Dashboard. The 78.1% circular radial gauge animates from 0% to 78.1%.
+  KPI cards highlight: 25 Attended, 7 Missed, 1 Safe Skip Left.
+  • On-Screen Text: CampusOS • Real-Time Attendance Intelligence
+  • Voiceover (VO): "Meet CampusOS — the next-generation attendance intelligence platform. Get instant
+  visibility over your attendance percentage, marked slots, and live academic standing in one unified dashboard.
+  "
+  ──────
+  ### Scene 3: Conversational AI in Action (0:22 - 0:38)
+
+  • Visual: Screen switches to the AI Assistant Workspace. The cursor clicks a prompt chip: "Was I present on
+  March 20 for slot 01:00 - 02:00?". In sub-second time, the AI streams back: "Yes, you were marked Present for
+  slot 01:00 - 02:00 with Prof. Bob."
+  • On-Screen Text: Zero-Hallucination AI • Sub-Second Speed
+  • Voiceover (VO): "Powered by high-speed LLMs and smart guardrails, our AI agent answers slot-by-slot queries,
+  monthly summaries, and faculty details instantly — without guessing or hallucinating."
+  ──────
+  ### Scene 4: The Game-Changer: Target Simulator (0:38 - 0:52)
+
+  • Visual: Transition to the Target Simulator. The mouse drags the percentage slider from 75% to 85%. Instantly,
+  the big blue counter updates to "Attend 14 consecutive classes" and the green safe skip updates in real time.
+  • On-Screen Text: Smart Target Planner & Safe Bunk Calculator
+  • Voiceover (VO): "Planning your schedule? Use the Attendance Target Simulator. Drag the slider to see exactly
+  how many classes you need to attend to hit your goal, or how many classes you can safely skip while staying
+  above 75%."
+  ──────
+  ### Scene 5: Deep Analytics & Audit Transparency (0:52 - 1:02)
+
+  • Visual: Quick montage showing:
+      1. The Calendar Slot Matrix opening slot breakdowns with faculty names.
+      2. The Day-of-Week & Faculty Attendance Charts.
+      3. Clicking Export CSV in the Records Explorer.
+  • On-Screen Text: Full Transparency • Faculty Analytics • Audit Records
+  • Voiceover (VO): "Explore detailed calendar slot matrices, track attendance trends by faculty, and access
+  full audit history with instant CSV exports."
+  ──────
+  ### Scene 6: Call to Action & Outro (1:02 - 1:12)
+
+  • Visual: Camera zooms out showing the full responsive desktop & mobile SaaS interface. CampusOS logo and
+  glowing CTA button appear.
+  • On-Screen Text: CampusOS • Smarter Attendance for Modern Campuses
+  • Voiceover (VO): "Never miss criteria again. Experience the future of campus intelligence with CampusOS. Try
+  the demo today."
+  ──────
+   💡 Key SaaS Differentiators to Highlight in Marketing 
+
+  1. Ultra-Low Latency LLM Gateway: Groq-accelerated LLaMA 3.3 70B with automatic Gemini 2.5 Flash fallbacks for
+  99.9% uptime.
+  2. Deterministic Data Grounding: The LLM operates strictly on verified Supabase student tables and custom
+  tools (get_attendance_for_date, get_attendance_for_month).
+  3. Actionable Predictive Math: Real-time ceiling and floor math for student attendance recovery planning.
+  4. Clean Glassmorphic UI: High-contrast, accessibility-first design with responsive desktop and mobile support.
