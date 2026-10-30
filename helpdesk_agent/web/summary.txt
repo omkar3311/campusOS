@@ -1,0 +1,99 @@
+ 🎬 CampusOS AI — SaaS Product Video Summary & Script 
+  Here is the complete product summary, technical architecture breakdown, and ready-to-use video script tailored
+  for your SaaS product showcase video.
+  ──────
+  ## 📌 Executive Product Summary
+   Item            | Details
+  -----------------|--------------------------------------------------------------------------------------------
+   Product Name    | CampusOS AI
+   Tagline         | The Intelligent Enterprise Helpdesk for Modern Campuses
+   Target Audience | Universities, Colleges, Students, Faculty, and Campus Administrators
+   Core Value      | Eliminates administrative bottlenecks by delivering instant, verified answers to complex
+                   | student questions (fees, hostels, library, exams, scholarships) with zero hallucinations
+                   | and exact handbook citations.
+  ──────
+  ## 🏗️ Technical Architecture & Key Differentiators
+
+    flowchart LR
+        A[Student Query] --> B[Input Guardrails]
+        B -->|Passed| C[ChromaDB Vector Retrieval]
+        C --> D[LangGraph State Workflow]
+        D --> E[Groq Llama 3.3 70B]
+        E -.->|Fallback Failover| F[Google Gemini 2.5 Flash]
+        E --> G[Output Guardrails & PII Masking]
+        G --> H[ChatGPT-Style Frontend Streaming]
+
+  ### 1. LangGraph Agentic Workflow (src/helpdesk_agent/agent/graph.py)
+
+  • Built on a stateful 4-node pipeline: validate_input → retrieve → generate → validate_output.
+  • Includes built-in conversational memory checkpointers for seamless multi-turn dialog.
+
+  ### 2. Cascading Multi-Tier LLM Fallback (src/helpdesk_agent/llm/llm_gateway.py)
+
+  • Tier 1 (Ultra-Low Latency): Groq llama-3.3-70b-versatile
+  • Tier 2 (High Availability): Groq Secondary Key
+  • Tier 3 (Global Failover): Google gemini-2.5-flash
+  • Guarantees 99.99% uptime during peak admission & examination cycles.
+
+  ### 3. ChromaDB Semantic Vector Engine (src/helpdesk_agent/retrieval/store.py)
+
+  • Utilizes HuggingFace sentence-transformers/all-MiniLM-L6-v2 embeddings.
+  • Ingests institutional documents (.pdf, .txt, .docx, .md) with recursive chunking and overlap to preserve
+  policy context.
+
+  ### 4. Enterprise Guardrails & Privacy (src/helpdesk_agent/guardrails/guardrails.py)
+
+  • Prompt Injection Defense: Blocks adversarial attacks, jailbreaks, and system prompt exfiltration.
+  • Restricted Topics: Filters out unsafe/malicious queries.
+  • PII Auto-Redaction: Automatically masks student emails and phone numbers before output.
+
+  ### 5. SaaS UI & Frontend Streaming Engine (web/)
+
+  • Real-Time Word-by-Word Streaming: ChatGPT-style typewriter cadence with live blinking cursor (▍).
+  • Date-Grouped Conversation History: Persistent multi-session history (Today, Yesterday, Previous 7 Days,
+  Older) with live search, renaming, and Markdown export.
+  • Verified Citations: Official source badges linking answers directly to specific handbook sections.
+  ──────
+  ## 🎙️ SaaS Explainer Video Script (60–90 Seconds)
+
+  ### [0:00 - 0:15] Scene 1: The Problem (Hook)
+
+  • Visual: Split screen showing overwhelmed college administrative counters, long queues, and frustrated
+  students searching through 100-page PDF handbooks.
+  • Voiceover (VO):
+  │ "Every semester, thousands of students waste hours searching through massive policy documents or waiting in
+  │ administrative lines for basic questions about fees, hostels, and exams."
+
+  ──────
+  ### [0:15 - 0:35] Scene 2: Introducing CampusOS AI
+
+  • Visual: Smooth transition to the sleek CampusOS AI SaaS dark-mode interface. A student clicks a prompt card:
+  "What are the library timings and overdue fine policies?"
+  • Voiceover (VO):
+  │ "Meet CampusOS AI — the next-generation intelligent campus helpdesk powered by LangGraph, ChromaDB, and Groq
+  │ high-speed LLMs."
+
+  ──────
+  ### [0:35 - 0:55] Scene 3: Live ChatGPT-Style Streaming & Citations
+
+  • Visual: Close-up of the ChatGPT-style streaming text typing out instantly with the blinking cursor, followed
+  by the expandable "Official Knowledge Sources" citation pill appearing below the response.
+  • Voiceover (VO):
+  │ "CampusOS AI delivers real-time, streaming answers grounded strictly in your official institutional
+  │ handbooks. No guesswork, no hallucinations — just verified answers with exact document citations."
+
+  ──────
+  ### [0:55 - 1:15] Scene 4: Enterprise Safety & Multi-Session History
+
+  • Visual: Screen showcases switching between past conversations grouped by date (Today, Previous 7 Days),
+  renaming a chat, and demonstrating built-in prompt injection protection and PII redaction.
+  • Voiceover (VO):
+  │ "With multi-tier fallback architecture, persistent conversation memory, and enterprise-grade guardrails that
+  │ protect student privacy, CampusOS AI is built for institutional scale."
+
+  ──────
+  ### [1:15 - 1:30] Scene 5: Call to Action (Outro)
+
+  • Visual: Animated CampusOS AI logo, student clicking 'New Consultation', and campus crest.
+  • Voiceover (VO):
+  │ "Empower your campus with 24/7 intelligence. Experience CampusOS AI today."
