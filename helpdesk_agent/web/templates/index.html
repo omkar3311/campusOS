@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusOS AI | Intelligent College Helpdesk</title>
+    <meta name="description" content="CampusOS AI is an enterprise virtual assistant for students and faculty, delivering instant answers from official college policies, handbooks, and regulations.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="static/icon.ico">
+    <link rel="stylesheet" href="static/css/style.css">
+    <!-- Marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+    <!-- ==========================================================================
+         CampusOS Unified Global Header Bar
+         ========================================================================== -->
+    <header class="campusos-global-header">
+        <div class="campusos-brand">
+            <a href="/" class="campusos-logo-mark">
+                <span class="campusos-icon">CO</span>
+                <span class="campusos-name">CampusOS</span>
+            </a>
+            <span class="campusos-divider">/</span>
+            <span class="campusos-agent-badge" style="background: rgba(16, 185, 129, 0.1); color: #15803d; border-color: rgba(16, 185, 129, 0.25);">💬 Campus Inquiry AI</span>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; font-weight: 500;">
+            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 9999px; background: rgba(15, 23, 42, 0.04); border: 1px solid rgba(15, 23, 42, 0.08);">
+                <span>🏛️</span> 24/7 Public Information Desk • Admission & Policies
+            </span>
+        </div>
+
+        <div class="campusos-user-dock">
+            <div class="campusos-status-pill">
+                <span class="pulse-dot"></span>
+                <span class="status-label">Public Desk</span>
+            </div>
+            <a id="backToPortalBtn" href="/" class="campusos-exit-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                <span id="backToPortalText">CampusOS Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div id="app" class="saas-layout">
+        
+        <!-- ========================================================= -->
+        <!-- SIDEBAR -->
+        <!-- ========================================================= -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Brand Header -->
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">Helpdesk AI</span>
+                        <span class="brand-tag">Campus Support</span>
+                    </div>
+                </div>
+                <button class="icon-btn-sm collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar (Ctrl+[)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- New Chat CTA -->
+            <div class="sidebar-cta">
+                <button class="btn btn-new-chat" id="newChatBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>New Consultation</span>
+                    <kbd class="shortcut-kbd">Alt+N</kbd>
+                </button>
+            </div>
+
+            <!-- Search Conversations -->
+            <div class="sidebar-search">
+                <div class="search-input-wrap">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="searchHistoryInput" placeholder="Search conversations...">
+                </div>
+            </div>
+
+            <!-- Conversation History Groups -->
+            <div class="history-scroll" id="historyContainer">
+                <div class="history-group" id="groupToday">
+                    <div class="group-title">TODAY</div>
+                    <div class="group-items" id="itemsToday"></div>
+                </div>
+                <div class="history-group" id="groupYesterday">
+                    <div class="group-title">YESTERDAY</div>
+                    <div class="group-items" id="itemsYesterday"></div>
+                </div>
+                <div class="history-group" id="groupPastWeek">
+                    <div class="group-title">PREVIOUS 7 DAYS</div>
+                    <div class="group-items" id="itemsPastWeek"></div>
+                </div>
+                <div class="history-group" id="groupOlder">
+                    <div class="group-title">OLDER</div>
+                    <div class="group-items" id="itemsOlder"></div>
+                </div>
+            </div>
+
+            <!-- Sidebar User / Status Footer -->
+            <div class="sidebar-footer">
+                <div class="user-profile-tile" id="directoryBtnTrigger" title="View Campus Directory">
+                    <div class="user-avatar">
+                        <span>ST</span>
+                        <span class="user-status-dot"></span>
+                    </div>
+                    <div class="user-meta">
+                        <span class="user-name">Student Portal</span>
+                        <span class="user-role">Official Knowledge Connected</span>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="user-more-icon">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="19" cy="12" r="1"></circle>
+                        <circle cx="5" cy="12" r="1"></circle>
+                    </svg>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ========================================================= -->
+        <!-- MAIN CHAT CANVAS -->
+        <!-- ========================================================= -->
+        <main class="chat-canvas">
+            
+            <!-- Top Navigation Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="icon-btn mobile-menu-btn" id="mobileMenuBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div class="active-session-title-wrap">
+                        <span class="active-session-title" id="activeSessionHeaderTitle">General Consultation</span>
+                        <button class="icon-btn-ghost" id="renameSessionBtn" title="Rename Conversation">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="model-badge">
+                        <span class="model-dot"></span>
+                        <span class="model-name">Qwen 3.6 27B (Enterprise RAG)</span>
+                    </div>
+
+                    <button class="icon-btn" id="directoryBtn" title="Campus Directory & Contacts">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="icon-btn" id="exportChatBtn" title="Export Conversation">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </button>
+
+                    <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+                        <svg class="sun-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <svg class="moon-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Messages Stream Area -->
+            <div class="chat-viewport" id="chatViewport">
+                <div class="chat-inner-container">
+                    
+                    <!-- Empty State Hero (Visible when no messages in session) -->
+                    <div class="chat-hero" id="chatHero">
+                        <div class="hero-crest">
+                            <div class="hero-crest-glow"></div>
+                            <div class="hero-crest-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <h1 class="hero-title">How can I assist your college inquiries today?</h1>
+                        <p class="hero-desc">Ask questions about academics, admissions, hostel guidelines, examinations, fees, and campus facilities. Verified by official college documentation.</p>
+
+                        <!-- Curated Prompt Cards Grid -->
+                        <div class="prompt-cards-grid">
+                            <button class="prompt-card" data-prompt="What are the college library timings, issue limits, and overdue fine policies?">
+                                <div class="prompt-card-icon">📚</div>
+                                <div class="prompt-card-text">
+                                    <strong>Library Regulations & Hours</strong>
+                                    <span>Borrowing limits, catalog access & fines</span>
+                                </div>
+                            </button>
+
+                            <button class="prompt-card" data-prompt="What is the minimum attendance required to appear for semester examinations?">
+                                <div class="prompt-card-icon">📊</div>
+                                <div class="prompt-card-text">
+                                    <strong>Attendance & Exam Eligibility</strong>
+                                    <span>Minimum percentage, medical leaves & criteria</span>
+                                </div>
+                            </button>
+
+                            <button class="prompt-card" data-prompt="What are the hostel curfew timings and night-out permission procedures?">
+                                <div class="prompt-card-icon">🏡</div>
+                                <div class="prompt-card-text">
+                                    <strong>Hostel Rules & Curfew Hours</strong>
+                                    <span>Night passes, guest policy & entry timings</span>
+                                </div>
+                            </button>
+
+                            <button class="prompt-card" data-prompt="How do I apply for merit-based and need-based scholarships?">
+                                <div class="prompt-card-icon">🎓</div>
+                                <div class="prompt-card-text">
+                                    <strong>Scholarships & Financial Aid</strong>
+                                    <span>Eligibility guidelines and submission deadlines</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active Message Cards Stream -->
+                    <div class="messages-list" id="messagesList"></div>
+
+                    <!-- Animated Thinking Placeholder -->
+                    <div class="thinking-row" id="thinkingRow">
+                        <div class="agent-avatar">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div class="thinking-bubble">
+                            <div class="thinking-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span class="thinking-label">Consulting official handbook & synthesizing answer...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating Scroll-To-Bottom Button -->
+            <button class="scroll-bottom-btn" id="scrollBottomBtn" title="Scroll to bottom">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+
+            <!-- Stop Generating Floating Action -->
+            <div class="stop-generating-wrap" id="stopGeneratingWrap">
+                <button class="btn btn-stop-generating" id="stopGeneratingBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+                    </svg>
+                    <span>Stop Generating</span>
+                </button>
+            </div>
+
+            <!-- ChatGPT Style Input Bar -->
+            <div class="chat-input-wrapper">
+                <div class="input-card-pill">
+                    <textarea 
+                        id="chatInput" 
+                        class="chat-textarea" 
+                        placeholder="Ask anything about college policies, courses, examinations, hostels, or fees... (Press Enter to send)"
+                        rows="1"
+                        maxlength="3000"
+                    ></textarea>
+
+                    <div class="input-actions-bar">
+                        <div class="input-meta-left">
+                            <span class="char-count" id="charCount">0/3000</span>
+                        </div>
+                        <div class="input-meta-right">
+                            <button class="send-action-btn" id="sendBtn" title="Send question (Enter)">
+                                <svg class="send-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-disclaimer-text">
+                    CampusOS AI provides answers grounded in official college handbooks and verified institutional policies.
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- MODALS -->
+    <!-- ============================================================= -->
+
+    <!-- Campus Directory & Contacts Modal -->
+    <div class="modal-backdrop" id="directoryModal">
+        <div class="modal-dialog modal-md">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <h3 class="modal-heading">Campus Directory & Office Helpdesk</h3>
+                    <p class="modal-subheading">Important contact numbers and operational hours</p>
+                </div>
+                <button class="icon-btn-ghost close-modal" data-close="directoryModal">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="directory-list">
+                    <div class="directory-item">
+                        <div class="dir-icon">🏛️</div>
+                        <div class="dir-info">
+                            <strong>Academic Affairs & Registrar</strong>
+                            <span>Main Administration Block, Room 102 • Mon-Fri 9:00 AM - 5:00 PM</span>
+                        </div>
+                    </div>
+                    <div class="directory-item">
+                        <div class="dir-icon">📚</div>
+                        <div class="dir-info">
+                            <strong>Central Library & Digital Archives</strong>
+                            <span>Library Complex • Mon-Sat 8:00 AM - 10:00 PM</span>
+                        </div>
+                    </div>
+                    <div class="directory-item">
+                        <div class="dir-icon">🏡</div>
+                        <div class="dir-info">
+                            <strong>Chief Warden & Hostel Office</strong>
+                            <span>Student Residential Complex, Block C • 24/7 Helpline Active</span>
+                        </div>
+                    </div>
+                    <div class="directory-item">
+                        <div class="dir-icon">💳</div>
+                        <div class="dir-info">
+                            <strong>Accounts & Scholarship Cell</strong>
+                            <span>Finance Wing, Counter 4 • Mon-Fri 10:00 AM - 3:30 PM</span>
+                        </div>
+                    </div>
+                    <div class="directory-item">
+                        <div class="dir-icon">🏥</div>
+                        <div class="dir-info">
+                            <strong>Health Center & Emergency Support</strong>
+                            <span>Campus Medical Center • 24/7 Emergency Support Available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close="directoryModal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Session Modal -->
+    <div class="modal-backdrop" id="renameModal">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-header">
+                <h3 class="modal-heading">Rename Conversation</h3>
+                <button class="icon-btn-ghost close-modal" data-close="renameModal">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="renameInput" class="modal-input" placeholder="Enter conversation title...">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close="renameModal">Cancel</button>
+                <button class="btn btn-primary" id="saveRenameBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-stack" id="toastStack"></div>
+
+    <!-- Application Logic -->
+    <script src="static/js/app.js"></script>
+</body>
+</html>
