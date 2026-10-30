@@ -1,0 +1,238 @@
+# ==============================================================================
+# CampusOS Comprehensive Knowledge Base & User Help Guide (Chatbot Knowledge Base)
+# ==============================================================================
+
+---
+
+## 1. GENERAL SYSTEM OVERVIEW & ARCHITECTURE
+
+### What is CampusOS?
+CampusOS is an all-in-one next-generation Artificial Intelligence Operating System designed for modern educational institutions, universities, and colleges. It unifies academic intelligence, placement acceleration, touchless biometric attendance, faculty management, and 24/7 campus operations into a single cohesive platform.
+
+### Core Ecosystem Components
+CampusOS consists of two main interconnected systems:
+1. **The CampusOS Main Portal (Web Platform)**:
+   - Role-based management dashboard for HODs, Teachers, and Students.
+   - Classroom management, student directory, timetable tracking, attendance updates, defaulter rules, and CSV exports.
+   - Secure JWT HttpOnly cookie authentication and role hierarchy.
+2. **Four Specialized AI Agents**:
+   - **Learning Agent** (`/agent/study/`): Academic AI tutor, study materials RAG, adaptive roadmap, quizzes, flashcards.
+   - **Career Agent / ResumeIQ** (`/agent/career/`): ATS resume review, skill gap analysis, placement eligibility, mock interviews.
+   - **Attendance Agent** (`/agent/attendance/`): Biometric face recognition, attendance prediction, safe zone calculator, leave planning.
+   - **Campus Inquiry AI / Helpdesk** (`/agent/campus/`): 24/7 public virtual information desk for prospective students, visitors, and campus policies.
+
+---
+
+## 2. USER ROLES & PERMISSION HIERARCHY
+
+CampusOS enforces a strict 3-tier Role-Based Access Control (RBAC) hierarchy:
+
+### Tier 1: Student (Level 1)
+- **Permissions**:
+  - Access personal Student Portal (`/student` or `/student/dashboard`).
+  - View personal attendance percentages, monthly trends, streaks, rank, and safe slot goals.
+  - Access the 3 dedicated AI Workspaces: Learning Agent, Career Agent, and Attendance Agent.
+  - Personal student isolation: chats, notes, and study sessions are completely private to each student.
+- **Restrictions**:
+  - Cannot access Staff Dashboard (`/staff`), Faculty Dashboards, or Classroom Management.
+  - Cannot modify attendance or assign teachers.
+
+### Tier 2: Teacher / Faculty (Level 2)
+- **Permissions**:
+  - Access Class Dashboard (`/classroom/{id}`) and College Overview (`/dashboard`).
+  - Take, mark, and edit student attendance across daily time slots (Present / Absent).
+  - Add new students to assigned classrooms with face photos for biometric indexing.
+  - Set Defaulter Threshold percentages for classrooms.
+  - Export classroom attendance reports as CSV spreadsheets.
+  - Access AI Workspaces in faculty assistance mode.
+- **Restrictions**:
+  - Cannot access HOD Staff Management (`/staff`).
+  - Cannot assign or reassign class teachers.
+
+### Tier 3: Head of Department (HOD) / Principal (Level 3 - Super Admin)
+- **Permissions**:
+  - Full administrative control across the entire college.
+  - Access Main College Dashboard (`/main_dashboard` or `/dashboard`) with real-time college-wide telemetry.
+  - Access Staff Management Portal (`/staff`): view all registered faculty, invite new teachers.
+  - Assign and reassign Class Teachers for any classroom.
+  - Create and manage all classrooms and student rosters.
+  - Set institution-wide and classroom defaulter rules.
+  - Access all AI Workspaces with administrator privileges.
+
+---
+
+## 3. THE 4 SPECIALIZED AI AGENTS
+
+### Agent 1: Learning Agent (Academic AI Tutor)
+- **URL**: `/agent/study/` or `/agent/learning/` (Requires Login)
+- **Purpose**: Hyper-personalized academic study companion grounded in uploaded course materials.
+- **Key Features**:
+  - **Knowledge Base RAG**: Upload syllabus PDFs, textbook chapters, slide decks, and lecture notes.
+  - **Adaptive Study Roadmaps**: Breaks down complex academic concepts into structured, step-by-step learning milestones.
+  - **AI Practice Quizzes & Flashcards**: Generates instant multi-question quizzes with explanations.
+  - **Student Privacy & Isolation**: Every student maintains their own isolated chat history, document registry, and study sessions without mixing with other students.
+  - **Modes**: Concept Breakdown, Code Intuition, Exam Preparation, and Math Simplification.
+
+### Agent 2: Career Agent (ResumeIQ & Placement Engine)
+- **URL**: `/agent/career/` or `/agent/resume/` (Requires Login)
+- **Purpose**: Transforms student academic potential into high-value job placements and career growth.
+- **Key Features**:
+  - **Instant ATS Resume Score**: Scans resumes against modern Applicant Tracking System standards (formatting, keywords, quantifiable impact, sections).
+  - **Skill-Gap Analysis**: Compares a student's resume directly against target Job Descriptions (JDs) to identify missing skills and required courses.
+  - **Placement Eligibility Checker**: Evaluates student profile readiness for campus recruitment drives.
+  - **Mock Interview Preparation**: Generates tailored technical, behavioral, and system design interview questions with model answers.
+  - **Coding Practice & Career Roadmap**: Recommends practice problem sets and long-term career milestone plans.
+
+### Agent 3: Attendance Intelligence Agent
+- **URL**: `/agent/attendance/` (Requires Login)
+- **Purpose**: Automated attendance intelligence, predictive risk analysis, and touchless recognition.
+- **Key Features**:
+  - **Biometric Face Recognition**: Sub-second face recognition model for classroom cameras.
+  - **Attendance Prediction Engine**: Forecasts semester-end attendance based on historical trends and weekday patterns.
+  - **Safe Zone Calculator**: Calculates the exact number of upcoming classes a student must attend to cross the safe 75% or 80% mark.
+  - **Leave Planning**: Simulates the impact of taking leave on overall attendance percentage.
+  - **Faculty Workload & Timetable Matrix**: Displays lecture distribution and room utilization.
+
+### Agent 4: Campus Inquiry AI (Public Virtual Desk)
+- **URL**: `/agent/campus/` or `/agent/helpdesk/` (Public • No Login Required)
+- **Purpose**: 24/7 virtual inquiry desk for prospective students, parents, and visitors.
+- **Key Features**:
+  - Directly accessible from the CampusOS Home page (`/`) without needing login credentials.
+  - Answers queries regarding campus admissions, eligibility criteria, department offerings, hostel facilities, library timings, exam guidelines, and official college regulations.
+  - Features quick consultation pill prompts (e.g., "Admission Process", "Fee Structure", "Library Rules", "Hostel Facilities").
+
+---
+
+## 4. AUTHENTICATION & LOGIN HELP
+
+### How to Log In
+1. Navigate to the CampusOS Home Page (`/`) or Login Page (`/login`).
+2. Select your role tab: **Student**, **Teacher**, or **HOD / Principal**.
+3. For **Student Login**:
+   - Enter your registered Full Name.
+   - Enter your Student Email Address.
+   - Enter your College ID and Classroom ID.
+   - Click **Login as Student**.
+4. For **Teacher Login**:
+   - Enter your College ID.
+   - Enter your Teacher Name.
+   - Enter your Faculty Email and Password.
+   - Click **Login as Teacher**.
+5. For **HOD Login**:
+   - Enter your Name, College Name, HOD Email, and Password.
+   - Click **Login as HOD**.
+6. Upon successful authentication, a cryptographically signed JWT `HttpOnly` cookie (`campusos_token`) is set, automatically directing you to your authorized dashboard.
+
+### How to Sign Up (New College Registration)
+1. Go to `/login` and switch to the **HOD / Principal** tab.
+2. Toggle to **Sign Up (New College)** mode.
+3. Enter your HOD Name, College Name, Admin Email, and strong Password.
+4. Submit the form to generate a new College Workspace with unique ID.
+
+### Student Classroom Join Link (Invite)
+- Teachers and HODs can share a unique invite link formatted as:
+  `http://127.0.0.1:8000/student/invite/{college_id}/{classroom_id}`
+- Students opening this link can register directly into that specific classroom by entering their Name, PRN, Email, Password, and uploading a profile face photo.
+
+### Teacher College Join Link (Invite)
+- HODs can copy the Teacher Invite link from the `/staff` dashboard:
+  `http://127.0.0.1:8000/teacher/invite/{college_id}`
+- New faculty members can register by entering their Name, Email, and Password to join the institution.
+
+### How to Log Out
+- Click the **Log Out** button located in the navigation bar or top user dock.
+- Visiting `/logout` completely clears the JWT authentication cookie and resets session state, returning to the home page.
+
+---
+
+## 5. DASHBOARDS & WORKSPACE NAVIGATION
+
+### Navigating the Unified Topbar
+Across all AI agents and dashboards, CampusOS provides a unified top navigation bar:
+- **CampusOS Brand Logo**: Click `CampusOS` to return to the portal.
+- **Agent Switcher Tabs**: Click `📚 Learning`, `💼 Career`, or `📊 Attendance` to switch between workspaces without losing identity or query parameters.
+- **Status Indicator**: Shows green pulse `● Online` or `● Live Sync`.
+- **User Role Pill**: Shows active role (`HOD`, `TEACHER`, or `STUDENT`) with user display name.
+- **Back to Portal Button**: Context-aware exit button that returns you to your specific dashboard (`HOD Dashboard`, `Class Dashboard`, or `Student Portal`).
+
+---
+
+## 6. CLASSROOM & STUDENT MANAGEMENT GUIDE
+
+### How to View Classrooms
+1. Log in as HOD or Teacher to land on the College Dashboard (`/dashboard`).
+2. Scroll to the **Classrooms** section.
+3. Click on any classroom card to open its dedicated Class Dashboard (`/classroom/{id}`).
+
+### How to Add a Student to a Classroom
+1. Open the target classroom (`/classroom/{id}`).
+2. In the right-hand panel, locate the **Add Student** form.
+3. Fill in:
+   - **Student Full Name**
+   - **PRN / Roll Number**
+   - **Email Address**
+   - **Password**
+   - **Face Photo Upload** (clear front-facing image for biometric recognition).
+4. Click **Add Student to Class**.
+
+### How to View a Student's Detailed Profile & Analytics
+1. Open the classroom dashboard (`/classroom/{id}`).
+2. In the student roster grid, click on any student's card or name.
+3. This opens the student view page (`/student/view/{classroom_id}/{prn}`) displaying:
+   - Overall Attendance Percentage.
+   - Class average comparison and student rank.
+   - Attendance streak count and safe slots needed.
+   - Daily attendance breakdown with per-slot status tags.
+
+---
+
+## 7. ATTENDANCE OPERATIONS & CSV EXPORTS
+
+### How to Mark or Edit Attendance
+1. Log in as Teacher or HOD.
+2. Open the classroom and select the student profile.
+3. Scroll down to the **Attendance Logs** table.
+4. Locate the specific date and slot label (e.g., `slot_09_00` or `10:00 AM`).
+5. Click the **Edit (✏️)** button.
+6. Change the status to **Present** or **Absent**.
+7. Click **Save**; the system instantly updates the attendance record and logs the teacher's name.
+
+### How to Export Attendance as CSV
+1. Open the classroom dashboard (`/classroom/{id}`).
+2. Click the **Export CSV** or **Download Attendance** button (`/classroom/{id}/export/csv`).
+3. The system compiles all student attendance records across all dates and time slots into a standard `.csv` spreadsheet and downloads it to your computer.
+
+### How to Set Classroom Defaulter Threshold
+1. Open the classroom dashboard (`/classroom/{id}`).
+2. Locate the **Defaulter Rule / Threshold** setting.
+3. Enter the required minimum percentage (e.g., `75` or `80`).
+4. Click **Update Threshold**. Students with attendance below this number are automatically flagged as defaulters.
+
+### How to Assign a Class Teacher (HOD-Only)
+1. Log in as HOD and open the classroom dashboard (`/classroom/{id}`).
+2. In the classroom settings panel, locate **Assign Class Teacher**.
+3. Select the faculty member from the dropdown list of registered college teachers.
+4. Click **Save Teacher Assignment**.
+
+---
+
+## 8. TROUBLESHOOTING & FREQUENTLY ASKED QUESTIONS (FAQ)
+
+### Q: Why am I being redirected to /login when clicking an AI Agent?
+**A**: The 3 main AI agents (Learning Agent, Career Agent, Attendance Agent) are secure academic workspaces that require an authenticated student or faculty account. Log in first, and you will be immediately taken to your agent. The Campus Inquiry AI on the home page does not require a login.
+
+### Q: Why can't I access the Staff Dashboard (/staff) as a Teacher?
+**A**: The Staff Dashboard and Class Teacher Assignment are strictly restricted to Head of Department (HOD) / Principal accounts under the CampusOS permission hierarchy. Teachers have full access to class rosters, student telemetry, and attendance marking.
+
+### Q: How does the Biometric Attendance system work?
+**A**: When a student is enrolled with their face photo, 128-dimensional facial embedding vectors are generated. During classroom lectures, the camera detects faces and matches them against the classroom vector database in sub-second inference time.
+
+### Q: How does the Safe Attendance Slot Calculator work?
+**A**: The calculator evaluates your current attended lectures against total conducted lectures. If your attendance is below 75%, it calculates the exact consecutive lecture slots you must attend as Present to elevate your overall average back into the safe green zone.
+
+### Q: Can other students see my Learning Agent notes and conversations?
+**A**: No. CampusOS features complete student isolation. Each student has a private session store and document registry keyed to their unique student identity.
+
+---
+# End of CampusOS Knowledge Base Document
+# ==============================================================================

@@ -1,0 +1,387 @@
+# College Handbook
+
+## 1. College Information
+
+**College Name:** Sunrise Institute of Technology and Management
+**Location:** Pune, Maharashtra, India
+
+Sunrise Institute of Technology and Management is a fictional college document created for testing the College Helpdesk RAG Agent.
+
+The college offers undergraduate and postgraduate programs in engineering, computer applications, management, and science.
+
+---
+
+## 2. Admissions
+
+Admissions are handled by the **Central Admissions Office** located in the **Main Administrative Building, Ground Floor**.
+
+Students who want to apply for admission should first complete the online application form and then visit the Central Admissions Office for document verification.
+
+### Admission Process
+
+The general admission process is:
+
+1. Complete the online application form.
+2. Upload the required academic documents.
+3. Wait for the application to be reviewed.
+4. Visit the Central Admissions Office for document verification.
+5. Pay the applicable admission and tuition fees.
+6. Collect the admission confirmation receipt.
+
+Students should bring the following documents for verification:
+
+* Government-issued identity proof
+* Passport-size photographs
+* Class 10 marksheet
+* Class 12 marksheet
+* Transfer certificate
+* Migration certificate, if applicable
+* Entrance examination scorecard, if applicable
+* Caste/category certificate, if applicable
+* Valid income certificate, if applicable
+
+---
+
+## 3. Where to Take Admission
+
+For admission-related queries and document verification, students should visit:
+
+**Office:** Central Admissions Office
+**Building:** Main Administrative Building
+**Floor:** Ground Floor
+**Counter:** Admission Counter 1 to 4
+
+The Central Admissions Office handles:
+
+* New admissions
+* Document verification
+* Admission confirmation
+* Course selection
+* Admission-related fee information
+* Student admission records
+
+The Helpdesk Agent should not claim that an admission has been completed unless the user provides information from an actual college system.
+
+---
+
+## 4. Tuition Fees
+
+The following fees are for testing purposes.
+
+### Bachelor of Technology (B.Tech)
+
+| Program                           | Annual Tuition Fee |
+| --------------------------------- | -----------------: |
+| Computer Engineering              |          ₹1,20,000 |
+| Information Technology            |          ₹1,15,000 |
+| Electronics and Telecommunication |          ₹1,10,000 |
+| Mechanical Engineering            |          ₹1,00,000 |
+| Civil Engineering                 |            ₹95,000 |
+
+### Bachelor of Computer Applications (BCA)
+
+Annual tuition fee: **₹85,000**
+
+### Bachelor of Business Administration (BBA)
+
+Annual tuition fee: **₹80,000**
+
+### Master of Computer Applications (MCA)
+
+Annual tuition fee: **₹1,10,000**
+
+These amounts are tuition fees only. Other applicable charges may be listed separately.
+
+---
+
+## 5. Other College Fees
+
+The following charges may apply in addition to tuition fees:
+
+| Fee Type                 |              Amount |
+| ------------------------ | ------------------: |
+| Admission Processing Fee |              ₹2,000 |
+| Examination Fee          | ₹1,500 per semester |
+| Library Fee              |     ₹2,000 per year |
+| Student Activity Fee     |     ₹1,000 per year |
+| Identity Card Fee        |                ₹200 |
+| Laboratory Fee           |     ₹3,000 per year |
+
+Fees must be paid through the official college payment process.
+
+Students should contact the Accounts Office if they have questions about a specific payment or fee receipt.
+
+---
+
+## 6. Accounts Office
+
+The Accounts Office is located in the:
+
+**Main Administrative Building, First Floor**
+
+The Accounts Office handles:
+
+* Tuition fee payments
+* Fee receipts
+* Refund-related queries
+* Scholarship fee adjustments
+* Payment verification
+* Outstanding fee queries
+
+Students should keep their payment receipt for future reference.
+
+---
+
+## 7. Academic Departments
+
+The college has the following departments:
+
+* Computer Engineering
+* Information Technology
+* Electronics and Telecommunication
+* Mechanical Engineering
+* Civil Engineering
+* Computer Applications
+* Business Administration
+* Basic Sciences
+
+Students should contact their respective department office for academic matters.
+
+---
+
+## 8. College Library
+
+The Central Library is located in the **Library Building, First Floor**.
+
+### Library Hours
+
+Monday to Friday:
+
+**8:00 AM to 8:00 PM**
+
+Saturday:
+
+**9:00 AM to 2:00 PM**
+
+The library is closed on Sundays and official college holidays.
+
+Students can use the library for:
+
+* Textbooks
+* Reference books
+* Journals
+* Newspapers
+* Digital learning resources
+* Study spaces
+
+Students must carry their valid college identity card when using the library.
+
+---
+
+## 9. Hostel
+
+The college provides separate hostel facilities for eligible students.
+
+The Hostel Office is located in the **Student Services Building**.
+
+### Hostel Fees
+
+| Hostel Type       | Annual Fee |
+| ----------------- | ---------: |
+| Shared Room       |    ₹70,000 |
+| Three-Person Room |    ₹60,000 |
+| Four-Person Room  |    ₹50,000 |
+
+Hostel fees do not include the refundable security deposit.
+
+Students interested in hostel accommodation should contact the Hostel Office for availability and allocation.
+
+---
+
+## 10. Student ID Card
+
+Every enrolled student must have a valid college identity card.
+
+New students receive their identity cards through the Student Services Office after admission confirmation.
+
+The Student Services Office is located in the **Main Administrative Building, Second Floor**.
+
+If an identity card is lost, the student should report the loss to the Student Services Office.
+
+The replacement identity card fee is **₹200**.
+
+---
+
+## 11. Attendance
+
+Students are expected to maintain at least **75% attendance** in each course.
+
+Attendance is recorded by the respective course instructor.
+
+Students with attendance-related questions should first contact the concerned faculty member or department office.
+
+The Helpdesk Agent should not approve attendance exemptions or make exceptions to attendance requirements.
+
+---
+
+## 12. Examinations
+
+Semester examinations are coordinated by the **Examination Office**.
+
+The Examination Office is located in the **Main Administrative Building, First Floor**.
+
+The Examination Office handles:
+
+* Examination forms
+* Examination schedules
+* Hall tickets
+* Examination fees
+* Results
+* Revaluation applications
+* Examination-related queries
+
+Students should regularly check official college notices for examination dates and deadlines.
+
+---
+
+## 13. Scholarships
+
+Eligible students may apply for scholarships through the Student Scholarship Office.
+
+The Student Scholarship Office is located in the **Student Services Building, Ground Floor**.
+
+Students may be required to provide:
+
+* Academic records
+* Income certificate
+* Category certificate, where applicable
+* Government identity proof
+* Bank account information
+* Other documents specified by the scholarship authority
+
+Scholarship eligibility depends on the applicable scholarship rules.
+
+The Helpdesk Agent should not guarantee scholarship approval.
+
+---
+
+## 14. Transportation
+
+The college operates buses on selected routes within Pune.
+
+Students who want to use college transportation should register with the Transport Office.
+
+The Transport Office is located in the **Main Administrative Building, Ground Floor**.
+
+Transportation registration is separate from academic admission.
+
+Students should contact the Transport Office for route availability and bus registration.
+
+---
+
+## 15. Important Offices
+
+### Central Admissions Office
+
+**Location:** Main Administrative Building, Ground Floor
+
+Handles:
+
+* New admissions
+* Document verification
+* Admission confirmation
+* Admission queries
+
+### Accounts Office
+
+**Location:** Main Administrative Building, First Floor
+
+Handles:
+
+* Fees
+* Receipts
+* Payment queries
+* Refund queries
+
+### Examination Office
+
+**Location:** Main Administrative Building, First Floor
+
+Handles:
+
+* Examination forms
+* Hall tickets
+* Examination schedules
+* Results
+* Revaluation
+
+### Student Services Office
+
+**Location:** Main Administrative Building, Second Floor
+
+Handles:
+
+* Student ID cards
+* General student services
+* Student records
+
+### Hostel Office
+
+**Location:** Student Services Building
+
+Handles:
+
+* Hostel applications
+* Room allocation
+* Hostel-related queries
+
+### Scholarship Office
+
+**Location:** Student Services Building, Ground Floor
+
+Handles:
+
+* Scholarship applications
+* Scholarship documentation
+
+### Transport Office
+
+**Location:** Main Administrative Building, Ground Floor
+
+Handles:
+
+* Bus registration
+* Transportation-related queries
+
+---
+
+## 16. General Helpdesk Information
+
+The College Helpdesk can answer general questions using the official college knowledge base.
+
+Examples of supported questions include:
+
+* What is the tuition fee for Computer Engineering?
+* Where is the admission office?
+* Where do I submit admission documents?
+* What documents are required for admission?
+* How much does the BCA program cost?
+* Where is the Accounts Office?
+* What are the library timings?
+* What is the hostel fee?
+* What is the minimum attendance requirement?
+* Where is the Examination Office?
+* Where can I apply for a scholarship?
+* Where is the Student Services Office?
+
+The Helpdesk Agent must not invent information that is not present in the college knowledge base.
+
+If the knowledge base does not contain enough information to answer a question, the Helpdesk Agent should clearly tell the student that the available information is insufficient.
+
+---
+
+## 17. Important Note
+
+This document is a **fictional test document** created for development and testing of the College Helpdesk RAG Agent.
+
+The fees, office locations, procedures, timings, and policies in this document are not real college information.
