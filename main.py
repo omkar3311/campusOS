@@ -78,5 +78,11 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=True,
-        reload_dirs=[str(ROOT_DIR)]
+        reload_dirs=[str(ROOT_DIR)],
+        reload_excludes=[
+            "**/.venv/**",
+            "**/venv/**",
+            "**/.git/**",
+            "**/__pycache__/**",
+        ],
     )

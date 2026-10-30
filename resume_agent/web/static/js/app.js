@@ -1036,6 +1036,54 @@ async function loadProfileDetails() {
 // ==========================================================================
 // File Upload & Modal Handling
 // ==========================================================================
+function setUploadProgressState(labelText, percentValue, currentStep) {
+  const panel = document.getElementById('upload-progress-panel');
+  const fill = document.getElementById('upload-progress-fill');
+  const label = document.getElementById('upload-progress-label');
+  const percent = document.getElementById('upload-progress-percent');
+  const steps = document.querySelectorAll('.upload-progress-step');
+
+  if (!panel || !fill || !label || !percent) return;
+
+  panel.style.display = 'block';
+  fill.style.width = `${percentValue}%`;
+  label.textContent = labelText;
+  percent.textContent = `${percentValue}%`;
+
+  steps.forEach((step, index) => {
+    const active = index <= currentStep;
+    step.style.opacity = active ? '1' : '0.45';
+    step.style.borderColor = active ? 'rgba(125, 211, 252, 0.8)' : 'rgba(148, 163, 184, 0.35)';
+    step.style.background = active ? 'rgba(14, 165, 233, 0.15)' : 'rgba(148, 163, 184, 0.08)';
+    step.style.color = active ? '#dbeafe' : 'var(--text-dim)';
+  });
+}
+
+function resetUploadProgressState() {
+  const panel = document.getElementById('upload-progress-panel');
+  const fill = document.getElementById('upload-progress-fill');
+  const label = document.getElementById('upload-progress-label');
+  const percent = document.getElementById('upload-progress-percent');
+  if (!panel || !fill || !label || !percent) return;
+  panel.style.display = 'none';
+  fill.style.width = '0%';
+  label.textContent = 'Preparing upload...';
+  percent.textContent = '0%';
+}
+
+async function runUploadProgressSequence() {
+  const stages = [
+    { label: 'Uploading files', percent: 28, step: 0 },
+    { label: 'Chunking documents', percent: 66, step: 1 },
+    { label: 'Storing embeddings', percent: 100, step: 2 },
+  ];
+
+  for (const stage of stages) {
+    setUploadProgressState(stage.label, stage.percent, stage.step);
+    await new Promise((resolve) => setTimeout(resolve, 350));
+  }
+}
+
 function initUploadModal() {
   const modal = document.getElementById('upload-modal');
   const btnTrigger = document.getElementById('btn-open-upload');
@@ -1096,8 +1144,10 @@ function initUploadModal() {
 
       btnSubmit.disabled = true;
       btnSubmit.innerHTML = `<span>Indexing Documents...</span>`;
+      setUploadProgressState('Uploading files', 12, -1);
 
       try {
+        await runUploadProgressSequence();
         const res = await fetch(`${API_BASE}/api/upload`, {
           method: 'POST',
           body: formData
@@ -1105,6 +1155,7 @@ function initUploadModal() {
 
         const data = await res.json();
         if (res.ok && data.success) {
+          setUploadProgressState('Upload complete', 100, 2);
           showToast(data.message, 'success');
           closeUploadModal();
           selectedFiles = [];
@@ -1112,14 +1163,17 @@ function initUploadModal() {
           await fetchSystemStatus();
           if (state.activeView === 'ats') runATSAudit();
         } else {
+          resetUploadProgressState();
           showToast(data.detail || 'Upload failed', 'error');
         }
       } catch (err) {
         console.error('Upload error:', err);
+        resetUploadProgressState();
         showToast('Error uploading files', 'error');
       } finally {
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = `<span>Index Documents</span>`;
+        setTimeout(() => resetUploadProgressState(), 500);
       }
     });
   }
