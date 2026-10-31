@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import shutil
 import logging
@@ -61,17 +62,66 @@ TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# Singleton ResumeAgent instance
-agent_instance: Optional[ResumeAgent] = None
-loaded_resumes_meta: dict[str, dict] = {}
+# User-scoped session storage to avoid cross-user resume/chat leakage.
+USER_SESSION_AGENTS: dict[str, ResumeAgent] = {}
+USER_SESSION_RESUME_META: dict[str, dict[str, dict]] = {}
+DEFAULT_SESSION_KEY = "career_agent:guest:user:guest"
 
 
-def get_agent() -> ResumeAgent:
-    global agent_instance
-    if agent_instance is None:
-        LOGGER.info("Initializing ResumeAgent instance...")
-        agent_instance = ResumeAgent()
-    return agent_instance
+def _normalize_session_fragment(value: Optional[str], fallback: str) -> str:
+    cleaned = (value or fallback).strip()
+    cleaned = re.sub(r"[^a-zA-Z0-9_-]+", "_", cleaned)
+    cleaned = cleaned.strip("_")
+    return cleaned.lower() if cleaned else fallback.lower()
+
+
+def build_session_key(
+    role: Optional[str] = None,
+    name: Optional[str] = None,
+    user_id: Optional[str] = None,
+    path: str = "career_agent",
+) -> str:
+    role_value = _normalize_session_fragment(role, "guest")
+    name_value = _normalize_session_fragment(name, "user")
+    user_value = _normalize_session_fragment(user_id, "guest")
+    return f"{path}:{role_value}:{name_value}:{user_value}"
+
+
+def resolve_session_key(request: Optional[Request] = None) -> str:
+    if request is None:
+        return DEFAULT_SESSION_KEY
+
+    params = request.query_params
+    role = params.get("role") or params.get("user_role") or "student"
+    name = params.get("name") or params.get("username") or params.get("student_name") or "student"
+    user_id = (
+        params.get("user_id")
+        or params.get("id")
+        or params.get("student_id")
+        or params.get("prn")
+        or "guest"
+    )
+    return build_session_key(role=role, name=name, user_id=user_id, path="career_agent")
+
+
+def get_session_storage(request: Optional[Request] = None):
+    session_key = resolve_session_key(request)
+    if session_key not in USER_SESSION_AGENTS:
+        LOGGER.info("Initializing ResumeAgent instance for session %s", session_key)
+        USER_SESSION_AGENTS[session_key] = ResumeAgent()
+    if session_key not in USER_SESSION_RESUME_META:
+        USER_SESSION_RESUME_META[session_key] = {}
+    return session_key, USER_SESSION_AGENTS[session_key], USER_SESSION_RESUME_META[session_key]
+
+
+def get_agent(request: Optional[Request] = None) -> ResumeAgent:
+    _, agent, _ = get_session_storage(request)
+    return agent
+
+
+def get_loaded_resumes_meta(request: Optional[Request] = None) -> dict[str, dict]:
+    _, _, meta = get_session_storage(request)
+    return meta
 
 
 # ---------------------------------------------------------
@@ -113,11 +163,11 @@ async def serve_index(request: Request):
 # API Endpoints
 # ---------------------------------------------------------
 @app.get("/api/status")
-async def get_status():
+async def get_status(request: Request):
     """Get system status and catalog of loaded resumes."""
-    agent = get_agent()
+    _, agent, loaded_resumes_meta = get_session_storage(request)
     records = agent.tools_manager.loader.records()
-    
+
     catalog = []
     for rid, rec in records.items():
         fn = rec.get("filename", "")
@@ -139,9 +189,9 @@ async def get_status():
 
 
 @app.post("/api/upload")
-async def upload_resumes(files: List[UploadFile] = File(...)):
+async def upload_resumes(request: Request, files: List[UploadFile] = File(...)):
     """Upload single or multiple resumes (PDF / DOCX) and index them."""
-    agent = get_agent()
+    _, agent, loaded_resumes_meta = get_session_storage(request)
     saved_paths = []
 
     for file in files:
@@ -176,9 +226,9 @@ async def upload_resumes(files: List[UploadFile] = File(...)):
 
 
 @app.post("/api/load-sample")
-async def load_sample_resume():
+async def load_sample_resume(request: Request):
     """Load default workspace sample resume (e.g. omkar2.pdf) if available."""
-    agent = get_agent()
+    _, agent, loaded_resumes_meta = get_session_storage(request)
     sample_path = PROJECT_ROOT / "omkar2.pdf"
     
     if not sample_path.is_file():
@@ -212,9 +262,9 @@ async def load_sample_resume():
 
 
 @app.post("/api/chat")
-async def chat_with_agent(payload: ChatRequest):
+async def chat_with_agent(request: Request, payload: ChatRequest):
     """Interactive conversational agent with guardrails, memory, and tool integration."""
-    agent = get_agent()
+    _, agent, _ = get_session_storage(request)
     
     if not agent.tools_manager.loader.records():
         raise HTTPException(
@@ -268,9 +318,9 @@ async def chat_with_agent(payload: ChatRequest):
 
 
 @app.post("/api/ats-audit")
-async def ats_audit(payload: ATSAuditRequest):
+async def ats_audit(request: Request, payload: ATSAuditRequest):
     """Run comprehensive ATS structural & content scoring."""
-    agent = get_agent()
+    _, agent, _ = get_session_storage(request)
     
     if not agent.tools_manager.loader.records():
         raise HTTPException(
@@ -331,9 +381,9 @@ async def ats_audit(payload: ATSAuditRequest):
 
 
 @app.post("/api/jd-match")
-async def jd_match(payload: JDMatchRequest):
+async def jd_match(request: Request, payload: JDMatchRequest):
     """Run instant Job Description matching, skill gap analysis, and placement eligibility."""
-    agent = get_agent()
+    _, agent, _ = get_session_storage(request)
     
     if not agent.tools_manager.loader.records():
         raise HTTPException(
@@ -387,9 +437,9 @@ async def jd_match(payload: JDMatchRequest):
 
 
 @app.post("/api/compare-resumes")
-async def compare_resumes(payload: CompareRequest):
+async def compare_resumes(request: Request, payload: CompareRequest):
     """Rank and compare all loaded candidate resumes against a JD or ATS benchmarks."""
-    agent = get_agent()
+    _, agent, _ = get_session_storage(request)
     records = agent.tools_manager.loader.records()
     
     if not records:
@@ -453,9 +503,9 @@ async def compare_resumes(payload: CompareRequest):
 
 
 @app.get("/api/resume-details")
-async def resume_details(filename: Optional[str] = Query(None)):
+async def resume_details(request: Request, filename: Optional[str] = Query(None)):
     """Retrieve extracted structured details, sections, and profile memory for a resume."""
-    agent = get_agent()
+    _, agent, _ = get_session_storage(request)
     records = agent.tools_manager.loader.records()
     
     if not records:
@@ -499,9 +549,9 @@ async def resume_details(filename: Optional[str] = Query(None)):
 
 
 @app.post("/api/reset-session")
-async def reset_session():
+async def reset_session(request: Request):
     """Reset conversational session memory."""
-    agent = get_agent()
+    _, agent, _ = get_session_storage(request)
     agent.tools_manager.session_memory = agent.tools_manager.session_memory.__class__()
     return {"success": True, "message": "Session conversation memory has been reset."}
 

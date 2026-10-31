@@ -5,6 +5,24 @@
 
 const API_BASE = window.location.pathname.replace(/\/$/, "");
 
+function getSessionQueryString() {
+  const params = new URLSearchParams(window.location.search);
+  const query = new URLSearchParams();
+  const keys = ['role', 'name', 'username', 'user_id', 'id', 'student_id', 'prn'];
+
+  keys.forEach(key => {
+    const value = params.get(key);
+    if (value) query.set(key, value);
+  });
+
+  return query.toString();
+}
+
+function buildApiUrl(path) {
+  const query = getSessionQueryString();
+  return query ? `${API_BASE}${path}?${query}` : `${API_BASE}${path}`;
+}
+
 // Global Application State
 const state = {
   activeView: 'chat',
@@ -195,7 +213,7 @@ function setupReturnNavigation() {
 // ==========================================================================
 async function fetchSystemStatus() {
   try {
-    const res = await fetch(`${API_BASE}/api/status`);
+    const res = await fetch(buildApiUrl('/api/status'));
     const data = await res.json();
     
     state.loadedResumes = data.resumes || [];
@@ -357,7 +375,7 @@ async function loadSampleResume() {
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${API_BASE}/api/load-sample`, { method: 'POST' });
+    const res = await fetch(buildApiUrl('/api/load-sample'), { method: 'POST' });
     const data = await res.json();
     
     if (res.ok && data.success) {
@@ -460,7 +478,7 @@ function initChatEvents() {
   if (btnResetSession) {
     btnResetSession.addEventListener('click', async () => {
       try {
-        await fetch(`${API_BASE}/api/reset-session`, { method: 'POST' });
+        await fetch(buildApiUrl('/api/reset-session'), { method: 'POST' });
         state.chatHistory = [];
         clearPersistedChatHistory();
         showToast('Chat session memory cleared', 'info');
@@ -574,7 +592,7 @@ async function sendChatMessage() {
   const jdContent = jdTextarea ? jdTextarea.value.trim() : '';
 
   try {
-    const res = await fetch(`${API_BASE}/api/chat`, {
+    const res = await fetch(buildApiUrl('/api/chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -724,7 +742,7 @@ async function runATSAudit() {
   container.style.opacity = '0.5';
 
   try {
-    const res = await fetch(`${API_BASE}/api/ats-audit`, {
+    const res = await fetch(buildApiUrl('/api/ats-audit'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ filename: state.activeResume })
@@ -894,7 +912,7 @@ async function runJDMatch() {
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${API_BASE}/api/jd-match`, {
+    const res = await fetch(buildApiUrl('/api/jd-match'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1013,7 +1031,7 @@ async function runResumeComparison() {
   const jdText = document.getElementById('compare-jd-input') ? document.getElementById('compare-jd-input').value.trim() : '';
 
   try {
-    const res = await fetch(`${API_BASE}/api/compare-resumes`, {
+    const res = await fetch(buildApiUrl('/api/compare-resumes'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ job_description: jdText || null })
@@ -1094,7 +1112,7 @@ async function loadProfileDetails() {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/resume-details?filename=${encodeURIComponent(state.activeResume)}`);
+    const res = await fetch(`${buildApiUrl('/api/resume-details')}?filename=${encodeURIComponent(state.activeResume)}`);
     const data = await res.json();
 
     if (res.ok && data.success) {
@@ -1231,7 +1249,7 @@ function initUploadModal() {
 
       try {
         await runUploadProgressSequence();
-        const res = await fetch(`${API_BASE}/api/upload`, {
+        const res = await fetch(buildApiUrl('/api/upload'), {
           method: 'POST',
           body: formData
         });

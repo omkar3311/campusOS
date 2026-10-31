@@ -46,10 +46,6 @@
     </nav>
 
     <div class="campusos-user-dock">
-      <div class="campusos-status-pill">
-        <span class="pulse-dot"></span>
-        <span class="status-label">Online</span>
-      </div>
       <div class="campusos-user-badge">
         <span class="user-role-tag" id="userRoleTag">Student</span>
         <span class="user-display-name" id="userDisplayName">Candidate</span>
@@ -175,24 +171,7 @@
     </nav>
 
     <!-- Sidebar Footer -->
-    <div class="sidebar-footer">
-      <button class="btn-upload-trigger" id="btn-open-upload">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="17 8 12 3 7 8"></polyline>
-          <line x1="12" y1="3" x2="12" y2="15"></line>
-        </svg>
-        <span>Upload Resumes</span>
-      </button>
-
-      <div class="system-status-indicator">
-        <div>
-          <span class="status-dot"></span>
-          <span>Vector DB & LLM Online</span>
-        </div>
-        <span style="font-size: 10px; color: var(--text-dim);">v2.0</span>
-      </div>
-    </div>
+    <div class="sidebar-footer"></div>
   </aside>
 
   <!-- ==========================================================================
@@ -211,13 +190,14 @@
 
       <div class="topbar-right">
         <span id="top-resume-badge" class="tag-badge detected" style="display: none;">omkar2.pdf</span>
-        
-        <button class="btn btn-demo" id="btn-load-sample" title="Load sample omkar2.pdf resume">
+
+        <button class="btn btn-primary" id="btn-open-upload" title="Upload your resume">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
           </svg>
-          <span>Load Demo Resume</span>
+          <span>Upload Resume</span>
         </button>
 
         <button class="btn btn-secondary" id="btn-reset-chat" title="Clear conversation memory">
@@ -756,8 +736,12 @@
     </div>
 
     <p style="font-size: 13px; color: var(--text-muted);">
-      Upload single or multiple resumes in PDF or DOCX format. Resumes will be chunked, embedded via SentenceTransformers, and stored into ChromaDB vector memory.
+      Only PDF and DOCX files are allowed. Upload a single resume or multiple resumes to build a user-specific career memory.
     </p>
+
+    <div style="margin: 8px 0 12px; font-size: 11px; color: var(--text-dim); background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.16); border-radius: 10px; padding: 8px 10px;">
+      <strong style="color: #dbeafe;">Allowed formats:</strong> PDF and DOCX only
+    </div>
 
     <div class="dropzone-area" id="dropzone-input">
       <div class="dropzone-icon">
