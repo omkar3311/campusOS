@@ -37,6 +37,9 @@ if not root_logger.handlers:
 
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("hpack").setLevel(logging.WARNING)
+logging.getLogger("h2").setLevel(logging.WARNING)
+logging.getLogger("hyper").setLevel(logging.WARNING)
 logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
 logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
 
