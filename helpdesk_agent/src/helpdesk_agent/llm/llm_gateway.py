@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
-
+from dotenv import load_dotenv
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.chat_models import (
     BaseChatModel,
@@ -29,6 +29,7 @@ class LLMGateway:
         )
 
         self.model = self._create_model()
+        load_dotenv()
 
         LOGGER.info(
             "LLM fallback chain initialized successfully."
@@ -68,34 +69,60 @@ class LLMGateway:
                 "GEMINI_API_KEY is not configured."
             )
 
-        groq1 = ChatGroq(
-            model="openai/gpt-oss-20b",
-            temperature=0,
-            api_key=groq1_key,
-        )
+        configured_models: list[BaseChatModel] = []
 
-        groq2 = ChatGroq(
-            model="openai/gpt-oss-20b",
-            temperature=0,
-            api_key=groq2_key,
-        )
+        if groq1_key:
+            configured_models.append(
+                ChatGroq(
+                    model="openai/gpt-oss-20b",
+                    temperature=0,
+                    api_key=groq1_key,
+                )
+            )
 
-        gemini = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
-            temperature=0,
-            google_api_key=gemini_key,
-        )
+        if groq2_key:
+            configured_models.append(
+                ChatGroq(
+                    model="openai/gpt-oss-20b",
+                    temperature=0,
+                    api_key=groq2_key,
+                )
+            )
+
+        if gemini_key:
+            configured_models.append(
+                ChatGoogleGenerativeAI(
+                    model="gemini-2.5-flash",
+                    temperature=0,
+                    google_api_key=gemini_key,
+                )
+            )
+
+        if not configured_models:
+            raise RuntimeError(
+                "No LLM API keys are configured. Set GROQ_API_KEY, GROQ_API_KEY0, "
+                "or GEMINI_API_KEY in your environment before starting the helpdesk agent."
+            )
+
+        primary_model = configured_models[0]
+        fallback_models = configured_models[1:]
 
         LOGGER.info(
-            "Configured LLM fallback order: "
-            "Groq-1 -> Groq-2 -> Gemini."
+            "Configured LLM fallback order: %s.",
+            " -> ".join(
+                [
+                    "Groq-1" if groq1_key else "",
+                    "Groq-2" if groq2_key else "",
+                    "Gemini" if gemini_key else "",
+                ]
+            ).strip(" -> "),
         )
 
-        return groq1.with_fallbacks(
-            [
-                groq2,
-                gemini,
-            ]
+        if not fallback_models:
+            return primary_model
+
+        return primary_model.with_fallbacks(
+            fallback_models
         )
 
     def get_model(
@@ -180,20 +207,20 @@ class EmbeddingGateway:
 
         elif self.provider == "huggingface":
 
-            # Original model load kept for reference and disabled to avoid repeated startup downloads.
-            # from langchain_huggingface import (
-            #     HuggingFaceEmbeddings,
-            # )
-            # self._embeddings = (
-            #     HuggingFaceEmbeddings(
-            #         model_name=self.model_name
-            #     )
-            # )
             try:
-                from main import get_shared_embedding_model
-                self._embeddings = get_shared_embedding_model()
+                from langchain_huggingface import (
+                    HuggingFaceEmbeddings,
+                )
+
+                self._embeddings = HuggingFaceEmbeddings(
+                    model_name=self.model_name
+                )
             except Exception:
-                self._embeddings = None
+                try:
+                    from main import get_shared_embedding_model
+                    self._embeddings = get_shared_embedding_model()
+                except Exception:
+                    self._embeddings = None
 
         elif self.provider == "google":
 

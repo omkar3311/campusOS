@@ -25,6 +25,7 @@ const DOM = {
     // Sidebar
     sidebar: document.getElementById('sidebar'),
     sidebarCollapseBtn: document.getElementById('sidebarCollapseBtn'),
+    sidebarOpenBtn: document.getElementById('sidebarOpenBtn'),
     mobileMenuBtn: document.getElementById('mobileMenuBtn'),
     newChatBtn: document.getElementById('newChatBtn'),
     searchHistoryInput: document.getElementById('searchHistoryInput'),
@@ -91,17 +92,17 @@ function setupReturnNavigation() {
     
     let returnUrl = explicitReturn || savedReturn;
     if (!returnUrl) {
-        if (role === 'hod') returnUrl = '/main_dashboard';
-        else if (role === 'teacher') returnUrl = '/class_dashboard';
-        else if (role === 'student') returnUrl = '/student';
+        if (role === 'hod') returnUrl = '/';
+        else if (role === 'teacher') returnUrl = '/';
+        else if (role === 'student') returnUrl = '/';
         else if (document.referrer && !document.referrer.includes('/agent/')) returnUrl = document.referrer;
-        else returnUrl = '/main_dashboard';
+        else returnUrl = '/';
     }
 
-    let returnLabel = 'Portal';
-    if (role === 'hod') returnLabel = 'HOD Dashboard';
-    else if (role === 'teacher') returnLabel = 'Class Dashboard';
-    else if (role === 'student') returnLabel = 'Student Portal';
+    let returnLabel = 'Dashboard';
+    if (role === 'hod') returnLabel = 'Dashboard';
+    else if (role === 'teacher') returnLabel = 'Dashboard';
+    else if (role === 'student') returnLabel = 'Dashboard';
 
     const backBtn = document.getElementById('backToPortalBtn');
     const backText = document.getElementById('backToPortalText');
@@ -725,9 +726,13 @@ function escapeHtml(text) {
 // ============================================================================
 
 function initEventListeners() {
-    // Sidebar Collapse
+    // Sidebar Collapse / Expand
     DOM.sidebarCollapseBtn.addEventListener('click', () => {
         DOM.sidebar.classList.toggle('collapsed');
+    });
+
+    DOM.sidebarOpenBtn.addEventListener('click', () => {
+        DOM.sidebar.classList.remove('collapsed');
     });
 
     DOM.mobileMenuBtn.addEventListener('click', () => {

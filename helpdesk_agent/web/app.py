@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import time
 import json
 import logging
@@ -19,13 +20,17 @@ from pydantic import BaseModel
 # Setup paths
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
+SRC_DIR = PROJECT_ROOT / "src"
 STATIC_DIR = BASE_DIR / "static"
+TEMPLATES_DIR = BASE_DIR / "templates"
+DOCS_DIR = PROJECT_ROOT / "data" / "documents"
+
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 # Load environment variables
 load_dotenv(PROJECT_ROOT / ".env")
 load_dotenv()
-TEMPLATES_DIR = BASE_DIR / "templates"
-DOCS_DIR = PROJECT_ROOT / "data" / "documents"
 
 # Logger
 logging.basicConfig(level=logging.INFO)
@@ -100,10 +105,22 @@ class ChatResponse(BaseModel):
 # Core Web Application Route
 # ---------------------------------------------------------------------------
 
+@app.get("/agent/campus", response_class=HTMLResponse)
+@app.get("/agent/campus/", response_class=HTMLResponse)
+@app.get("/agent/helpdesk", response_class=HTMLResponse)
+@app.get("/agent/helpdesk/", response_class=HTMLResponse)
 @app.get("/", response_class=HTMLResponse)
 async def serve_app(request: Request):
     """Renders the single SaaS application interface."""
-    return templates.TemplateResponse(request=request, name="index.html")
+    response = templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"version": int(time.time())}
+    )
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 # ---------------------------------------------------------------------------
