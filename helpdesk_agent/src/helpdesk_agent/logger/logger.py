@@ -131,6 +131,18 @@ class Logger:
         ).setLevel(logging.WARNING)
 
         logging.getLogger(
+            "hpack"
+        ).setLevel(logging.WARNING)
+
+        logging.getLogger(
+            "h2"
+        ).setLevel(logging.WARNING)
+
+        logging.getLogger(
+            "hyper"
+        ).setLevel(logging.WARNING)
+
+        logging.getLogger(
             "huggingface_hub"
         ).setLevel(logging.WARNING)
 
