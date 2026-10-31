@@ -15,8 +15,69 @@ const state = {
   isProcessing: false,
   plannerData: null,
   quizData: null,
-  flashcardsData: null
+  flashcardsData: null,
+  chatHistory: []
 };
+
+function getCurrentUserChatKey() {
+  const params = new URLSearchParams(window.location.search);
+  const role = params.get('role') || 'student';
+  const name = params.get('name') || params.get('username') || 'user';
+  const userId = params.get('user_id') || params.get('id') || params.get('student_id') || 'guest';
+  const path = window.location.pathname.replace(/[^a-zA-Z0-9_-]/g, '_') || 'study_agent';
+  const suffix = `${role}-${(name || 'user').replace(/\s+/g, '_')}-${userId}`;
+  return `campusos_study_chat_${path}_${suffix}`;
+}
+
+function loadPersistedChatHistory() {
+  try {
+    const key = getCurrentUserChatKey();
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Unable to restore study chat history:', error);
+    return [];
+  }
+}
+
+function savePersistedChatHistory() {
+  try {
+    localStorage.setItem(getCurrentUserChatKey(), JSON.stringify(state.chatHistory || []));
+  } catch (error) {
+    console.warn('Unable to save study chat history:', error);
+  }
+}
+
+function clearPersistedChatHistory() {
+  try {
+    localStorage.removeItem(getCurrentUserChatKey());
+  } catch (error) {
+    console.warn('Unable to clear study chat history:', error);
+  }
+}
+
+function restorePersistedChatHistory() {
+  const history = document.getElementById('chat-history-container');
+  if (!history) return;
+
+  state.chatHistory = loadPersistedChatHistory();
+  if (!state.chatHistory.length) {
+    renderChatWelcome();
+    return;
+  }
+
+  history.innerHTML = '';
+  state.chatHistory.forEach(entry => {
+    if (entry.type === 'user') {
+      appendUserMessage(entry.text, { skipSave: true, time: entry.time });
+    } else if (entry.type === 'assistant') {
+      appendAssistantMessage(entry.text, entry.modeName || 'Study Agent', Boolean(entry.guardrail), { skipSave: true, time: entry.time });
+    }
+  });
+  history.scrollTop = history.scrollHeight;
+}
 
 // Mode Map
 const MODE_MAP = {
@@ -44,15 +105,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   initChatEvents();
   initUploadModal();
   initAcademicGenerators();
-  
-  // Wipe session memory and loaded documents on fresh page visit / refresh
-  try {
-    await fetch(`${API_BASE}/api/reset-session`, { method: 'POST' });
-  } catch (e) {
-    console.warn('Session reset on page load:', e);
-  }
-  
+  state.chatHistory = loadPersistedChatHistory();
   fetchSystemStatus();
+  restorePersistedChatHistory();
 });
 
 
@@ -351,6 +406,8 @@ const btnSampleTopic = document.getElementById('btn-chat-sample-topic');
     btnResetSession.addEventListener('click', async () => {
       try {
         await fetch(`${API_BASE}/api/reset-session`, { method: 'POST' });
+        state.chatHistory = [];
+        clearPersistedChatHistory();
         showToast('Study session memory cleared', 'info');
         const history = document.getElementById('chat-history-container');
         if (history) history.innerHTML = '';
@@ -365,6 +422,11 @@ const btnSampleTopic = document.getElementById('btn-chat-sample-topic');
 function renderChatWelcome() {
   const history = document.getElementById('chat-history-container');
   if (!history) return;
+
+  if (state.chatHistory.length) {
+    restorePersistedChatHistory();
+    return;
+  }
 
   if (state.documents.length === 0) {
     history.innerHTML = `
@@ -510,8 +572,9 @@ async function sendChatMessage() {
   }
 }
 
-function appendUserMessage(text) {
+function appendUserMessage(text, options = {}) {
   const history = document.getElementById('chat-history-container');
+  const timestamp = options.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const msgEl = document.createElement('div');
   msgEl.className = 'chat-msg user';
   msgEl.innerHTML = `
@@ -524,15 +587,21 @@ function appendUserMessage(text) {
     <div class="msg-body">
       <div class="msg-bubble">${escapeHtml(text)}</div>
       <div class="msg-meta">
-        <span>You</span> • <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        <span>You</span> • <span>${timestamp}</span>
       </div>
     </div>
   `;
   history.appendChild(msgEl);
+
+  if (!options.skipSave) {
+    state.chatHistory.push({ type: 'user', text, time: timestamp });
+    savePersistedChatHistory();
+  }
 }
 
-function appendAssistantMessage(text, modeUsed, isBlocked = false) {
+function appendAssistantMessage(text, modeUsed, isBlocked = false, options = {}) {
   const history = document.getElementById('chat-history-container');
+  const timestamp = options.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const msgEl = document.createElement('div');
   msgEl.className = 'chat-msg assistant';
 
@@ -559,7 +628,7 @@ function appendAssistantMessage(text, modeUsed, isBlocked = false) {
       </div>
       <div class="msg-meta">
         <span class="mode-badge-tag">${escapeHtml(modeName)}</span>
-        <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        <span>${timestamp}</span>
         <button class="btn-copy-msg" id="${copyBtnId}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -571,6 +640,11 @@ function appendAssistantMessage(text, modeUsed, isBlocked = false) {
     </div>
   `;
   history.appendChild(msgEl);
+
+  if (!options.skipSave) {
+    state.chatHistory.push({ type: 'assistant', text, modeName: modeName || 'Study Agent', guardrail: Boolean(isBlocked), time: timestamp });
+    savePersistedChatHistory();
+  }
 
   const copyBtn = document.getElementById(copyBtnId);
   if (copyBtn) {
