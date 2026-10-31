@@ -168,6 +168,15 @@
       </div>
 
       <div class="topbar-right">
+        <button class="btn btn-upload-trigger" id="btn-topbar-upload" title="Upload study documents">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>Upload</span>
+        </button>
+
         <label class="tag-badge detected" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px;">
           <span style="font-size: 10px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.08em;">File</span>
           <select id="active-session-file-select" aria-label="Select uploaded file for this chat" style="background: transparent; color: inherit; border: none; outline: none; font: inherit; max-width: 160px;">
@@ -256,14 +265,6 @@
               <h3>Study Materials & Knowledge Base</h3>
               <p class="panel-sub">Upload textbooks, lecture notes, syllabus PDFs, and problem sets</p>
             </div>
-            <button class="btn btn-primary" onclick="openUploadModal()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-              <span>Upload New Document</span>
-            </button>
           </div>
 
           <!-- Dropzone in View -->

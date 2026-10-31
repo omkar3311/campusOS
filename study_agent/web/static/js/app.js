@@ -4,10 +4,34 @@
  */
 
 const API_BASE = window.location.pathname.replace(/\/$/, "");
+const STUDY_BOOT_KEY = 'campusos_study_boot_id';
 
 function getApiUrl(endpoint) {
   const query = window.location.search || '';
   return `${API_BASE}${endpoint}${query}`;
+}
+
+async function handleBootReset() {
+  try {
+    const res = await fetch(getApiUrl('/api/boot-id'));
+    if (!res.ok) return;
+    const data = await res.json();
+    const freshBootId = data?.boot_id || null;
+    const storedBootId = localStorage.getItem(STUDY_BOOT_KEY);
+
+    if (storedBootId && freshBootId && storedBootId !== freshBootId) {
+      clearPersistedChatHistory();
+      state.chatSessions = [];
+      state.chatHistory = [];
+      state.activeSessionId = null;
+    }
+
+    if (freshBootId) {
+      localStorage.setItem(STUDY_BOOT_KEY, freshBootId);
+    }
+  } catch (error) {
+    console.warn('Unable to sync Study Agent boot state:', error);
+  }
 }
 
 // Global Application State
@@ -175,6 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initChatEvents();
   initUploadModal();
   initAcademicGenerators();
+  await handleBootReset();
   state.chatHistory = loadPersistedChatHistory();
   fetchSystemStatus();
   restorePersistedChatHistory();

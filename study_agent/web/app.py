@@ -7,6 +7,7 @@ import shutil
 import asyncio
 from pathlib import Path
 from datetime import datetime
+from time import time
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -46,17 +47,79 @@ TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Global pipeline instance
+# Global pipeline instance per user session
 rag_pipeline: Optional[RAGPipeline] = None
+USER_PIPELINES: Dict[str, RAGPipeline] = {}
+BOOT_ID = f"study-agent-boot-{int(time() * 1000)}"
 
 
-def get_pipeline() -> RAGPipeline:
+def clear_all_user_sessions() -> None:
+    """Reset server-side session state on a full app restart."""
+    session_root = DATA_DIR / "user_sessions"
+    try:
+        if session_root.exists():
+            shutil.rmtree(session_root, ignore_errors=True)
+        session_root.mkdir(parents=True, exist_ok=True)
+        USER_PIPELINES.clear()
+        LOGGER.info("Cleared all study-agent user session data for server restart.")
+    except Exception:
+        LOGGER.exception("Failed to clear study-agent user session data on startup.")
+
+
+def normalize_session_fragment(value: Optional[str], fallback: str) -> str:
+    cleaned = (value or fallback).strip()
+    cleaned = re.sub(r"[^a-zA-Z0-9_-]+", "_", cleaned)
+    cleaned = cleaned.strip("_")
+    if not cleaned:
+        cleaned = fallback
+    return cleaned.lower()
+
+
+def resolve_session_key(request: Optional[Request] = None) -> str:
+    if request is None:
+        return "study_agent:guest:user:guest"
+
+    params = request.query_params
+    role = params.get("role") or params.get("user_role") or "student"
+    name = params.get("name") or params.get("username") or params.get("student_name") or "student"
+    user_id = params.get("user_id") or params.get("id") or params.get("student_id") or params.get("prn") or "guest"
+    return f"study_agent:{normalize_session_fragment(role, 'student')}:{normalize_session_fragment(name, 'user')}:{normalize_session_fragment(user_id, 'guest')}"
+
+
+def get_user_session_paths(request: Optional[Request] = None) -> Dict[str, Path]:
+    session_key = resolve_session_key(request)
+    user_dir = DATA_DIR / "user_sessions" / session_key
+    uploads_dir = user_dir / "documents"
+    db_dir = user_dir / "chroma_db"
+    registry_file = user_dir / "documents_registry.json"
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    db_dir.mkdir(parents=True, exist_ok=True)
+    return {
+        "session_key": Path(session_key),
+        "user_dir": user_dir,
+        "uploads_dir": uploads_dir,
+        "db_dir": db_dir,
+        "registry_file": registry_file,
+    }
+
+
+def get_pipeline(request: Optional[Request] = None) -> RAGPipeline:
     global rag_pipeline
-    if rag_pipeline is None:
-        LOGGER.info("Lazy initializing RAG Pipeline...")
-        rag_pipeline = RAGPipeline()
-        LOGGER.info("RAG Pipeline ready.")
-    return rag_pipeline
+    session_key = resolve_session_key(request)
+    if session_key in USER_PIPELINES:
+        return USER_PIPELINES[session_key]
+
+    user_paths = get_user_session_paths(request)
+    previous_db_dir = settings.db_dir
+    settings.db_dir = user_paths["db_dir"]
+    try:
+        LOGGER.info("Lazy initializing per-user RAG Pipeline for %s", session_key)
+        USER_PIPELINES[session_key] = RAGPipeline()
+        LOGGER.info("RAG Pipeline initialized for %s", session_key)
+    finally:
+        settings.db_dir = previous_db_dir
+
+    return USER_PIPELINES[session_key]
 
 
 # ============================================================================
@@ -113,51 +176,56 @@ def clean_llm_response(text: str) -> str:
 # Document Registry Helpers (Empty by default until user uploads or loads sample)
 # ============================================================================
 
-def load_docs_registry() -> List[Dict[str, Any]]:
-    if not DOCS_REGISTRY_FILE.exists():
+def load_docs_registry(request: Optional[Request] = None) -> List[Dict[str, Any]]:
+    registry_file = get_user_session_paths(request)["registry_file"]
+    if not registry_file.exists():
         return []
     try:
-        data = json.loads(DOCS_REGISTRY_FILE.read_text(encoding="utf-8"))
+        data = json.loads(registry_file.read_text(encoding="utf-8"))
         return data if isinstance(data, list) else []
     except Exception:
-        LOGGER.exception("Failed to load docs registry")
+        LOGGER.exception("Failed to load docs registry for %s", registry_file)
         return []
 
 
-def save_docs_registry(registry: List[Dict[str, Any]]):
+def save_docs_registry(registry: List[Dict[str, Any]], request: Optional[Request] = None):
+    registry_file = get_user_session_paths(request)["registry_file"]
     try:
-        DOCS_REGISTRY_FILE.write_text(json.dumps(registry, indent=2, ensure_ascii=False), encoding="utf-8")
+        registry_file.parent.mkdir(parents=True, exist_ok=True)
+        registry_file.write_text(json.dumps(registry, indent=2, ensure_ascii=False), encoding="utf-8")
     except Exception:
-        LOGGER.exception("Failed to save docs registry")
+        LOGGER.exception("Failed to save docs registry for %s", registry_file)
 
 
-def clear_all_documents_and_memory():
-    """Wipes all uploaded study documents, clears vector store, and clears chat session memory."""
-    global rag_pipeline
+def clear_user_documents_and_memory(request: Optional[Request] = None):
+    """Wipes the uploaded study documents and vector store for the current user session only."""
+    session_paths = get_user_session_paths(request)
+    session_key = resolve_session_key(request)
     try:
-        DOCS_REGISTRY_FILE.write_text("[]", encoding="utf-8")
-        if UPLOADS_DIR.exists():
-            for f in UPLOADS_DIR.glob("*"):
+        session_paths["registry_file"].write_text("[]", encoding="utf-8")
+        uploads_dir = session_paths["uploads_dir"]
+        if uploads_dir.exists():
+            for f in uploads_dir.glob("*"):
                 if f.is_file():
                     try:
                         f.unlink()
                     except Exception:
                         pass
-        chroma_dir = settings.db_dir
+        chroma_dir = session_paths["db_dir"]
         if chroma_dir.exists():
             try:
                 shutil.rmtree(chroma_dir, ignore_errors=True)
                 chroma_dir.mkdir(parents=True, exist_ok=True)
             except Exception:
-                LOGGER.exception("Failed to wipe chroma db directory")
-        if rag_pipeline:
+                LOGGER.exception("Failed to wipe user chroma db directory for %s", session_key)
+        pipeline = USER_PIPELINES.pop(session_key, None)
+        if pipeline:
             try:
-                rag_pipeline.clear_memory()
+                pipeline.clear_memory()
             except Exception:
                 pass
-            rag_pipeline = None
     except Exception:
-        LOGGER.exception("Error in clear_all_documents_and_memory")
+        LOGGER.exception("Error in clear_user_documents_and_memory for %s", session_key)
 
 
 # In-memory sessions store (temporary per visit)
@@ -171,8 +239,7 @@ IN_MEMORY_SESSIONS: Dict[str, Any] = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     LOGGER.info("StudyAgent SaaS Web Server starting...")
-    clear_all_documents_and_memory()
-    asyncio.create_task(asyncio.to_thread(get_pipeline))
+    clear_all_user_sessions()
     yield
     LOGGER.info("StudyAgent SaaS Web Server shutting down.")
 
@@ -240,11 +307,16 @@ async def serve_ui(request: Request):
 # System Status & Catalog
 # ============================================================================
 
+@app.get("/api/boot-id")
+async def get_boot_id():
+    return {"boot_id": BOOT_ID}
+
+
 @app.get("/api/status")
 @app.get("/api/catalog")
-async def get_catalog():
+async def get_catalog(request: Request):
     """Returns platform metadata, registered documents, and indexing status."""
-    registry = load_docs_registry()
+    registry = load_docs_registry(request)
     total_chunks = sum(doc.get("chunks", 0) for doc in registry)
     total_size_mb = round(sum(doc.get("size_mb", 0) for doc in registry), 2)
     
@@ -271,9 +343,9 @@ async def get_catalog():
 # ============================================================================
 
 @app.get("/api/documents")
-async def list_documents():
+async def list_documents(request: Request):
     """List all indexed study documents with chunk statistics."""
-    registry = load_docs_registry()
+    registry = load_docs_registry(request)
     total_chunks = sum(doc.get("chunks", 0) for doc in registry)
     total_size_mb = round(sum(doc.get("size_mb", 0) for doc in registry), 2)
 
@@ -290,13 +362,14 @@ async def list_documents():
 
 @app.post("/api/documents/upload")
 @app.post("/api/upload")
-async def upload_documents(files: List[UploadFile] = File(...)):
+async def upload_documents(request: Request, files: List[UploadFile] = File(...)):
     """Upload study files (PDF, TXT, MD), index into Vector DB."""
     if not files:
         raise HTTPException(status_code=400, detail="No files provided for upload.")
 
-    registry = load_docs_registry()
-    pipeline = get_pipeline()
+    user_paths = get_user_session_paths(request)
+    registry = load_docs_registry(request)
+    pipeline = get_pipeline(request)
     splitter = DocumentSplitter()
 
     uploaded_results = []
@@ -313,7 +386,7 @@ async def upload_documents(files: List[UploadFile] = File(...)):
 
         file_id = f"doc_{int(datetime.now().timestamp()*1000)}_{uuid.uuid4().hex[:6]}"
         safe_filename = f"{Path(original_filename).stem}_{uuid.uuid4().hex[:4]}{file_ext}"
-        save_path = UPLOADS_DIR / safe_filename
+        save_path = user_paths["uploads_dir"] / safe_filename
         
         with open(save_path, "wb") as buffer:
             shutil.copyfileobj(upload.file, buffer)
@@ -384,7 +457,7 @@ async def upload_documents(files: List[UploadFile] = File(...)):
             LOGGER.exception("Failed to process uploaded file: %s", original_filename)
             continue
 
-    save_docs_registry(registry)
+    save_docs_registry(registry, request)
 
     return {
         "status": "success",
@@ -395,9 +468,10 @@ async def upload_documents(files: List[UploadFile] = File(...)):
 
 
 @app.post("/api/load-sample")
-async def load_sample_document():
+async def load_sample_document(request: Request):
     """1-Click loads demo study material for instant testing."""
-    registry = load_docs_registry()
+    user_paths = get_user_session_paths(request)
+    registry = load_docs_registry(request)
     sample_name = "Computer_Science_AI_Fundamentals.txt"
     
     # Check if already present
@@ -440,10 +514,10 @@ Modern Generative AI platforms integrate Large Language Models (LLMs) with exter
   5. Grounded Prompt Synthesis with Guardrails & Source Citations.
 - **Guardrails & Hallucination Prevention**: Strict validation ensures the LLM synthesizes answers solely from retrieved verified text chunks rather than unbounded parametric memory.
 """
-    sample_path = UPLOADS_DIR / "sample_ai_study_guide.txt"
+    sample_path = user_paths["uploads_dir"] / "sample_ai_study_guide.txt"
     sample_path.write_text(sample_content, encoding="utf-8")
 
-    pipeline = get_pipeline()
+    pipeline = get_pipeline(request)
     splitter = DocumentSplitter()
     raw_doc = Document(page_content=sample_content, metadata={"source": str(sample_path), "filename": sample_name, "page": 1})
     chunks = splitter.split([raw_doc])
@@ -468,7 +542,7 @@ Modern Generative AI platforms integrate Large Language Models (LLMs) with exter
         "uploaded_at": datetime.now().strftime("%b %d, %Y %I:%M %p")
     }
     registry.append(doc_entry)
-    save_docs_registry(registry)
+    save_docs_registry(registry, request)
 
     return {
         "status": "success",
@@ -479,9 +553,9 @@ Modern Generative AI platforms integrate Large Language Models (LLMs) with exter
 
 
 @app.delete("/api/documents/{doc_id}")
-async def delete_document(doc_id: str):
+async def delete_document(request: Request, doc_id: str):
     """Delete a document and clear its vector store chunks."""
-    registry = load_docs_registry()
+    registry = load_docs_registry(request)
     doc_to_delete = next((d for d in registry if d.get("id") == doc_id), None)
     if not doc_to_delete:
         raise HTTPException(status_code=404, detail="Document not found.")
@@ -494,7 +568,7 @@ async def delete_document(doc_id: str):
             pass
 
     try:
-        pipeline = get_pipeline()
+        pipeline = get_pipeline(request)
         if pipeline.vectorstore.exists():
             db = pipeline.vectorstore.load()
             db._collection.delete(where={"filename": doc_to_delete.get("filename")})
@@ -502,7 +576,7 @@ async def delete_document(doc_id: str):
         pass
 
     registry = [d for d in registry if d.get("id") != doc_id]
-    save_docs_registry(registry)
+    save_docs_registry(registry, request)
 
     return {"status": "success", "message": f"Document '{doc_to_delete.get('filename')}' deleted."}
 
@@ -512,13 +586,13 @@ async def delete_document(doc_id: str):
 # ============================================================================
 
 @app.post("/api/chat")
-async def chat_endpoint(payload: ChatRequest):
+async def chat_endpoint(request: Request, payload: ChatRequest):
     """Process a query through RAG. Blocks with error if no files are uploaded."""
     user_message = payload.message.strip()
     if not user_message:
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
 
-    registry = load_docs_registry()
+    registry = load_docs_registry(request)
     
     # REQUIREMENT GATE: If no files are uploaded, do NOT give answer
     if not registry:
@@ -540,7 +614,7 @@ async def chat_endpoint(payload: ChatRequest):
     session_id = payload.session_id or f"sess_{int(datetime.now().timestamp()*1000)}_{uuid.uuid4().hex[:6]}"
 
     try:
-        pipeline = get_pipeline()
+        pipeline = get_pipeline(request)
         raw_answer = await asyncio.to_thread(pipeline.ask, query_text, session_id)
         answer = clean_llm_response(raw_answer)
 
@@ -570,13 +644,13 @@ async def chat_endpoint(payload: ChatRequest):
 # ============================================================================
 
 @app.post("/api/planner")
-async def generate_planner(payload: PlannerRequest = PlannerRequest()):
+async def generate_planner(request: Request, payload: PlannerRequest = PlannerRequest()):
     """Generate structured day-by-day exam roadmap from uploaded document."""
-    registry = load_docs_registry()
+    registry = load_docs_registry(request)
     if not registry:
         raise HTTPException(status_code=400, detail="Please upload a study document first.")
 
-    pipeline = get_pipeline()
+    pipeline = get_pipeline(request)
     topic = payload.topic or "all core topics in the document"
     prompt = f"Create a high-impact {payload.days}-day study and revision schedule for {topic}, allocating {payload.hours_per_day} hours/day. Include daily learning objectives, key chapters to review, and self-test checkpoints strictly based on the provided material."
     
@@ -585,13 +659,13 @@ async def generate_planner(payload: PlannerRequest = PlannerRequest()):
 
 
 @app.post("/api/quiz")
-async def generate_quiz(payload: QuizRequest = QuizRequest()):
+async def generate_quiz(request: Request, payload: QuizRequest = QuizRequest()):
     """Generate multiple-choice practice quiz strictly from uploaded material."""
-    registry = load_docs_registry()
+    registry = load_docs_registry(request)
     if not registry:
         raise HTTPException(status_code=400, detail="Please upload a study document first.")
 
-    pipeline = get_pipeline()
+    pipeline = get_pipeline(request)
     topic = payload.topic or "key concepts across the document"
     prompt = f"""Generate {payload.question_count} high-quality Multiple Choice Questions (MCQs) on '{topic}' strictly based on the uploaded material.
 For each question, provide:
@@ -606,13 +680,13 @@ Format cleanly with Markdown."""
 
 
 @app.post("/api/flashcards")
-async def generate_flashcards(payload: FlashcardRequest = FlashcardRequest()):
+async def generate_flashcards(request: Request, payload: FlashcardRequest = FlashcardRequest()):
     """Generate concept definitions and formulas deck from uploaded material."""
-    registry = load_docs_registry()
+    registry = load_docs_registry(request)
     if not registry:
         raise HTTPException(status_code=400, detail="Please upload a study document first.")
 
-    pipeline = get_pipeline()
+    pipeline = get_pipeline(request)
     topic = payload.topic or "core definitions, theorems, and algorithms"
     prompt = f"""Extract {payload.count} essential key concept flashcards for '{topic}' from the study material.
 For each flashcard:
@@ -627,9 +701,9 @@ For each flashcard:
 
 @app.post("/api/reset-session")
 @app.post("/api/clear-all")
-async def reset_session():
-    """Clear temporary session memory and all uploaded documents for a fresh visit."""
-    clear_all_documents_and_memory()
-    return {"status": "success", "message": "Session memory and documents cleared."}
+async def reset_session(request: Request):
+    """Clear temporary session memory and uploaded documents for the current user only."""
+    clear_user_documents_and_memory(request)
+    return {"status": "success", "message": "Session memory and documents cleared for this user."}
 
 
