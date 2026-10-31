@@ -15,6 +15,7 @@ import os
 import sys
 import csv
 import io
+import types
 import importlib.util
 from urllib.parse import quote
 from pathlib import Path
@@ -157,8 +158,25 @@ def _mount_agent_apps(main_app: FastAPI):
             sys.path.insert(0, str(help_src))
         if str(help_web) not in sys.path:
             sys.path.insert(0, str(help_web))
-        spec = importlib.util.spec_from_file_location("helpdesk_web_app", help_web / "app.py")
+
+        package_name = "helpdesk_agent"
+        package_module = sys.modules.get(package_name)
+        if package_module is None:
+            package_module = types.ModuleType(package_name)
+            package_module.__path__ = [str(CAMPUS_ROOT / "helpdesk_agent"), str(help_src / "helpdesk_agent")]
+            sys.modules[package_name] = package_module
+
+        web_package_name = f"{package_name}.web"
+        web_package_module = sys.modules.get(web_package_name)
+        if web_package_module is None:
+            web_package_module = types.ModuleType(web_package_name)
+            web_package_module.__path__ = [str(help_web)]
+            sys.modules[web_package_name] = web_package_module
+
+        module_name = f"{package_name}.web.app"
+        spec = importlib.util.spec_from_file_location(module_name, help_web / "app.py")
         help_mod = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = help_mod
         spec.loader.exec_module(help_mod)
         main_app.mount("/agent/campus", help_mod.app)
         main_app.mount("/agent/helpdesk", help_mod.app)
