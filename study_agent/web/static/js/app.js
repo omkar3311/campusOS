@@ -5,6 +5,11 @@
 
 const API_BASE = window.location.pathname.replace(/\/$/, "");
 
+function getApiUrl(endpoint) {
+  const query = window.location.search || '';
+  return `${API_BASE}${endpoint}${query}`;
+}
+
 // Global Application State
 const state = {
   activeView: 'chat',
@@ -16,7 +21,9 @@ const state = {
   plannerData: null,
   quizData: null,
   flashcardsData: null,
-  chatHistory: []
+  chatHistory: [],
+  chatSessions: [],
+  activeSessionId: null
 };
 
 function getCurrentUserChatKey() {
@@ -29,8 +36,61 @@ function getCurrentUserChatKey() {
   return `campusos_study_chat_${path}_${suffix}`;
 }
 
+function getChatSessionsStorageKey() {
+  return `${getCurrentUserChatKey()}_sessions`;
+}
+
+function truncateSessionTitle(title, maxLength = 30) {
+  const clean = String(title || '').replace(/\s+/g, ' ').trim();
+  if (!clean) return 'New chat';
+  if (clean.length <= maxLength) return clean;
+  return `${clean.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+}
+
+function createChatSessionObject(filename = state.activeDocument || 'New chat') {
+  const fallbackName = filename && filename !== 'New chat' ? filename : 'New chat';
+  return {
+    id: `chat_${Date.now()}_${Math.random().toString(16).slice(2, 7)}`,
+    title: 'New chat',
+    filename: fallbackName,
+    messages: []
+  };
+}
+
+function getActiveSession() {
+  return state.chatSessions.find(session => session.id === state.activeSessionId) || state.chatSessions[0] || null;
+}
+
+function ensureActiveSession() {
+  if (!state.chatSessions.length) {
+    const session = createChatSessionObject();
+    state.chatSessions.push(session);
+  }
+
+  if (!state.activeSessionId || !state.chatSessions.some(session => session.id === state.activeSessionId)) {
+    state.activeSessionId = state.chatSessions[0].id;
+  }
+
+  const activeSession = getActiveSession();
+  if (activeSession) {
+    state.chatHistory = activeSession.messages || [];
+    state.activeDocument = activeSession.filename || state.activeDocument || (state.documents[0]?.filename || '');
+  }
+}
+
 function loadPersistedChatHistory() {
   try {
+    const savedSessionData = localStorage.getItem(getChatSessionsStorageKey());
+    if (savedSessionData) {
+      const parsed = JSON.parse(savedSessionData);
+      if (Array.isArray(parsed) && parsed.length) {
+        state.chatSessions = parsed;
+        state.activeSessionId = state.chatSessions[0]?.id || null;
+        ensureActiveSession();
+        return state.chatHistory;
+      }
+    }
+
     const key = getCurrentUserChatKey();
     const raw = localStorage.getItem(key);
     if (!raw) return [];
@@ -44,7 +104,11 @@ function loadPersistedChatHistory() {
 
 function savePersistedChatHistory() {
   try {
-    localStorage.setItem(getCurrentUserChatKey(), JSON.stringify(state.chatHistory || []));
+    localStorage.setItem(getChatSessionsStorageKey(), JSON.stringify(state.chatSessions || []));
+    const activeSession = getActiveSession();
+    if (activeSession) {
+      localStorage.setItem(getCurrentUserChatKey(), JSON.stringify(activeSession.messages || []));
+    }
   } catch (error) {
     console.warn('Unable to save study chat history:', error);
   }
@@ -52,6 +116,7 @@ function savePersistedChatHistory() {
 
 function clearPersistedChatHistory() {
   try {
+    localStorage.removeItem(getChatSessionsStorageKey());
     localStorage.removeItem(getCurrentUserChatKey());
   } catch (error) {
     console.warn('Unable to clear study chat history:', error);
@@ -62,7 +127,12 @@ function restorePersistedChatHistory() {
   const history = document.getElementById('chat-history-container');
   if (!history) return;
 
-  state.chatHistory = loadPersistedChatHistory();
+  state.chatSessions = loadPersistedChatHistory() ? state.chatSessions : state.chatSessions;
+  ensureActiveSession();
+
+  const activeSession = getActiveSession();
+  state.chatHistory = activeSession?.messages || [];
+
   if (!state.chatHistory.length) {
     renderChatWelcome();
     return;
@@ -177,19 +247,22 @@ function setupReturnNavigation() {
 // ==========================================================================
 async function fetchSystemStatus() {
   try {
-    const res = await fetch(`${API_BASE}/api/status`);
+    const res = await fetch(getApiUrl('/api/status'));
     const data = await res.json();
-    
+
     state.documents = data.documents || [];
+    ensureActiveSession();
     updateDocumentDropdowns();
     updateStatusIndicators(data);
     renderDocumentsTable();
     renderChatWelcome();
-    loadAuditMetrics();
 
     if (state.documents.length > 0 && !state.activeDocument) {
       state.activeDocument = state.documents[0].filename;
+      const activeSession = getActiveSession();
+      if (activeSession) activeSession.filename = state.activeDocument;
       updateDocumentDropdowns();
+      updateSessionFileSelector();
     }
   } catch (err) {
     console.error('Error fetching system status:', err);
@@ -200,17 +273,9 @@ async function fetchSystemStatus() {
 function updateStatusIndicators(data) {
   const countEl = document.getElementById('sidebar-doc-count');
   if (countEl) {
-    countEl.textContent = `${state.documents.length} Loaded`;
+    countEl.textContent = `${Math.max(state.chatSessions.length, 0)} Loaded`;
   }
-  const topDocBadge = document.getElementById('top-doc-badge');
-  if (topDocBadge) {
-    if (state.activeDocument) {
-      topDocBadge.textContent = state.activeDocument;
-      topDocBadge.style.display = 'inline-flex';
-    } else {
-      topDocBadge.style.display = 'none';
-    }
-  }
+  updateSessionFileSelector();
 }
 
 function updateDocumentDropdowns() {
@@ -218,31 +283,87 @@ function updateDocumentDropdowns() {
   if (!select) return;
 
   select.innerHTML = '';
-  
-  if (state.documents.length === 0) {
+
+  if (state.chatSessions.length === 0) {
     const opt = document.createElement('option');
     opt.value = '';
-    opt.textContent = 'No Documents Loaded';
+    opt.textContent = 'No Chats Yet';
     select.appendChild(opt);
     select.disabled = true;
     return;
   }
 
   select.disabled = false;
-  state.documents.forEach(doc => {
+  state.chatSessions.forEach(session => {
+    const safeTitle = truncateSessionTitle(session.title || 'New chat', 30);
+    session.title = safeTitle;
     const opt = document.createElement('option');
-    opt.value = doc.filename;
-    opt.textContent = `${doc.filename} (${doc.chunks} chunks)`;
-    if (doc.filename === state.activeDocument) {
+    opt.value = session.id;
+    opt.textContent = safeTitle;
+    if (session.id === state.activeSessionId) {
       opt.selected = true;
     }
     select.appendChild(opt);
   });
 
   select.onchange = (e) => {
-    state.activeDocument = e.target.value;
-    showToast(`Active study material set to: ${state.activeDocument}`, 'info');
-    updateStatusIndicators();
+    switchChatSession(e.target.value);
+  };
+}
+
+function switchChatSession(sessionId) {
+  const target = state.chatSessions.find(session => session.id === sessionId);
+  if (!target) return;
+
+  state.activeSessionId = sessionId;
+  state.activeDocument = target.filename || state.documents[0]?.filename || '';
+  state.chatHistory = target.messages || [];
+  renderSessionList();
+  renderChatHistoryFromCurrentSession();
+  updateSessionFileSelector();
+}
+
+function renderSessionList() {
+  updateDocumentDropdowns();
+  const countEl = document.getElementById('sidebar-doc-count');
+  if (countEl) {
+    countEl.textContent = `${state.chatSessions.length} Loaded`;
+  }
+}
+
+function updateSessionFileSelector() {
+  const select = document.getElementById('active-session-file-select');
+  if (!select) return;
+
+  const currentSession = getActiveSession();
+  const activeFile = currentSession?.filename || state.activeDocument || '';
+  select.innerHTML = '<option value="">No File Selected</option>';
+
+  state.documents.forEach(doc => {
+    const opt = document.createElement('option');
+    opt.value = doc.filename;
+    opt.textContent = doc.filename;
+    if (doc.filename === activeFile) opt.selected = true;
+    select.appendChild(opt);
+  });
+
+  if (activeFile && !state.documents.some(doc => doc.filename === activeFile)) {
+    select.value = '';
+  } else if (activeFile) {
+    select.value = activeFile;
+  }
+
+  select.onchange = (e) => {
+    const nextFile = e.target.value;
+    state.activeDocument = nextFile;
+    const session = getActiveSession();
+    if (session) session.filename = nextFile || 'New chat';
+    if (session && session.title === 'New chat') {
+      session.title = nextFile || 'New chat';
+    }
+    renderSessionList();
+    savePersistedChatHistory();
+    showToast(nextFile ? `Chat file updated to: ${nextFile}` : 'No file selected for this chat', 'info');
   };
 }
 
@@ -259,19 +380,14 @@ function initNavigation() {
     });
   });
 
-  const btnLoadSample = document.getElementById('btn-load-sample');
-  if (btnLoadSample) {
-    btnLoadSample.addEventListener('click', loadSampleDocument);
+  const btnNewChat = document.getElementById('btn-new-chat');
+  if (btnNewChat) {
+    btnNewChat.addEventListener('click', createNewChatSession);
   }
 
   const btnOpenUpload = document.getElementById('btn-open-upload');
   if (btnOpenUpload) {
     btnOpenUpload.addEventListener('click', openUploadModal);
-  }
-
-  const btnTopbarUpload = document.getElementById('btn-topbar-upload');
-  if (btnTopbarUpload) {
-    btnTopbarUpload.addEventListener('click', openUploadModal);
   }
 }
 
@@ -295,12 +411,11 @@ function switchView(viewName) {
   });
 
   const titles = {
-    'chat': { title: 'AI Study Copilot & Academic Assistant', desc: 'Ask questions, explain complex theories, or generate revision roadmaps' },
-    'documents': { title: 'Study Materials & Knowledge Base', desc: 'Manage textbooks, notes, syllabus files, and vector embeddings' },
+    'chat': { title: 'AI Study Copilot & Academic Assistant', desc: 'Ask questions, explain concepts, and keep each chat linked to its uploaded file' },
+    'documents': { title: 'Study Materials & Knowledge Base', desc: 'Upload one file or many files to build the knowledge base' },
     'planner': { title: 'Exam Revision & Study Schedule Generator', desc: 'Structured day-by-day exam roadmap grounded in active study material' },
     'quiz': { title: 'Smart Practice Quiz & MCQ Studio', desc: 'Generate interactive practice questions strictly grounded in your textbook' },
-    'flashcards': { title: 'Key Concepts & Definition Flashcards', desc: 'Essential terms, formulas, theorems, and exam tips' },
-    'audit': { title: 'Vector Store Index & Chunks Telemetry', desc: 'Inspect semantic retrieval parameters and chunk distribution' }
+    'flashcards': { title: 'Key Concepts & Definition Flashcards', desc: 'Essential terms, formulas, theorems, and exam tips' }
   };
 
   const info = titles[viewName] || { title: 'StudyIQ SaaS', desc: 'Academic Intelligence' };
@@ -309,39 +424,6 @@ function switchView(viewName) {
 
   if (viewName === 'documents') {
     renderDocumentsTable();
-  } else if (viewName === 'audit') {
-    loadAuditMetrics();
-  }
-}
-
-// ==========================================================================
-// Sample Study Material Loader
-// ==========================================================================
-async function loadSampleDocument() {
-  const btn = document.getElementById('btn-load-sample');
-  const originalText = btn.innerHTML;
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = `<span>Loading Demo...</span>`;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/load-sample`, { method: 'POST' });
-    const data = await res.json();
-    
-    if (res.ok && data.success) {
-      showToast(data.message, 'success');
-      await fetchSystemStatus();
-      switchView('chat');
-    } else {
-      showToast(data.detail || 'Failed to load sample textbook', 'error');
-    }
-  } catch (err) {
-    console.error('Error loading sample:', err);
-    showToast('Failed to connect to server', 'error');
-  } finally {
-    btn.innerHTML = originalText;
-    btn.disabled = false;
   }
 }
 
@@ -405,7 +487,7 @@ const btnSampleTopic = document.getElementById('btn-chat-sample-topic');
   if (btnResetSession) {
     btnResetSession.addEventListener('click', async () => {
       try {
-        await fetch(`${API_BASE}/api/reset-session`, { method: 'POST' });
+        await fetch(getApiUrl('/api/reset-session'), { method: 'POST' });
         state.chatHistory = [];
         clearPersistedChatHistory();
         showToast('Study session memory cleared', 'info');
@@ -423,8 +505,9 @@ function renderChatWelcome() {
   const history = document.getElementById('chat-history-container');
   if (!history) return;
 
-  if (state.chatHistory.length) {
-    restorePersistedChatHistory();
+  const currentSession = getActiveSession();
+  if (currentSession && currentSession.messages.length) {
+    renderChatHistoryFromCurrentSession();
     return;
   }
 
@@ -441,15 +524,11 @@ function renderChatWelcome() {
         </div>
         <h2>No Study Material Uploaded Yet</h2>
         <p>StudyAgent requires your course textbook, syllabus, or lecture notes to provide grounded explanations and revision roadmaps.</p>
-        
-        <div style="display: flex; gap: 12px; margin-top: 8px;">
+
+        <div style="display: flex; gap: 12px; margin-top: 8px; justify-content: center;">
           <button class="btn btn-primary" onclick="openUploadModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            <span>Upload Study Material (PDF/TXT)</span>
-          </button>
-          <button class="btn btn-demo" onclick="loadSampleDocument()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            <span>Load Demo Study Guide</span>
+            <span>Upload Study Material</span>
           </button>
         </div>
       </div>
@@ -457,6 +536,7 @@ function renderChatWelcome() {
     return;
   }
 
+  const activeFile = currentSession?.filename || state.activeDocument || 'Study Document';
   history.innerHTML = `
     <div class="chat-welcome" id="chat-welcome-screen">
       <div class="welcome-icon-box">
@@ -468,8 +548,8 @@ function renderChatWelcome() {
         </svg>
       </div>
       <h2>What would you like to master today?</h2>
-      <p>StudyAgent is grounded in your active material: <strong>${escapeHtml(state.activeDocument || 'Study Document')}</strong>.</p>
-      
+      <p>StudyAgent is grounded in your active material: <strong>${escapeHtml(activeFile)}</strong>.</p>
+
       <div class="prompt-chips-grid">
         <div class="prompt-chip" data-prompt="Explain the most complex core concept from this document in simple terms with intuitive examples." data-mode="concept">
           <div class="chip-tag">Concept Explainer</div>
@@ -509,6 +589,41 @@ function renderChatWelcome() {
   });
 }
 
+function renderChatHistoryFromCurrentSession() {
+  const history = document.getElementById('chat-history-container');
+  if (!history) return;
+
+  const activeSession = getActiveSession();
+  state.chatHistory = activeSession?.messages || [];
+  history.innerHTML = '';
+
+  if (!state.chatHistory.length) {
+    renderChatWelcome();
+    return;
+  }
+
+  state.chatHistory.forEach(entry => {
+    if (entry.type === 'user') {
+      appendUserMessage(entry.text, { skipSave: true, time: entry.time });
+    } else if (entry.type === 'assistant') {
+      appendAssistantMessage(entry.text, entry.modeName || 'Study Agent', Boolean(entry.guardrail), { skipSave: true, time: entry.time });
+    }
+  });
+  history.scrollTop = history.scrollHeight;
+}
+
+function createNewChatSession() {
+  const session = createChatSessionObject(state.activeDocument || 'New chat');
+  state.chatSessions.unshift(session);
+  state.activeSessionId = session.id;
+  state.chatHistory = session.messages;
+  state.activeDocument = session.filename || state.documents[0]?.filename || '';
+  updateDocumentDropdowns();
+  updateSessionFileSelector();
+  renderChatWelcome();
+  savePersistedChatHistory();
+}
+
 async function sendChatMessage() {
   if (state.isProcessing) return;
 
@@ -520,6 +635,18 @@ async function sendChatMessage() {
     showToast('Please upload or load a study document first!', 'warning');
     openUploadModal();
     return;
+  }
+
+  let currentSession = getActiveSession();
+  if (!currentSession) {
+    currentSession = createChatSessionObject(state.activeDocument || 'New chat');
+    state.chatSessions.unshift(currentSession);
+    state.activeSessionId = currentSession.id;
+  }
+
+  currentSession.filename = state.activeDocument || currentSession.filename || state.documents[0]?.filename || 'No file selected';
+  if (!currentSession.title || currentSession.title === 'New chat') {
+    currentSession.title = truncateSessionTitle(message, 30);
   }
 
   const welcome = document.getElementById('chat-welcome-screen');
@@ -536,20 +663,21 @@ async function sendChatMessage() {
   history.scrollTop = history.scrollHeight;
 
   state.isProcessing = true;
-  document.getElementById('btn-chat-send').disabled = true;
+  const sendButton = document.getElementById('btn-chat-send');
+  if (sendButton) sendButton.disabled = true;
 
   const topicTextarea = document.getElementById('chat-topic-textarea');
   const topicContent = topicTextarea ? topicTextarea.value.trim() : '';
 
   try {
-    const res = await fetch(`${API_BASE}/api/chat`, {
+    const res = await fetch(getApiUrl('/api/chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: message,
         mode: state.activeMode,
         topic: topicContent || null,
-        filename: state.activeDocument || null
+        filename: currentSession.filename || state.activeDocument || null
       })
     });
 
@@ -567,8 +695,11 @@ async function sendChatMessage() {
     appendAssistantMessage('Connection to server failed. Please ensure the backend is running.', 'Network Error', true);
   } finally {
     state.isProcessing = false;
-    document.getElementById('btn-chat-send').disabled = false;
+    if (sendButton) sendButton.disabled = false;
     history.scrollTop = history.scrollHeight;
+    renderSessionList();
+    updateSessionFileSelector();
+    savePersistedChatHistory();
   }
 }
 
@@ -594,8 +725,16 @@ function appendUserMessage(text, options = {}) {
   history.appendChild(msgEl);
 
   if (!options.skipSave) {
-    state.chatHistory.push({ type: 'user', text, time: timestamp });
-    savePersistedChatHistory();
+    const activeSession = getActiveSession();
+    if (activeSession) {
+      activeSession.messages.push({ type: 'user', text, time: timestamp });
+      state.chatHistory = activeSession.messages;
+      if (!activeSession.title || activeSession.title === 'New chat') {
+        activeSession.title = truncateSessionTitle(text, 30);
+      }
+      renderSessionList();
+      savePersistedChatHistory();
+    }
   }
 }
 
@@ -642,8 +781,12 @@ function appendAssistantMessage(text, modeUsed, isBlocked = false, options = {})
   history.appendChild(msgEl);
 
   if (!options.skipSave) {
-    state.chatHistory.push({ type: 'assistant', text, modeName: modeName || 'Study Agent', guardrail: Boolean(isBlocked), time: timestamp });
-    savePersistedChatHistory();
+    const activeSession = getActiveSession();
+    if (activeSession) {
+      activeSession.messages.push({ type: 'assistant', text, modeName: modeName || 'Study Agent', guardrail: Boolean(isBlocked), time: timestamp });
+      state.chatHistory = activeSession.messages;
+      savePersistedChatHistory();
+    }
   }
 
   const copyBtn = document.getElementById(copyBtnId);
@@ -717,14 +860,15 @@ function resetUploadProgressState() {
 
 async function runUploadProgressSequence() {
   const stages = [
-    { label: 'Uploading files', percent: 28, step: 0 },
-    { label: 'Chunking documents', percent: 66, step: 1 },
-    { label: 'Storing embeddings', percent: 100, step: 2 },
+    { label: 'Preparing upload', percent: 18, step: 0, delay: 280 },
+    { label: 'Uploading files', percent: 42, step: 0, delay: 320 },
+    { label: 'Chunking documents', percent: 68, step: 1, delay: 350 },
+    { label: 'Storing in vector DB', percent: 92, step: 2, delay: 420 }
   ];
 
   for (const stage of stages) {
     setUploadProgressState(stage.label, stage.percent, stage.step);
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    await new Promise((resolve) => setTimeout(resolve, stage.delay));
   }
 }
 
@@ -792,19 +936,21 @@ function initUploadModal() {
 
       btnSubmit.disabled = true;
       btnSubmit.innerHTML = `<span>Indexing Documents...</span>`;
-      setUploadProgressState('Uploading files', 12, -1);
+      setUploadProgressState('Preparing upload', 12, -1);
 
       try {
-        await runUploadProgressSequence();
-        const res = await fetch(`${API_BASE}/api/upload`, {
+        const progressTask = runUploadProgressSequence();
+        const res = await fetch(getApiUrl('/api/upload'), {
           method: 'POST',
           body: formData
         });
 
+        await progressTask;
         const data = await res.json();
         if (res.ok && (data.success || data.status === 'success')) {
-          setUploadProgressState('Upload complete', 100, 2);
+          setUploadProgressState('Vector DB synced', 100, 2);
           showToast(`Successfully indexed ${data.uploaded_count || selectedFiles.length} file(s)!`, 'success');
+          await new Promise((resolve) => setTimeout(resolve, 500));
           closeUploadModal();
           selectedFiles = [];
           updateUploadPreview([]);
@@ -876,7 +1022,7 @@ function renderDocumentsTable() {
     tbody.innerHTML = `
       <tr>
         <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">
-          No study documents indexed yet. Upload a PDF or click "Load Demo Textbook".
+          No study documents indexed yet. Upload a PDF, DOCX, or TXT file to build your knowledge base.
         </td>
       </tr>
     `;
@@ -910,7 +1056,7 @@ async function deleteDocument(docId) {
   if (!confirm('Are you sure you want to remove this document from your knowledge base?')) return;
 
   try {
-    const res = await fetch(`${API_BASE}/api/documents/${docId}`, { method: 'DELETE' });
+    const res = await fetch(getApiUrl(`/api/documents/${docId}`), { method: 'DELETE' });
     const data = await res.json();
     if (res.ok) {
       showToast(data.message || 'Document deleted', 'success');
@@ -955,7 +1101,7 @@ async function runPlannerGeneration() {
   outputEl.innerHTML = '<div class="empty-placeholder"><p>Synthesizing structured revision roadmap...</p></div>';
 
   try {
-    const res = await fetch(`${API_BASE}/api/planner`, {
+    const res = await fetch(getApiUrl('/api/planner'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ topic, days, hours_per_day: hours, filename: state.activeDocument })
@@ -985,7 +1131,7 @@ async function runQuizGeneration() {
   outputEl.innerHTML = '<div class="empty-placeholder"><p>Extracting MCQs & quiz questions from textbook...</p></div>';
 
   try {
-    const res = await fetch(`${API_BASE}/api/quiz`, {
+    const res = await fetch(getApiUrl('/api/quiz'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ topic, question_count: 5, filename: state.activeDocument })
@@ -1013,7 +1159,7 @@ async function runFlashcardGeneration() {
   outputEl.innerHTML = '<div class="empty-placeholder" style="grid-column: 1 / -1;"><p>Synthesizing concept definitions & flashcard deck...</p></div>';
 
   try {
-    const res = await fetch(`${API_BASE}/api/flashcards`, {
+    const res = await fetch(getApiUrl('/api/flashcards'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ count: 6, filename: state.activeDocument })

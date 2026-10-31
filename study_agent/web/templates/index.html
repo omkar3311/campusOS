@@ -46,10 +46,6 @@
     </nav>
 
     <div class="campusos-user-dock">
-      <div class="campusos-status-pill">
-        <span class="pulse-dot"></span>
-        <span class="status-label">Online</span>
-      </div>
       <div class="campusos-user-badge">
         <span class="user-role-tag" id="userRoleTag">Student</span>
         <span class="user-display-name" id="userDisplayName">Academic</span>
@@ -84,15 +80,21 @@
       </div>
     </div>
 
-    <!-- Active Study Document Selector -->
     <div class="active-resume-card">
       <div class="active-resume-label">
-        <span>Active Study Material</span>
+        <span>Active Chats</span>
         <span id="sidebar-doc-count" style="color: var(--primary-light);">0 Loaded</span>
       </div>
-      <div class="resume-select-wrapper">
-        <select id="sidebar-doc-select" aria-label="Select Active Study Material">
-          <option value="">No Documents Loaded</option>
+      <button class="btn btn-primary" id="btn-new-chat" style="width: 100%; margin-top: 10px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>New Chat</span>
+      </button>
+      <div class="resume-select-wrapper" style="margin-top: 10px;">
+        <select id="sidebar-doc-select" aria-label="Select Active Chat">
+          <option value="">No Chats Yet</option>
         </select>
       </div>
     </div>
@@ -148,34 +150,7 @@
         <span>Key Concepts & Cards</span>
       </a>
 
-      <a href="#" class="nav-item" data-view="audit">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M12 6v6l4 2"></path>
-        </svg>
-        <span>Vector Chunks & Audit</span>
-      </a>
     </nav>
-
-    <!-- Sidebar Footer -->
-    <div class="sidebar-footer">
-      <button class="btn-upload-trigger" id="btn-open-upload">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="17 8 12 3 7 8"></polyline>
-          <line x1="12" y1="3" x2="12" y2="15"></line>
-        </svg>
-        <span>Upload Study Material</span>
-      </button>
-
-      <div class="system-status-indicator">
-        <div>
-          <span class="status-dot"></span>
-          <span>Vector DB & LLM Online</span>
-        </div>
-        <span style="font-size: 10px; color: var(--text-dim);">Qwen 27B</span>
-      </div>
-    </div>
   </aside>
 
   <!-- ==========================================================================
@@ -193,24 +168,12 @@
       </div>
 
       <div class="topbar-right">
-        <span id="top-doc-badge" class="tag-badge detected" style="display: none;">No File Loaded</span>
-        
-        <button class="btn btn-demo" id="btn-load-sample" title="Load sample Computer Science & AI Fundamentals guide">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-          </svg>
-          <span>Load Demo Textbook</span>
-        </button>
-
-        <button class="btn btn-secondary" id="btn-topbar-upload">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <span>Upload Files</span>
-        </button>
+        <label class="tag-badge detected" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px;">
+          <span style="font-size: 10px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.08em;">File</span>
+          <select id="active-session-file-select" aria-label="Select uploaded file for this chat" style="background: transparent; color: inherit; border: none; outline: none; font: inherit; max-width: 160px;">
+            <option value="">No File Selected</option>
+          </select>
+        </label>
 
         <button class="btn btn-secondary" id="btn-reset-chat" title="Clear conversation memory">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -325,7 +288,6 @@
                 <tr>
                   <th>Document Name</th>
                   <th>Size</th>
-                  <th>Vector Chunks</th>
                   <th>Uploaded At</th>
                   <th>Actions</th>
                 </tr>
@@ -443,41 +405,6 @@
           <div class="flashcards-grid" id="flashcards-grid">
             <div class="empty-placeholder" style="grid-column: 1 / -1;">
               <p>Click "Extract Key Concepts Deck" to generate flashcards from your uploaded material.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ========================================================================
-         VIEW 6: Vector Chunks & Audit
-         ======================================================================== -->
-    <div class="view-container" id="view-audit">
-      <div class="subview-wrapper">
-        <div class="panel-card">
-          <div class="panel-header">
-            <div>
-              <h3>Vector Store Index & Chunks Telemetry</h3>
-              <p class="panel-sub">Inspect semantic retrieval parameters and chunk distribution</p>
-            </div>
-          </div>
-
-          <div class="audit-metrics-grid" id="audit-metrics-grid">
-            <div class="metric-card">
-              <div class="metric-val" id="audit-total-docs">0</div>
-              <div class="metric-lbl">Indexed Documents</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-val" id="audit-total-chunks">0</div>
-              <div class="metric-lbl">Total Vector Chunks</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-val" id="audit-embedding-model">all-MiniLM-L6-v2</div>
-              <div class="metric-lbl">Embedding Model</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-val">Qwen 3.6 27B</div>
-              <div class="metric-lbl">Primary Inference LLM</div>
             </div>
           </div>
         </div>

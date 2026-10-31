@@ -526,7 +526,7 @@ async def chat_endpoint(payload: ChatRequest):
             "status": "error",
             "session_id": payload.session_id or "new",
             "session_title": "Upload Study Material",
-            "answer": "**Document Required**: Please upload your syllabus, textbook, or lecture notes (PDF, TXT, MD) using the **Upload Material** button or click **Load Demo Book** before asking questions.\n\n*StudyAgent requires verified course documents to provide grounded, hallucination-free explanations.*",
+            "answer": "**Document Required**: Please upload your syllabus, textbook, or lecture notes (PDF, TXT, MD) using the **Upload Material** button before asking questions.\n\n*StudyAgent requires verified course documents to provide grounded, hallucination-free explanations.*",
             "mode_used": "Document Required",
             "guardrail_blocked": True,
             "time": datetime.now().strftime("%I:%M %p").lstrip("0")
