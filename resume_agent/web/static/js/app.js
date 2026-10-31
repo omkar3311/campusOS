@@ -15,7 +15,67 @@ const state = {
   isChatProcessing: false,
   atsData: null,
   jdMatchData: null,
+  chatHistory: []
 };
+
+function getCurrentUserChatKey() {
+  const params = new URLSearchParams(window.location.search);
+  const role = params.get('role') || 'student';
+  const name = params.get('name') || params.get('username') || 'user';
+  const userId = params.get('user_id') || params.get('id') || params.get('student_id') || 'guest';
+  const path = window.location.pathname.replace(/[^a-zA-Z0-9_-]/g, '_') || 'resume_agent';
+  const suffix = `${role}-${(name || 'user').replace(/\s+/g, '_')}-${userId}`;
+  return `campusos_resume_chat_${path}_${suffix}`;
+}
+
+function loadPersistedChatHistory() {
+  try {
+    const raw = localStorage.getItem(getCurrentUserChatKey());
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Unable to restore resume chat history:', error);
+    return [];
+  }
+}
+
+function savePersistedChatHistory() {
+  try {
+    localStorage.setItem(getCurrentUserChatKey(), JSON.stringify(state.chatHistory || []));
+  } catch (error) {
+    console.warn('Unable to save resume chat history:', error);
+  }
+}
+
+function clearPersistedChatHistory() {
+  try {
+    localStorage.removeItem(getCurrentUserChatKey());
+  } catch (error) {
+    console.warn('Unable to clear resume chat history:', error);
+  }
+}
+
+function restorePersistedChatHistory() {
+  const history = document.getElementById('chat-history-container');
+  if (!history) return;
+
+  state.chatHistory = loadPersistedChatHistory();
+  if (!state.chatHistory.length) {
+    renderChatWelcome();
+    return;
+  }
+
+  history.innerHTML = '';
+  state.chatHistory.forEach(entry => {
+    if (entry.type === 'user') {
+      appendUserMessage(entry.text, { skipSave: true, time: entry.time });
+    } else if (entry.type === 'assistant') {
+      appendAssistantMessage(entry.text, entry.modeName || 'Career Agent', Boolean(entry.guardrail), { skipSave: true, time: entry.time });
+    }
+  });
+  history.scrollTop = history.scrollHeight;
+}
 
 // Mode Map
 const MODE_MAP = {
@@ -64,7 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initChatEvents();
   initUploadModal();
   initJDEvents();
+  state.chatHistory = loadPersistedChatHistory();
   fetchSystemStatus();
+  restorePersistedChatHistory();
 });
 
 // Dynamic Return Navigation & CampusOS Header Sync
@@ -399,6 +461,8 @@ function initChatEvents() {
     btnResetSession.addEventListener('click', async () => {
       try {
         await fetch(`${API_BASE}/api/reset-session`, { method: 'POST' });
+        state.chatHistory = [];
+        clearPersistedChatHistory();
         showToast('Chat session memory cleared', 'info');
         const history = document.getElementById('chat-history-container');
         history.innerHTML = '';
@@ -412,6 +476,13 @@ function initChatEvents() {
 
 function renderChatWelcome() {
   const history = document.getElementById('chat-history-container');
+  if (!history) return;
+
+  if (state.chatHistory.length) {
+    restorePersistedChatHistory();
+    return;
+  }
+
   history.innerHTML = `
     <div class="chat-welcome" id="chat-welcome-screen">
       <div class="welcome-icon-box">
@@ -533,8 +604,9 @@ async function sendChatMessage() {
   }
 }
 
-function appendUserMessage(text) {
+function appendUserMessage(text, options = {}) {
   const history = document.getElementById('chat-history-container');
+  const timestamp = options.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const msgEl = document.createElement('div');
   msgEl.className = 'chat-msg user';
   msgEl.innerHTML = `
@@ -547,15 +619,21 @@ function appendUserMessage(text) {
     <div class="msg-body">
       <div class="msg-bubble">${escapeHtml(text)}</div>
       <div class="msg-meta">
-        <span>You</span> • <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        <span>You</span> • <span>${timestamp}</span>
       </div>
     </div>
   `;
   history.appendChild(msgEl);
+
+  if (!options.skipSave) {
+    state.chatHistory.push({ type: 'user', text, time: timestamp });
+    savePersistedChatHistory();
+  }
 }
 
-function appendAssistantMessage(rawText, modeName, isGuardrail) {
+function appendAssistantMessage(rawText, modeName, isGuardrail, options = {}) {
   const history = document.getElementById('chat-history-container');
+  const timestamp = options.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const msgEl = document.createElement('div');
   msgEl.className = 'chat-msg assistant';
 
@@ -581,7 +659,7 @@ function appendAssistantMessage(rawText, modeName, isGuardrail) {
       <div class="msg-meta">
         ${modeBadge}
         <span>CampusOS Agent</span> • 
-        <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        <span>${timestamp}</span>
         <button class="btn-copy-msg" id="${copyBtnId}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -593,6 +671,11 @@ function appendAssistantMessage(rawText, modeName, isGuardrail) {
     </div>
   `;
   history.appendChild(msgEl);
+
+  if (!options.skipSave) {
+    state.chatHistory.push({ type: 'assistant', text: rawText, modeName: modeName || 'Career Agent', guardrail: Boolean(isGuardrail), time: timestamp });
+    savePersistedChatHistory();
+  }
 
   // Attach copy handler
   document.getElementById(copyBtnId).addEventListener('click', () => {
