@@ -464,6 +464,9 @@
             gap: 16px;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
         }
 
         .ai-card::before {
@@ -1268,7 +1271,7 @@
         </div>
 
         <section class="ai-grid" aria-label="AI workspace">
-            <article class="ai-card">
+            <a href="/agent/study/?role=hod&return_to={{ request.url.path | default('/main_dashboard') }}&name={{ current_user_name | default('HOD') | urlencode }}&email={{ current_user_email | default('') | urlencode }}" class="ai-card" style="display:block; text-decoration:none; color:inherit;">
                 <div class="ai-card-header">
                     <h3>Learning Agent</h3>
                     <span class="ai-badge">Teaching</span>
@@ -1281,11 +1284,11 @@
                     <li>Recent Conversations</li>
                 </ul>
                 <div class="chip-row">
-                    <a href="/agent/study/?role=hod&return_to={{ request.url.path | default('/main_dashboard') }}&name={{ current_user_name | default('HOD') | urlencode }}&email={{ current_user_email | default('') | urlencode }}" class="chip" style="text-decoration:none;">Open Agent ↗</a>
+                    <span class="chip">Teaching</span>
                 </div>
-            </article>
+            </a>
 
-            <article class="ai-card">
+            <a href="/agent/career/?role=hod&return_to={{ request.url.path | default('/main_dashboard') }}&name={{ current_user_name | default('HOD') | urlencode }}&email={{ current_user_email | default('') | urlencode }}" class="ai-card" style="display:block; text-decoration:none; color:inherit;">
                 <div class="ai-card-header">
                     <h3>Career Agent</h3>
                     <span class="ai-badge">Growth</span>
@@ -1298,11 +1301,11 @@
                     <li>Career Roadmap</li>
                 </ul>
                 <div class="chip-row">
-                    <a href="/agent/career/?role=hod&return_to={{ request.url.path | default('/main_dashboard') }}&name={{ current_user_name | default('HOD') | urlencode }}&email={{ current_user_email | default('') | urlencode }}" class="chip" style="text-decoration:none;">Open Agent ↗</a>
+                    <span class="chip">Growth</span>
                 </div>
-            </article>
+            </a>
 
-            <article class="ai-card">
+            <a href="/agent/attendance/?role=hod&return_to={{ request.url.path | default('/main_dashboard') }}&name={{ current_user_name | default('HOD') | urlencode }}&email={{ current_user_email | default('') | urlencode }}&college_id={{ college.id if college else 1 }}" class="ai-card" style="display:block; text-decoration:none; color:inherit;">
                 <div class="ai-card-header">
                     <h3>Attendance Agent</h3>
                     <span class="ai-badge">Operations</span>
@@ -1315,9 +1318,9 @@
                     <li>Attendance Prediction</li>
                 </ul>
                 <div class="chip-row">
-                    <a href="/agent/attendance/?role=hod&return_to={{ request.url.path | default('/main_dashboard') }}&name={{ current_user_name | default('HOD') | urlencode }}&email={{ current_user_email | default('') | urlencode }}&college_id={{ college.id if college else 1 }}" class="chip" style="text-decoration:none;">Open Agent ↗</a>
+                    <span class="chip">Operations</span>
                 </div>
-            </article>
+            </a>
         </section>
 
         <div class="content-grid" style="margin-top:18px;">

@@ -167,7 +167,7 @@
         .student-section-title { font-size: 1.12rem; font-weight: 800; margin-bottom: 14px; color: var(--secondary); }
 
         .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
-        .ai-card { padding: 22px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden; transition: transform 180ms ease; }
+        .ai-card { padding: 22px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden; transition: transform 180ms ease; cursor: pointer; text-decoration: none; color: inherit; }
         .ai-card:hover { transform: translateY(-4px); }
         .ai-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(37,99,235,0.06), transparent 70%); pointer-events: none; }
         .ai-card-header { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
@@ -490,7 +490,7 @@
                 <h2 class="section-title">AI Workspace</h2>
             </div>
             <div class="ai-grid">
-                <article class="ai-card">
+                <a href="/agent/study/?role=teacher&return_to={{ request.url.path | default('/class_dashboard') }}&name={{ current_user_name | default('Faculty') | urlencode }}&email={{ current_user_email | default('') | urlencode }}&classroom_id={{ classroom.id if classroom else 1 }}" class="ai-card" style="display:block; text-decoration:none; color:inherit;">
                     <div class="ai-card-header">
                         <h3>Learning Agent</h3>
                         <span class="ai-badge">Assist</span>
@@ -501,11 +501,10 @@
                         <li>Adaptive reminders for students</li>
                     </ul>
                     <div class="chip-row">
-                        <a href="/agent/study/?role=teacher&return_to={{ request.url.path | default('/class_dashboard') }}&name={{ current_user_name | default('Faculty') | urlencode }}&email={{ current_user_email | default('') | urlencode }}&classroom_id={{ classroom.id if classroom else 1 }}" class="chip" style="text-decoration:none;">Open Agent ↗</a>
                         <span class="chip">Study plans</span>
                     </div>
-                </article>
-                <article class="ai-card">
+                </a>
+                <a href="/agent/career/?role=teacher&return_to={{ request.url.path | default('/class_dashboard') }}&name={{ current_user_name | default('Faculty') | urlencode }}&email={{ current_user_email | default('') | urlencode }}" class="ai-card" style="display:block; text-decoration:none; color:inherit;">
                     <div class="ai-card-header">
                         <h3>Career Agent</h3>
                         <span class="ai-badge">Guide</span>
@@ -516,11 +515,10 @@
                         <li>Career milestones by semester</li>
                     </ul>
                     <div class="chip-row">
-                        <a href="/agent/career/?role=teacher&return_to={{ request.url.path | default('/class_dashboard') }}&name={{ current_user_name | default('Faculty') | urlencode }}&email={{ current_user_email | default('') | urlencode }}" class="chip" style="text-decoration:none;">Open Agent ↗</a>
                         <span class="chip">Roadmaps</span>
                     </div>
-                </article>
-                <article class="ai-card">
+                </a>
+                <a href="/agent/attendance/?role=teacher&return_to={{ request.url.path | default('/class_dashboard') }}&name={{ current_user_name | default('Faculty') | urlencode }}&email={{ current_user_email | default('') | urlencode }}&college_id={{ college.id if college else 1 }}&classroom_id={{ classroom.id if classroom else 1 }}" class="ai-card" style="display:block; text-decoration:none; color:inherit;">
                     <div class="ai-card-header">
                         <h3>Attendance Agent</h3>
                         <span class="ai-badge">Monitor</span>
@@ -531,10 +529,9 @@
                         <li>Instant summaries for teachers</li>
                     </ul>
                     <div class="chip-row">
-                        <a href="/agent/attendance/?role=teacher&return_to={{ request.url.path | default('/class_dashboard') }}&name={{ current_user_name | default('Faculty') | urlencode }}&email={{ current_user_email | default('') | urlencode }}&college_id={{ college.id if college else 1 }}&classroom_id={{ classroom.id if classroom else 1 }}" class="chip" style="text-decoration:none;">Open Agent ↗</a>
                         <span class="chip">Risk tracking</span>
                     </div>
-                </article>
+                </a>
             </div>
         </section>
 

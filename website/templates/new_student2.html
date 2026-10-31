@@ -514,6 +514,12 @@
             flex-direction: column;
             gap: 12px;
             transition: transform 180ms ease, box-shadow 180ms ease;
+            cursor: pointer;
+        }
+
+        .workspace-card-link {
+            text-decoration: none;
+            color: inherit;
         }
 
         .workspace-card:hover {
@@ -1068,7 +1074,7 @@
         </section>
 
         <section class="workspace-grid" id="ai-agents" aria-label="AI workspace">
-            <article class="workspace-card">
+            <a class="workspace-card workspace-card-link" href="/agent/study/?role=student&return_to={{ request.url.path | default('/student') }}&name={{ student_name | urlencode }}&email={{ email | urlencode }}&prn={{ prn }}">
                 <div class="eyebrow">Learning Agent</div>
                 <h4>Continue smarter</h4>
                 <ul>
@@ -1077,9 +1083,8 @@
                     <li>• Practice Quiz</li>
                     <li>• Recent Conversations</li>
                 </ul>
-                <a class="accent-link" href="/agent/study/?role=student&return_to={{ request.url.path | default('/student') }}&name={{ student_name | urlencode }}&email={{ email | urlencode }}&prn={{ prn }}">Open Agent →</a>
-            </article>
-            <article class="workspace-card">
+            </a>
+            <a class="workspace-card workspace-card-link" href="/agent/career/?role=student&return_to={{ request.url.path | default('/student') }}&name={{ student_name | urlencode }}&email={{ email | urlencode }}&prn={{ prn }}">
                 <div class="eyebrow">Career Agent</div>
                 <h4>Shape your next move</h4>
                 <ul>
@@ -1088,9 +1093,8 @@
                     <li>• Interview Preparation</li>
                     <li>• Career Roadmap</li>
                 </ul>
-                <a class="accent-link" href="/agent/career/?role=student&return_to={{ request.url.path | default('/student') }}&name={{ student_name | urlencode }}&email={{ email | urlencode }}&prn={{ prn }}">Open Agent →</a>
-            </article>
-            <article class="workspace-card">
+            </a>
+            <a class="workspace-card workspace-card-link" href="/agent/attendance/?role=student&return_to={{ request.url.path | default('/student') }}&name={{ student_name | urlencode }}&email={{ email | urlencode }}&college_id={{ college_id }}&classroom_id={{ classroom_id }}&prn={{ prn }}">
                 <div class="eyebrow">Attendance Agent</div>
                 <h4>Stay safe and proactive</h4>
                 <ul>
@@ -1099,8 +1103,7 @@
                     <li>• Safe Attendance Calculator</li>
                     <li>• Attendance Insights</li>
                 </ul>
-                <a class="accent-link" href="/agent/attendance/?role=student&return_to={{ request.url.path | default('/student') }}&name={{ student_name | urlencode }}&email={{ email | urlencode }}&college_id={{ college_id }}&classroom_id={{ classroom_id }}&prn={{ prn }}">Open Agent →</a>
-            </article>
+            </a>
         </section>
 
         <section class="section-grid" id="attendance">
