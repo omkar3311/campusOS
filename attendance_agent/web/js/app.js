@@ -27,6 +27,7 @@ const state = {
   attendanceData: null,
   analyticsData: null,
   activeView: "overview",
+  role: "student",
   chatSessionId: "web-session-" + Math.random().toString(36).substring(2, 9),
   chatHistory: [],
   isChatLoading: false,
@@ -123,6 +124,7 @@ function setupReturnNavigation() {
   const savedReturn = sessionStorage.getItem('campusos_return_url');
   const role = urlParams.get('role') || 'student';
   const name = urlParams.get('name') || (role === 'hod' ? 'HOD Admin' : (role === 'teacher' ? 'Faculty' : 'Student'));
+  state.role = (role || 'student').toLowerCase();
   
   let returnUrl = explicitReturn || savedReturn;
   if (!returnUrl) {
@@ -191,6 +193,7 @@ async function loadApplicationData() {
 
       // Update Student Profile Pill in UI
       updateStudentUI();
+      applyRoleVisibility();
 
       // Render Dashboard
       renderDashboard();
@@ -224,6 +227,14 @@ async function loadApplicationData() {
 }
 
 // Update Student Profile details in UI
+function applyRoleVisibility() {
+  const role = (state.role || "student").toLowerCase();
+  const facultyCard = document.getElementById("faculty-attendance-card");
+  if (facultyCard) {
+    facultyCard.style.display = role === "hod" ? "" : "none";
+  }
+}
+
 function updateStudentUI() {
   document.querySelectorAll(".student-name-display").forEach((el) => {
     el.textContent = state.student.name;
@@ -285,6 +296,8 @@ function renderDashboard() {
       kpiSafeBunks.textContent = "0 (Shortage)";
     }
   }
+
+  applyRoleVisibility();
 
   // 3. Recent 5 Days List
   const recentList = document.getElementById("recent-days-container");
@@ -488,14 +501,15 @@ function jumpToDateDetails(dateStr) {
 // Render Analytics View
 function renderAnalytics() {
   if (!state.analyticsData) return;
-  const { teachers, day_of_week, streaks, summary } = state.analyticsData;
+  const { teachers, day_of_week, streaks, summary, monthly_trend } = state.analyticsData;
 
   // 1. Teacher breakdown bars
   const teacherList = document.getElementById("analytics-teacher-list");
-  if (teacherList && teachers) {
-    teacherList.innerHTML = teachers
-      .map(
-        (t) => `
+  if (teacherList && state.role === "hod") {
+    if (teachers) {
+      teacherList.innerHTML = teachers
+        .map(
+          (t) => `
       <div class="teacher-item">
         <div class="teacher-item-top">
           <span class="teacher-name">Prof. ${t.teacher}</span>
@@ -508,8 +522,11 @@ function renderAnalytics() {
         </div>
       </div>
     `
-      )
-      .join("");
+        )
+        .join("");
+    }
+  } else if (teacherList) {
+    teacherList.innerHTML = "<div style='font-size:0.8rem; color: var(--text-muted); padding: 8px 0;'>Your role only shows personal attendance data.</div>";
   }
 
   // 2. Day of Week Chart Bars
@@ -534,7 +551,51 @@ function renderAnalytics() {
       .join("");
   }
 
-  // 3. Streak KPI
+  // 3. Monthly trend chart
+  const monthlyContainer = document.getElementById("analytics-monthly-bars");
+  if (monthlyContainer) {
+    const trend = Array.isArray(monthly_trend) && monthly_trend.length ? monthly_trend : [];
+    if (trend.length > 0) {
+      const maxPct = Math.max(100, ...trend.map((m) => Number(m.percentage || 0)));
+      monthlyContainer.innerHTML = trend
+        .map((item) => {
+          const pct = Number(item.percentage || 0);
+          return `
+          <div class="monthly-bar-col">
+            <span class="monthly-value">${pct}%</span>
+            <div class="monthly-bar-wrap">
+              <div class="monthly-bar-fill" style="height: ${(pct / maxPct) * 100}%;"></div>
+            </div>
+            <span class="monthly-label">${item.month}</span>
+          </div>
+        `;
+        })
+        .join("");
+    } else {
+      monthlyContainer.innerHTML = "<div style='color: var(--text-muted); font-size: 0.82rem; padding-top: 18px;'>No monthly history available yet.</div>";
+    }
+  }
+
+  // 4. Attendance mix donut
+  const donut = document.getElementById("analytics-mix-ring");
+  const mixValue = document.getElementById("analytics-mix-value");
+  const mixLegend = document.getElementById("analytics-mix-legend");
+  if (donut && mixValue && mixLegend && summary) {
+    const present = Number(summary.present || 0);
+    const absent = Number(summary.absent || 0);
+    const total = present + absent || 1;
+    const presentPct = Math.round((present / total) * 100);
+    const absentPct = 100 - presentPct;
+
+    donut.style.background = `conic-gradient(var(--present) 0 ${presentPct}%, #f97316 ${presentPct}% ${presentPct + absentPct}%)`;
+    mixValue.textContent = `${presentPct}%`;
+    mixLegend.innerHTML = `
+      <div class="mini-legend-item"><span class="legend-dot present"></span><span>Present (${present})</span></div>
+      <div class="mini-legend-item"><span class="legend-dot absent"></span><span>Absent (${absent})</span></div>
+    `;
+  }
+
+  // 5. Streak KPI
   const streakEl = document.getElementById("analytics-streak-val");
   if (streakEl && streaks) {
     streakEl.textContent = `${streaks.current_streak_days} Days`;
@@ -744,7 +805,7 @@ async function sendChatQuery(question) {
 
 function appendChatMessage(role, content) {
   state.chatHistory.push({ role, content });
-  const container = document.getElementById("chat-messages-scroll");
+  const container = document.getElementById("chat-messages-stream");
   if (!container) return;
 
   const bubble = document.createElement("div");
@@ -766,7 +827,7 @@ function appendChatMessage(role, content) {
 }
 
 function showChatTyping() {
-  const container = document.getElementById("chat-messages-scroll");
+  const container = document.getElementById("chat-messages-stream");
   if (!container) return;
 
   const typingBubble = document.createElement("div");
@@ -796,13 +857,17 @@ async function handleResetChat() {
     await api.resetChat();
     state.chatSessionId = "web-session-" + Math.random().toString(36).substring(2, 9);
     state.chatHistory = [];
-    const container = document.getElementById("chat-messages-scroll");
+    const container = document.getElementById("chat-messages-stream");
     if (container) container.innerHTML = "";
     setupInitialChatWelcome();
     showToast("Chat memory reset", "info");
   } catch (err) {
     showToast("Failed to reset session", "error");
   }
+}
+
+function clearChatHistory() {
+  return handleResetChat();
 }
 
 function askAIAboutDate(dateStr) {
