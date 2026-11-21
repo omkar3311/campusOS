@@ -33,8 +33,55 @@ const state = {
   isChatProcessing: false,
   atsData: null,
   jdMatchData: null,
-  chatHistory: []
+  chatHistory: [],
+  interview: null,
+  interviewTimer: null,
+  interviewSeconds: 60,
+  interviewRecognition: null
 };
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[character]);
+}
+
+function removeElement(id) {
+  const element = typeof id === 'string' ? document.getElementById(id) : id;
+  if (element) element.remove();
+}
+
+function showToast(message, type = 'info') {
+  const stack = document.getElementById('toast-stack');
+  if (!stack) return;
+  const toast = document.createElement('div');
+  toast.className = `toast-item ${type}`;
+  toast.textContent = message;
+  stack.appendChild(toast);
+  setTimeout(() => toast.remove(), 4200);
+}
+
+async function loadProfileDetails() {
+  if (!state.activeResume) return;
+  try {
+    const separator = getSessionQueryString() ? '&' : '?';
+    const res = await fetch(buildApiUrl('/api/resume-details') + `${separator}filename=${encodeURIComponent(state.activeResume)}`);
+    const data = await res.json();
+    if (!res.ok) return;
+    const preview = document.getElementById('profile-resume-preview');
+    const name = document.getElementById('profile-candidate-name');
+    const filenameEl = document.getElementById('profile-filename');
+    const wordsEl = document.getElementById('profile-words');
+    const charsEl = document.getElementById('profile-chars');
+    const summaryEl = document.getElementById('profile-memory-summary');
+    if (name) name.textContent = data.candidate_name || 'Candidate';
+    if (filenameEl) filenameEl.textContent = data.filename || state.activeResume;
+    if (wordsEl) wordsEl.textContent = `${data.word_count || 0} words`;
+    if (charsEl) charsEl.textContent = `${data.char_count || 0} characters`;
+    if (preview) preview.textContent = data.raw_text_preview || '';
+    if (summaryEl && data.profile_summary) summaryEl.textContent = data.profile_summary;
+  } catch (error) {
+    console.warn('Unable to load resume profile:', error);
+  }
+}
 
 function getCurrentUserChatKey() {
   const params = new URLSearchParams(window.location.search);
@@ -142,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initChatEvents();
   initUploadModal();
   initJDEvents();
+  initInterviewStudio();
   state.chatHistory = loadPersistedChatHistory();
   fetchSystemStatus();
   restorePersistedChatHistory();
@@ -632,8 +680,7 @@ function appendUserMessage(text, options = {}) {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
         <circle cx="12" cy="7" r="4"></circle>
-      </svg>
-    </div>
+      </div>
     <div class="msg-body">
       <div class="msg-bubble">${escapeHtml(text)}</div>
       <div class="msg-meta">
@@ -1002,352 +1049,478 @@ function renderJDMatchResults(data) {
 // ==========================================================================
 // VIEW 4, 5, 6: Specialized Agent Studios (Interview, Coding, Career)
 // ==========================================================================
-function triggerStudioPrompt(mode, defaultPrompt) {
-  // Switch to Chat tab, set mode, fill prompt, and execute
-  switchView('chat');
-  
-  // Set mode pill
-  document.querySelectorAll('.mode-pill').forEach(p => {
-    if (p.getAttribute('data-mode') === mode) {
-      p.classList.add('active');
-    } else {
-      p.classList.remove('active');
-    }
-  });
-  state.activeMode = mode;
+function initInterviewStudio() {
+  const startBtn = document.getElementById('interview-start-btn');
+  const submitBtn = document.getElementById('interview-submit-btn');
+  const answer = document.getElementById('interview-answer');
+  const voiceBtn = document.getElementById('interview-voice-btn');
+  const endBtn = document.getElementById('interview-end-btn');
 
-  const chatInput = document.getElementById('chat-input-textarea');
-  chatInput.value = defaultPrompt;
-  sendChatMessage();
+  if (startBtn) startBtn.addEventListener('click', startInterview);
+  if (submitBtn) submitBtn.addEventListener('click', submitInterviewAnswer);
+  if (endBtn) endBtn.addEventListener('click', finishInterview);
+  if (answer) answer.addEventListener('input', () => {
+    const count = answer.value.trim() ? answer.value.trim().split(/\s+/).length : 0;
+    document.getElementById('interview-word-count').textContent = `${count} words`;
+  });
+  if (voiceBtn) voiceBtn.addEventListener('click', toggleInterviewVoice);
+}
+
+async function startInterview() {
+  if (!state.activeResume) {
+    showToast('Upload or load a resume before starting the interview.', 'warning');
+    openUploadModal();
+    return;
+  }
+
+  const role = document.getElementById('interview-role').value.trim();
+  const startBtn = document.getElementById('interview-start-btn');
+  startBtn.disabled = true;
+  startBtn.querySelector('span').textContent = 'Building questions...';
+
+  try {
+    const res = await fetch(buildApiUrl('/api/interview/start'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        filename: state.activeResume,
+        role: role || 'target role',
+        interview_type: document.getElementById('interview-type').value,
+        difficulty: document.getElementById('interview-difficulty').value,
+        question_count: parseInt(document.getElementById('interview-count').value, 10),
+        job_description: document.getElementById('interview-jd').value.trim() || null
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.detail || 'Could not start interview');
+
+    state.interview = {sessionId: data.session_id, total: data.total_questions, index: 0};
+    document.getElementById('interview-setup').classList.add('hidden');
+    document.getElementById('interview-session').classList.remove('hidden');
+    document.getElementById('interview-report').classList.add('hidden');
+    document.getElementById('interview-session-title').textContent = `Interview for ${role || 'your target role'}`;
+    document.getElementById('interview-active-resume').textContent = state.activeResume;
+    renderInterviewQuestion(data.question, data.question_index, data.total_questions);
+  } catch (error) {
+    showToast(error.message, 'error');
+  } finally {
+    startBtn.disabled = false;
+    startBtn.querySelector('span').textContent = 'Start interview';
+  }
+}
+
+function renderInterviewQuestion(question, index, total) {
+  clearInterval(state.interviewTimer);
+  state.interview.index = index;
+  document.getElementById('interview-progress-label').textContent = `Question ${index + 1} of ${total}`;
+  document.getElementById('interview-progress-bar').style.width = `${((index + 1) / total) * 100}%`;
+  document.getElementById('interview-question-category').textContent = question.category || 'Interview';
+  document.getElementById('interview-question-focus').textContent = question.focus || 'Candidate response';
+  document.getElementById('interview-question-text').textContent = question.question;
+  document.getElementById('interview-answer').value = '';
+  document.getElementById('interview-word-count').textContent = '0 words';
+  document.getElementById('interview-answer-feedback').classList.add('hidden');
+  document.getElementById('interview-submit-btn').disabled = false;
+
+  state.interviewSeconds = question.time_seconds || 60;
+  updateInterviewTimer();
+  state.interviewTimer = setInterval(() => {
+    state.interviewSeconds -= 1;
+    updateInterviewTimer();
+  }, 1000);
+}
+
+function updateInterviewTimer() {
+  const seconds = Math.max(0, state.interviewSeconds);
+  const minutes = Math.floor(seconds / 60);
+  document.getElementById('interview-timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+function toggleInterviewVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Voice capture is not supported in this browser.', 'warning');
+    return;
+  }
+  if (state.interviewRecognition) {
+    state.interviewRecognition.stop();
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+  const answer = document.getElementById('interview-answer');
+  const voiceBtn = document.getElementById('interview-voice-btn');
+  recognition.onstart = () => {
+    state.interviewRecognition = recognition;
+    voiceBtn.classList.add('recording');
+    voiceBtn.querySelector('span').textContent = 'Listening...';
+  };
+  recognition.onresult = (event) => {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) transcript += event.results[i][0].transcript;
+    if (transcript) answer.value = (answer.value + ' ' + transcript).trim();
+    answer.dispatchEvent(new Event('input'));
+  };
+  recognition.onend = () => {
+    state.interviewRecognition = null;
+    voiceBtn.classList.remove('recording');
+    voiceBtn.querySelector('span').textContent = 'Use microphone';
+  };
+  recognition.start();
+}
+
+async function submitInterviewAnswer() {
+  if (!state.interview) return;
+  const answer = document.getElementById('interview-answer').value.trim();
+  if (!answer) {
+    showToast('Add an answer before submitting.', 'warning');
+    document.getElementById('interview-answer').focus();
+    return;
+  }
+
+  const submitBtn = document.getElementById('interview-submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Evaluating...';
+
+  try {
+    const res = await fetch(buildApiUrl('/api/interview/answer'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({session_id: state.interview.sessionId, answer})
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.detail || 'Answer evaluation failed');
+
+    renderAnswerFeedback(data.evaluation);
+    clearInterval(state.interviewTimer);
+    setTimeout(() => {
+      if (data.has_next) renderInterviewQuestion(data.question, data.question_index, data.total_questions);
+      else finishInterview();
+    }, 1800);
+  } catch (error) {
+    showToast(error.message, 'error');
+  } finally {
+    submitBtn.innerHTML = 'Submit answer <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  }
+}
+
+function renderAnswerFeedback(evaluation) {
+  const container = document.getElementById('interview-answer-feedback');
+  const strengths = (evaluation.strengths || []).map(item => `<li>${escapeHtml(item)}</li>`).join('');
+  const improvements = (evaluation.improvements || []).map(item => `<li>${escapeHtml(item)}</li>`).join('');
+  container.innerHTML = `<div class="feedback-score"><strong>${evaluation.score || 0}</strong><span>/100</span></div><div class="feedback-copy"><strong>${escapeHtml(evaluation.summary || 'Answer evaluated.')}</strong><div class="feedback-columns"><div><span>Strengths</span><ul>${strengths}</ul></div><div><span>Improve next</span><ul>${improvements}</ul></div></div></div>`;
+  container.classList.remove('hidden');
+}
+
+async function finishInterview() {
+  if (!state.interview) return;
+  clearInterval(state.interviewTimer);
+  if (state.interviewRecognition) state.interviewRecognition.stop();
+
+  try {
+    const res = await fetch(buildApiUrl('/api/interview/finish'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({session_id: state.interview.sessionId})
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.detail || 'Could not generate report');
+    renderInterviewReport(data);
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
+
+function renderInterviewReport(data) {
+  document.getElementById('interview-session').classList.add('hidden');
+  const report = document.getElementById('interview-report');
+  const verdict = data.overall_score >= 80 ? 'Strong Hire Potential' : data.overall_score >= 60 ? 'Promising — Polish Required' : 'More Practice Recommended';
+  const categories = Object.entries(data.category_scores || {}).map(([name, score]) => `<div class="report-category"><div><span>${escapeHtml(name)}</span><strong>${score}%</strong></div><div class="report-bar"><span style="width:${score}%"></span></div></div>`).join('');
+  report.innerHTML = `<div class="report-header"><div><span>INTERVIEW REPORT</span><h2>${escapeHtml(data.candidate_name)} · ${escapeHtml(data.role)}</h2></div><button id="interview-restart-btn" class="interview-start-btn"><span>Practice again</span></button></div><div class="report-grid"><div class="report-score-card"><div class="report-ring" style="--score:${data.overall_score * 3.6}deg"><strong>${data.overall_score}</strong><span>/100</span></div><div><span>Overall performance</span><h3>${verdict}</h3><p>${data.answered} of ${data.total_questions} questions answered</p></div></div><div class="report-categories"><h3>Competency breakdown</h3>${categories}</div></div><div class="report-answers"><h3>Response review</h3>${data.responses.map((item, index) => `<article><div class="response-index">${index + 1}</div><div><span>${escapeHtml(item.question.category || 'Interview')}</span><h4>${escapeHtml(item.question.question)}</h4><p>${escapeHtml(item.answer)}</p><strong>${item.evaluation.score}/100 · ${escapeHtml(item.evaluation.summary || '')}</strong></div></article>`).join('')}</div>`;
+  report.classList.remove('hidden');
+  document.getElementById('interview-restart-btn').addEventListener('click', () => {
+    report.classList.add('hidden');
+    document.getElementById('interview-setup').classList.remove('hidden');
+  });
 }
 
 // ==========================================================================
-// VIEW 7: Multi-Resume Comparison & Leaderboard
+// VIEW 7: Multi-Candidate Leaderboard & Comparison
 // ==========================================================================
 async function runResumeComparison() {
-  const container = document.getElementById('compare-table-body');
-  container.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">Benchmarking candidates across vector embeddings...</td></tr>`;
+  const tbody = document.getElementById('compare-table-body');
+  if (!tbody) return;
 
-  const jdText = document.getElementById('compare-jd-input') ? document.getElementById('compare-jd-input').value.trim() : '';
+  if (state.loadedResumes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-dim);">No resumes uploaded yet. Upload resumes to benchmark candidates.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-dim);">Analyzing and comparing candidates...</td></tr>`;
 
   try {
+    const jdText = document.getElementById('jd-textarea')?.value?.trim() || state.jobDescription || '';
     const res = await fetch(buildApiUrl('/api/compare-resumes'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ job_description: jdText || null })
+      body: JSON.stringify({ job_description: jdText })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: #f43f5e;">${escapeHtml(data.detail || 'Failed to compare resumes')}</td></tr>`;
+      return;
+    }
+
+    if (!data.ranking || data.ranking.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-dim);">No candidates to compare.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = '';
+    data.ranking.forEach(c => {
+      const tr = document.createElement('tr');
+      const isSelected = c.filename === state.activeResume;
+      const matchedChips = (c.matched_sample || []).map(s => `<span class="skill-pill matched" style="font-size:10px; padding:2px 6px;">${escapeHtml(s)}</span>`).join(' ') || '<span style="color:var(--text-dim); font-size:11px;">None</span>';
+      const missingChips = (c.missing_sample || []).map(s => `<span class="skill-pill missing" style="font-size:10px; padding:2px 6px;">${escapeHtml(s)}</span>`).join(' ') || '<span style="color:var(--text-dim); font-size:11px;">None</span>';
+
+      tr.innerHTML = `
+        <td><strong style="color:var(--primary); font-size:14px;">#${c.rank}</strong></td>
+        <td>
+          <div style="font-weight:600; color:var(--text-main);">${escapeHtml(c.candidate_name)}</div>
+          <div style="font-size:11px; color:var(--text-dim);">${escapeHtml(c.filename)}</div>
+        </td>
+        <td>
+          <span class="tag-badge detected" style="font-size:12px; font-weight:700;">${c.score}%</span>
+          <span style="font-size:11px; color:var(--text-dim); margin-left:4px;">${escapeHtml(c.verdict || '')}</span>
+        </td>
+        <td><div style="display:flex; flex-wrap:wrap; gap:4px; max-width:220px;">${matchedChips}</div></td>
+        <td><div style="display:flex; flex-wrap:wrap; gap:4px; max-width:220px;">${missingChips}</div></td>
+        <td>
+          <button class="btn ${isSelected ? 'btn-primary' : 'btn-secondary'} btn-sm select-candidate-btn" data-filename="${escapeHtml(c.filename)}">
+            ${isSelected ? 'Active' : 'Select'}
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
     });
 
-    const data = await res.json();
-    if (res.ok && data.success) {
-      renderLeaderboard(data.ranking, data.has_jd);
-    } else {
-      container.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--danger);">${data.detail || 'Failed to compare resumes'}</td></tr>`;
-    }
+    tbody.querySelectorAll('.select-candidate-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const fn = e.currentTarget.getAttribute('data-filename');
+        if (fn) {
+          state.activeResume = fn;
+          updateResumeDropdowns();
+          handleResumeChanged();
+          runResumeComparison();
+        }
+      });
+    });
+
   } catch (err) {
-    console.error('Comparison error:', err);
-    container.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--danger);">Error connecting to benchmark service</td></tr>`;
+    console.error('Compare error:', err);
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: #f43f5e;">Error connecting to comparison service.</td></tr>`;
   }
 }
 
-function renderLeaderboard(ranking, hasJD) {
-  const tbody = document.getElementById('compare-table-body');
-  tbody.innerHTML = '';
+// Upload Modal Helper: Format file size
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
 
-  if (!ranking || ranking.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-dim);">No candidate resumes available to rank. Please upload resumes.</td></tr>`;
-    return;
-  }
+// Upload Modal Helper: Render selected files in preview list
+function renderSelectedFiles(files) {
+  const container = document.getElementById('upload-file-list');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!files || files.length === 0) return;
 
-  ranking.forEach((cand, idx) => {
-    const tr = document.createElement('tr');
-    let rankBadgeClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
-    
-    tr.innerHTML = `
-      <td>
-        <span class="rank-badge ${rankBadgeClass}">#${cand.rank}</span>
-      </td>
-      <td>
-        <strong style="color: #fff;">${escapeHtml(cand.candidate_name)}</strong>
-        <div style="font-size: 11px; color: var(--text-dim);">${escapeHtml(cand.filename)}</div>
-      </td>
-      <td>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <strong style="font-size: 15px; color: ${cand.score >= 70 ? 'var(--success)' : cand.score >= 40 ? 'var(--warning)' : 'var(--danger)'};">${cand.score}%</strong>
+  Array.from(files).forEach(file => {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isSupported = ext === 'pdf' || ext === 'docx';
+    const item = document.createElement('div');
+    item.className = 'file-preview-item';
+    item.innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:16px;">${ext === 'pdf' ? '📕' : '📄'}</span>
+        <div>
+          <strong style="color:var(--text-main); font-size:12px;">${escapeHtml(file.name)}</strong>
+          <span style="color:var(--text-dim); font-size:11px; margin-left:6px;">(${formatFileSize(file.size)})</span>
         </div>
-      </td>
-      <td>
-        <span class="tag-badge detected">${cand.matched_count} ${hasJD ? 'Skills' : 'Sections'}</span>
-      </td>
-      <td>
-        <span class="tag-badge missing">${cand.missing_count} Gaps</span>
-      </td>
-      <td>
-        <button class="btn btn-secondary btn-sm" onclick="selectResumeAndChat('${escapeHtml(cand.filename)}')">
-          Audit Profile
-        </button>
-      </td>
+      </div>
+      <span class="tag-badge" style="${isSupported ? 'background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3);' : 'background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);'}">
+        ${isSupported ? 'Ready' : 'Unsupported'}
+      </span>
     `;
-    tbody.appendChild(tr);
+    container.appendChild(item);
   });
 }
 
-function selectResumeAndChat(filename) {
-  state.activeResume = filename;
-  updateResumeDropdowns();
-  switchView('chat');
-  showToast(`Switched active candidate to: ${filename}`, 'info');
-}
-
-// ==========================================================================
-// VIEW 8: Resume Data & Profile Memory
-// ==========================================================================
-async function loadProfileDetails() {
-  if (!state.activeResume && state.loadedResumes.length > 0) {
-    state.activeResume = state.loadedResumes[0].filename;
-  }
-
-  if (!state.activeResume) {
-    showToast('No active resume selected', 'warning');
-    return;
-  }
-
-  try {
-    const res = await fetch(`${buildApiUrl('/api/resume-details')}?filename=${encodeURIComponent(state.activeResume)}`);
-    const data = await res.json();
-
-    if (res.ok && data.success) {
-      document.getElementById('profile-candidate-name').textContent = data.candidate_name;
-      document.getElementById('profile-filename').textContent = data.filename;
-      document.getElementById('profile-words').textContent = `${data.word_count} words`;
-      document.getElementById('profile-chars').textContent = `${data.char_count} characters`;
-
-      // Profile Memory
-      const summaryEl = document.getElementById('profile-memory-summary');
-      summaryEl.textContent = data.profile_summary;
-
-      // Raw Text
-      const rawEl = document.getElementById('profile-raw-text');
-      rawEl.textContent = data.raw_text_preview;
-    }
-  } catch (err) {
-    console.error('Error loading profile details:', err);
-  }
-}
-
-// ==========================================================================
-// File Upload & Modal Handling
-// ==========================================================================
-function setUploadProgressState(labelText, percentValue, currentStep) {
-  const panel = document.getElementById('upload-progress-panel');
-  const fill = document.getElementById('upload-progress-fill');
-  const label = document.getElementById('upload-progress-label');
-  const percent = document.getElementById('upload-progress-percent');
-  const steps = document.querySelectorAll('.upload-progress-step');
-
-  if (!panel || !fill || !label || !percent) return;
-
-  panel.style.display = 'block';
-  fill.style.width = `${percentValue}%`;
-  label.textContent = labelText;
-  percent.textContent = `${percentValue}%`;
-
-  steps.forEach((step, index) => {
-    const active = index <= currentStep;
-    step.style.opacity = active ? '1' : '0.45';
-    step.style.borderColor = active ? 'rgba(125, 211, 252, 0.8)' : 'rgba(148, 163, 184, 0.35)';
-    step.style.background = active ? 'rgba(14, 165, 233, 0.15)' : 'rgba(148, 163, 184, 0.08)';
-    step.style.color = active ? '#dbeafe' : 'var(--text-dim)';
-  });
-}
-
-function resetUploadProgressState() {
-  const panel = document.getElementById('upload-progress-panel');
-  const fill = document.getElementById('upload-progress-fill');
-  const label = document.getElementById('upload-progress-label');
-  const percent = document.getElementById('upload-progress-percent');
-  if (!panel || !fill || !label || !percent) return;
-  panel.style.display = 'none';
-  fill.style.width = '0%';
-  label.textContent = 'Preparing upload...';
-  percent.textContent = '0%';
-}
-
-async function runUploadProgressSequence() {
-  const stages = [
-    { label: 'Uploading files', percent: 28, step: 0 },
-    { label: 'Chunking documents', percent: 66, step: 1 },
-    { label: 'Storing embeddings', percent: 100, step: 2 },
-  ];
-
-  for (const stage of stages) {
-    setUploadProgressState(stage.label, stage.percent, stage.step);
-    await new Promise((resolve) => setTimeout(resolve, 350));
-  }
-}
-
+// Upload Modal Initialization and Handling
 function initUploadModal() {
   const modal = document.getElementById('upload-modal');
-  const btnTrigger = document.getElementById('btn-open-upload');
-  const btnClose = document.getElementById('btn-close-upload');
+  const openBtn = document.getElementById('btn-open-upload');
+  const closeBtn = document.getElementById('btn-close-upload');
   const dropzone = document.getElementById('dropzone-input');
   const fileInput = document.getElementById('file-upload-element');
-  const btnSubmit = document.getElementById('btn-submit-upload');
+  const submitBtn = document.getElementById('btn-submit-upload');
 
-  let selectedFiles = [];
+  window.openUploadModal = () => {
+    if (modal) {
+      modal.classList.add('open');
+      const progressPanel = document.getElementById('upload-progress-panel');
+      if (progressPanel) progressPanel.style.display = 'none';
+      const fileList = document.getElementById('upload-file-list');
+      if (fileList) fileList.innerHTML = '';
+      if (fileInput) fileInput.value = '';
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Index Documents';
+      }
+    }
+  };
 
-  if (btnTrigger) btnTrigger.addEventListener('click', openUploadModal);
-  if (btnClose) btnClose.addEventListener('click', closeUploadModal);
+  window.closeUploadModal = () => {
+    if (modal) {
+      modal.classList.remove('open');
+      const progressPanel = document.getElementById('upload-progress-panel');
+      if (progressPanel) progressPanel.style.display = 'none';
+      const fileList = document.getElementById('upload-file-list');
+      if (fileList) fileList.innerHTML = '';
+      if (fileInput) fileInput.value = '';
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Index Documents';
+      }
+    }
+  };
 
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeUploadModal();
-  });
+  if (openBtn) openBtn.addEventListener('click', window.openUploadModal);
+  if (closeBtn) closeBtn.addEventListener('click', window.closeUploadModal);
 
   if (dropzone && fileInput) {
     dropzone.addEventListener('click', () => fileInput.click());
 
-    dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.classList.add('dragover');
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('dragover');
+      });
     });
 
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.classList.remove('dragover');
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('dragover');
+      });
     });
 
     dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('dragover');
-      if (e.dataTransfer.files.length > 0) {
-        selectedFiles = Array.from(e.dataTransfer.files);
-        updateUploadPreview(selectedFiles);
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        renderSelectedFiles(fileInput.files);
       }
     });
 
     fileInput.addEventListener('change', () => {
-      if (fileInput.files.length > 0) {
-        selectedFiles = Array.from(fileInput.files);
-        updateUploadPreview(selectedFiles);
-      }
+      renderSelectedFiles(fileInput.files);
     });
   }
 
-  if (btnSubmit) {
-    btnSubmit.addEventListener('click', async () => {
-      if (selectedFiles.length === 0) {
-        showToast('Please select at least one PDF or DOCX file', 'warning');
-        return;
-      }
+  if (submitBtn) submitBtn.addEventListener('click', uploadSelectedResumes);
+}
 
-      const formData = new FormData();
-      selectedFiles.forEach(file => {
-        formData.append('files', file);
-      });
-
-      btnSubmit.disabled = true;
-      btnSubmit.innerHTML = `<span>Indexing Documents...</span>`;
-      setUploadProgressState('Uploading files', 12, -1);
-
-      try {
-        await runUploadProgressSequence();
-        const res = await fetch(buildApiUrl('/api/upload'), {
-          method: 'POST',
-          body: formData
-        });
-
-        const data = await res.json();
-        if (res.ok && data.success) {
-          setUploadProgressState('Upload complete', 100, 2);
-          showToast(data.message, 'success');
-          closeUploadModal();
-          selectedFiles = [];
-          updateUploadPreview([]);
-          await fetchSystemStatus();
-          if (state.activeView === 'ats') runATSAudit();
-        } else {
-          resetUploadProgressState();
-          showToast(data.detail || 'Upload failed', 'error');
-        }
-      } catch (err) {
-        console.error('Upload error:', err);
-        resetUploadProgressState();
-        showToast('Error uploading files', 'error');
-      } finally {
-        btnSubmit.disabled = false;
-        btnSubmit.innerHTML = `<span>Index Documents</span>`;
-        setTimeout(() => resetUploadProgressState(), 500);
-      }
-    });
+async function uploadSelectedResumes() {
+  const fileInput = document.getElementById('file-upload-element');
+  if (!fileInput || !fileInput.files.length) {
+    showToast('Select at least one PDF or DOCX resume.', 'warning');
+    return;
   }
-}
 
-function openUploadModal() {
-  document.getElementById('upload-modal').classList.add('open');
-}
+  for (const file of fileInput.files) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext !== 'pdf' && ext !== 'docx') {
+      showToast(`File "${file.name}" is not supported. Please upload PDF or DOCX only.`, 'warning');
+      return;
+    }
+  }
 
-function closeUploadModal() {
-  document.getElementById('upload-modal').classList.remove('open');
-}
+  const formData = new FormData();
+  Array.from(fileInput.files).forEach(file => formData.append('files', file));
+  const submitBtn = document.getElementById('btn-submit-upload');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Uploading & Indexing...';
 
-function updateUploadPreview(files) {
-  const listEl = document.getElementById('upload-file-list');
-  listEl.innerHTML = '';
+  const progressPanel = document.getElementById('upload-progress-panel');
+  const progressLabel = document.getElementById('upload-progress-label');
+  const progressPercent = document.getElementById('upload-progress-percent');
+  const progressFill = document.getElementById('upload-progress-fill');
 
-  files.forEach(f => {
-    const item = document.createElement('div');
-    item.className = 'file-preview-item';
-    item.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-        <strong>${escapeHtml(f.name)}</strong>
-      </div>
-      <span style="color: var(--text-dim);">${(f.size / 1024).toFixed(1)} KB</span>
-    `;
-    listEl.appendChild(item);
-  });
-}
+  if (progressPanel) {
+    progressPanel.style.display = 'block';
+    if (progressLabel) progressLabel.textContent = 'Uploading document(s)...';
+    if (progressPercent) progressPercent.textContent = '35%';
+    if (progressFill) progressFill.style.width = '35%';
+  }
 
-// ==========================================================================
-// Toast Notifications
-// ==========================================================================
-function showToast(message, type = 'info') {
-  const stack = document.getElementById('toast-stack');
-  if (!stack) return;
+  try {
+    const res = await fetch(buildApiUrl('/api/upload'), {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
 
-  const toast = document.createElement('div');
-  toast.className = `toast-msg ${type}`;
-  
-  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '!' : 'i';
-  toast.innerHTML = `
-    <span style="font-weight: bold;">${icon}</span>
-    <span>${escapeHtml(message)}</span>
-  `;
+    if (progressFill) progressFill.style.width = '85%';
+    if (progressLabel) progressLabel.textContent = 'Indexing in vector store...';
+    if (progressPercent) progressPercent.textContent = '85%';
 
-  stack.appendChild(toast);
+    if (res.ok && data.success) {
+      if (progressFill) progressFill.style.width = '100%';
+      if (progressPercent) progressPercent.textContent = '100%';
+      if (progressLabel) progressLabel.textContent = 'Completed!';
 
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(40px)';
-    toast.style.transition = 'all 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
-}
+      showToast(data.message || 'Resumes uploaded and indexed successfully!', 'success');
 
-// ==========================================================================
-// Utility Helpers
-// ==========================================================================
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+      // Refresh system status & reload resumes
+      await fetchSystemStatus();
 
-function removeElement(id) {
-  const el = document.getElementById(id);
-  if (el) el.remove();
+      if (data.loaded_files && data.loaded_files.length > 0) {
+        state.activeResume = data.loaded_files[data.loaded_files.length - 1];
+      } else if (data.resumes && data.resumes.length > 0) {
+        state.loadedResumes = data.resumes;
+        state.activeResume = data.resumes[data.resumes.length - 1].filename;
+      }
+
+      updateResumeDropdowns();
+      updateStatusIndicators({ total_resumes: state.loadedResumes.length });
+
+      if (state.activeView === 'ats') {
+        runATSAudit();
+      } else if (state.activeView === 'profile') {
+        loadProfileDetails();
+      } else if (state.activeView === 'compare') {
+        runResumeComparison();
+      }
+
+      setTimeout(() => closeUploadModal(), 400);
+    } else {
+      showToast(data.detail || data.message || 'Upload failed', 'error');
+    }
+  } catch (err) {
+    console.error('Upload error:', err);
+    showToast('Error connecting to upload service', 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Index Documents';
+  }
 }
 
 function animateScoreCounter(element, start, end, duration) {
