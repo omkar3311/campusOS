@@ -16,10 +16,16 @@ class DocumentReranker:
         )
 
         try:
+            try:
+                from main import get_shared_cross_encoder_model
+                self.model = get_shared_cross_encoder_model()
+            except Exception:
+                self.model = None
 
-            self.model = CrossEncoder(
-                settings.reranker_model_name
-            )
+            if self.model is None:
+                self.model = CrossEncoder(
+                    settings.reranker_model_name
+                )
 
             LOGGER.info(
                 "Reranker model loaded successfully."

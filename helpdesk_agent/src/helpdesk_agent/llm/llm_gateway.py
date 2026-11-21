@@ -208,17 +208,20 @@ class EmbeddingGateway:
         elif self.provider == "huggingface":
 
             try:
-                from langchain_huggingface import (
-                    HuggingFaceEmbeddings,
-                )
-
-                self._embeddings = HuggingFaceEmbeddings(
-                    model_name=self.model_name
-                )
+                from main import get_shared_embedding_model
+                self._embeddings = get_shared_embedding_model()
             except Exception:
+                self._embeddings = None
+
+            if self._embeddings is None:
                 try:
-                    from main import get_shared_embedding_model
-                    self._embeddings = get_shared_embedding_model()
+                    from langchain_huggingface import (
+                        HuggingFaceEmbeddings,
+                    )
+
+                    self._embeddings = HuggingFaceEmbeddings(
+                        model_name=self.model_name
+                    )
                 except Exception:
                     self._embeddings = None
 
