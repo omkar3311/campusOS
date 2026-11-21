@@ -17,6 +17,11 @@ try:
 except ImportError:
     HuggingFaceEmbeddings = None
 
+try:
+    from sentence_transformers import CrossEncoder
+except ImportError:
+    CrossEncoder = None
+
 # Setup paths so website and all agents are importable
 ROOT_DIR = Path(__file__).resolve().parent
 WEBSITE_DIR = ROOT_DIR / "website"
@@ -41,6 +46,23 @@ if HuggingFaceEmbeddings is not None:
 
 def get_shared_embedding_model():
     return SHARED_EMBEDDING_MODEL
+
+
+# Shared cross-encoder model loaded once at startup and reused by agents (e.g. study_agent).
+SHARED_CROSS_ENCODER_MODEL = None
+if CrossEncoder is not None:
+    try:
+        SHARED_CROSS_ENCODER_MODEL = CrossEncoder(
+            "cross-encoder/ms-marco-MiniLM-L-6-v2"
+        )
+        print("✅ Shared cross-encoder model loaded once in main.py")
+    except Exception as exc:  # pragma: no cover
+        print(f"⚠️ Shared cross-encoder model failed to load in main.py: {exc}")
+        SHARED_CROSS_ENCODER_MODEL = None
+
+
+def get_shared_cross_encoder_model():
+    return SHARED_CROSS_ENCODER_MODEL
 
 
 # Expose the FastAPI application instance for ASGI servers (e.g., uvicorn main:app)
@@ -78,6 +100,6 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=False,
-        # reload_dirs=[str(ROOT_DIR)],
+        # reload_dirs=[str(ROOT_DIR)]
         
     )
