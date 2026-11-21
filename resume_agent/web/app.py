@@ -1,7 +1,9 @@
 import os
 import re
 import sys
+import json
 import shutil
+import uuid
 import logging
 from pathlib import Path
 from typing import List, Optional
@@ -65,6 +67,7 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 # User-scoped session storage to avoid cross-user resume/chat leakage.
 USER_SESSION_AGENTS: dict[str, ResumeAgent] = {}
 USER_SESSION_RESUME_META: dict[str, dict[str, dict]] = {}
+USER_SESSION_INTERVIEWS: dict[str, dict] = {}
 DEFAULT_SESSION_KEY = "career_agent:guest:user:guest"
 
 
@@ -147,6 +150,24 @@ class CompareRequest(BaseModel):
     job_description: Optional[str] = None
 
 
+class InterviewStartRequest(BaseModel):
+    filename: Optional[str] = None
+    role: Optional[str] = None
+    interview_type: Optional[str] = "Mixed"
+    difficulty: Optional[str] = "Intermediate"
+    question_count: Optional[int] = 5
+    job_description: Optional[str] = None
+
+
+class InterviewAnswerRequest(BaseModel):
+    session_id: str
+    answer: str
+
+
+class InterviewFinishRequest(BaseModel):
+    session_id: str
+
+
 # ---------------------------------------------------------
 # UI Routes
 # ---------------------------------------------------------
@@ -189,6 +210,7 @@ async def get_status(request: Request):
 
 
 @app.post("/api/upload")
+@app.post("/api/upload-resumes")
 async def upload_resumes(request: Request, files: List[UploadFile] = File(...)):
     """Upload single or multiple resumes (PDF / DOCX) and index them."""
     _, agent, loaded_resumes_meta = get_session_storage(request)
@@ -214,11 +236,24 @@ async def upload_resumes(request: Request, files: List[UploadFile] = File(...)):
 
     try:
         loaded, docs = agent.load_resume(saved_paths)
+        records = agent.tools_manager.loader.records()
+        catalog = []
+        for rid, rec in records.items():
+            fn = rec.get("filename", "")
+            catalog.append({
+                "id": rid,
+                "filename": fn,
+                "candidate_name": rec.get("candidate_name", "Unknown Candidate"),
+                "uploaded_at": loaded_resumes_meta.get(fn, {}).get("uploaded_at", "Active Session"),
+                "size_bytes": loaded_resumes_meta.get(fn, {}).get("size_bytes", 0),
+            })
+
         return {
             "success": True,
             "message": f"Successfully indexed {len(loaded)} resume(s) into vector memory.",
             "loaded_files": loaded,
             "total_chunks": len(docs),
+            "resumes": catalog,
         }
     except Exception as e:
         LOGGER.error(f"Error loading resumes: {e}", exc_info=True)
@@ -502,49 +537,164 @@ async def compare_resumes(request: Request, payload: CompareRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/resume-details")
-async def resume_details(request: Request, filename: Optional[str] = Query(None)):
-    """Retrieve extracted structured details, sections, and profile memory for a resume."""
-    _, agent, _ = get_session_storage(request)
+@app.post("/api/interview/start")
+async def start_interview(request: Request, payload: InterviewStartRequest):
+    """Create a resume-grounded interview session and generate its question set."""
+    session_key, agent, _ = get_session_storage(request)
     records = agent.tools_manager.loader.records()
-    
     if not records:
-        raise HTTPException(status_code=400, detail="No resumes loaded.")
+        raise HTTPException(status_code=400, detail="Upload or load a resume before starting an interview.")
 
-    selected_rec = None
+    filename = payload.filename
     if filename:
-        for rec in records.values():
-            if rec.get("filename") == filename:
-                selected_rec = rec
-                break
-    
-    if not selected_rec and records:
-        selected_rec = next(iter(records.values()))
+        if not any(rec.get("filename") == filename for rec in records.values()):
+            raise HTTPException(status_code=404, detail="Selected resume was not found.")
+    else:
+        filename = next(iter(records.values()))["filename"]
 
-    if not selected_rec:
-        raise HTTPException(status_code=404, detail="Resume not found.")
+    count = max(3, min(int(payload.question_count or 5), 8))
+    role = (payload.role or "the target role").strip()
+    interview_type = (payload.interview_type or "Mixed").strip()
+    difficulty = (payload.difficulty or "Intermediate").strip()
 
-    fn = selected_rec.get("filename", "")
-    cname = selected_rec.get("candidate_name", "Unknown")
-    raw_text = selected_rec.get("text", "")
-    
-    # Get Profile memory
-    profile = agent.tools_manager.profile_memory.get_profile(cname)
-    
-    # Sections breakdown
-    sections = agent.tools_manager.ats.section_maker(raw_text)
-    
+    selected = agent.tools_manager.loader.records()
+    candidate_name = "Candidate"
+    for rec in selected.values():
+        if rec.get("filename") == filename:
+            candidate_name = rec.get("candidate_name", "Candidate")
+            break
+
+    generation_prompt = (
+        f"Create exactly {count} {difficulty.lower()} {interview_type.lower()} interview questions "
+        f"for {candidate_name} applying for {role}. Use only facts from the selected resume. "
+        "Return strict JSON with this shape: {\"questions\":[{\"question\":\"...\",\"category\":\"Technical|Behavioral|Project|Role\",\"focus\":\"...\",\"time_seconds\":60}]}. "
+        "Ask about specific projects, technologies, achievements, or experiences visible in the resume. "
+        "Do not add any text outside the JSON."
+    )
+
+    try:
+        raw = agent.ask(
+            question=generation_prompt,
+            job_description=payload.job_description,
+            mode="4",
+        )
+        match = re.search(r"\{.*\}", raw, flags=re.DOTALL)
+        data = json.loads(match.group(0)) if match else {"questions": []}
+        questions = data.get("questions", [])
+    except Exception as exc:
+        LOGGER.warning("Interview question generation fallback used: %s", exc)
+        questions = []
+
+    if not questions:
+        questions = [
+            {"question": "Walk me through the strongest project on your resume and explain your specific contribution.", "category": "Project", "focus": "Project depth", "time_seconds": 90},
+            {"question": "Which technology from your resume has been most valuable to you, and why?", "category": "Technical", "focus": "Technical confidence", "time_seconds": 60},
+            {"question": "Describe a challenge you faced in a project and how you solved it.", "category": "Behavioral", "focus": "Problem solving", "time_seconds": 75},
+            {"question": "How would you explain your experience to someone who is not familiar with the domain?", "category": "Behavioral", "focus": "Communication", "time_seconds": 60},
+            {"question": "Which skill would you prioritize improving for this role, and what is your plan?", "category": "Role", "focus": "Self-awareness", "time_seconds": 60},
+        ]
+
+    questions = questions[:count]
+    session_id = uuid.uuid4().hex
+    interview = {
+        "session_id": session_id,
+        "filename": filename,
+        "candidate_name": candidate_name,
+        "role": role,
+        "interview_type": interview_type,
+        "difficulty": difficulty,
+        "questions": questions,
+        "current_index": 0,
+        "answers": [],
+        "finished": False,
+    }
+    USER_SESSION_INTERVIEWS.setdefault(session_key, {})[session_id] = interview
+
+    return {"success": True, "session_id": session_id, "candidate_name": candidate_name, "question": questions[0], "question_index": 0, "total_questions": len(questions)}
+
+
+@app.post("/api/interview/answer")
+async def submit_interview_answer(request: Request, payload: InterviewAnswerRequest):
+    """Evaluate one spoken or written answer and advance the interview."""
+    session_key, agent, _ = get_session_storage(request)
+    interview = USER_SESSION_INTERVIEWS.get(session_key, {}).get(payload.session_id)
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview session not found.")
+    if interview["finished"]:
+        raise HTTPException(status_code=400, detail="This interview has already finished.")
+
+    index = interview["current_index"]
+    question = interview["questions"][index]
+    answer = payload.answer.strip()
+    if not answer:
+        raise HTTPException(status_code=400, detail="Answer cannot be empty.")
+
+    evaluation_prompt = (
+        "Evaluate this mock interview answer. Be fair, interview-oriented, and grounded in the resume. "
+        f"Question: {question.get('question')}\nCandidate answer: {answer}\n"
+        "Return strict JSON: {\"score\":0-100,\"strengths\":[\"...\"],\"improvements\":[\"...\"],\"ideal_points\":[\"...\"],\"summary\":\"...\"}. "
+        "Do not mention information not present in the resume. Do not add text outside JSON."
+    )
+
+    try:
+        raw = agent.ask(evaluation_prompt, mode="4")
+        match = re.search(r"\{.*\}", raw, flags=re.DOTALL)
+        evaluation = json.loads(match.group(0)) if match else {}
+        score = max(0, min(int(evaluation.get("score", 50)), 100))
+    except Exception:
+        score = 50
+        evaluation = {
+            "score": score,
+            "strengths": ["The answer was presented clearly enough to assess."],
+            "improvements": ["Add concrete evidence, examples, and measurable outcomes."],
+            "ideal_points": ["Explain the situation, your action, and the result."],
+            "summary": "Your answer has potential but needs more resume-grounded specifics.",
+        }
+
+    record = {"question": question, "answer": answer, "evaluation": evaluation | {"score": score}}
+    interview["answers"].append(record)
+    interview["current_index"] += 1
+
+    has_next = interview["current_index"] < len(interview["questions"])
+    next_question = interview["questions"][interview["current_index"]] if has_next else None
+
     return {
         "success": True,
-        "filename": fn,
-        "candidate_name": cname,
-        "profile_summary": profile or "No profile memory generated yet.",
-        "word_count": len(raw_text.split()),
-        "char_count": len(raw_text),
-        "detected_sections": {
-            k: len(v) for k, v in sections.items()
-        },
-        "raw_text_preview": raw_text[:2500] + ("..." if len(raw_text) > 2500 else "")
+        "evaluation": record["evaluation"],
+        "has_next": has_next,
+        "question": next_question,
+        "question_index": interview["current_index"],
+        "total_questions": len(interview["questions"]),
+    }
+
+
+@app.post("/api/interview/finish")
+async def finish_interview(request: Request, payload: InterviewFinishRequest):
+    """Calculate final interview performance and provide a hiring-style report."""
+    session_key, _, _ = get_session_storage(request)
+    interview = USER_SESSION_INTERVIEWS.get(session_key, {}).get(payload.session_id)
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview session not found.")
+
+    interview["finished"] = True
+    scores = [item["evaluation"].get("score", 0) for item in interview["answers"]]
+    overall = round(sum(scores) / len(scores)) if scores else 0
+
+    category_scores = {}
+    for item in interview["answers"]:
+        category = item["question"].get("category", "General")
+        category_scores.setdefault(category, []).append(item["evaluation"].get("score", 0))
+    category_scores = {key: round(sum(values) / len(values)) for key, values in category_scores.items()}
+
+    return {
+        "success": True,
+        "candidate_name": interview["candidate_name"],
+        "role": interview["role"],
+        "overall_score": overall,
+        "category_scores": category_scores,
+        "answered": len(interview["answers"]),
+        "total_questions": len(interview["questions"]),
+        "responses": interview["answers"],
     }
 
 
@@ -554,6 +704,38 @@ async def reset_session(request: Request):
     _, agent, _ = get_session_storage(request)
     agent.tools_manager.session_memory = agent.tools_manager.session_memory.__class__()
     return {"success": True, "message": "Session conversation memory has been reset."}
+
+
+@app.get("/api/resume-details")
+async def resume_details(request: Request, filename: Optional[str] = Query(None)):
+    """Retrieve extracted structured details, sections, and profile memory for a resume."""
+    _, agent, _ = get_session_storage(request)
+    records = agent.tools_manager.loader.records()
+    if not records:
+        raise HTTPException(status_code=400, detail="No resumes loaded.")
+
+    selected_rec = None
+    if filename:
+        selected_rec = next((rec for rec in records.values() if rec.get("filename") == filename), None)
+    if not selected_rec:
+        selected_rec = next(iter(records.values()))
+
+    fn = selected_rec.get("filename", "")
+    cname = selected_rec.get("candidate_name", "Unknown")
+    raw_text = selected_rec.get("text", "")
+    profile = agent.tools_manager.profile_memory.get_profile(cname)
+    sections = agent.tools_manager.ats.section_maker(raw_text)
+
+    return {
+        "success": True,
+        "filename": fn,
+        "candidate_name": cname,
+        "profile_summary": profile or "No profile memory generated yet.",
+        "word_count": len(raw_text.split()),
+        "char_count": len(raw_text),
+        "detected_sections": {k: len(v) for k, v in sections.items()},
+        "raw_text_preview": raw_text[:2500] + ("..." if len(raw_text) > 2500 else ""),
+    }
 
 
 # ---------------------------------------------------------

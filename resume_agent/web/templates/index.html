@@ -515,41 +515,79 @@
          VIEW 4: Technical & Behavioral Interview Prep
          ======================================================================== -->
     <div class="view-container" id="view-interview">
-      <div class="dashboard-grid">
-        <div class="saas-card" style="background: linear-gradient(135deg, #181d33 0%, #0e1424 100%);">
-          <div class="card-title-group">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-              <line x1="12" y1="19" x2="12" y2="23"></line>
-              <line x1="8" y1="23" x2="16" y2="23"></line>
-            </svg>
-            <div>
-              <h3>AI Technical & Behavioral Interview Studio</h3>
-              <p style="color: var(--text-muted); font-size: 13px;">Simulates rigorous interview questions tailored specifically to your projects, technology stack, and leadership examples.</p>
+      <div class="interview-studio" id="interview-studio">
+        <section class="interview-setup" id="interview-setup">
+          <div class="interview-setup-copy">
+            <div class="interview-kicker"><span class="live-dot"></span> AI Interview Room</div>
+            <h2>Practice for the interview <span>that matters.</span></h2>
+            <p>The interviewer studies your resume and asks focused questions about your projects, skills, decisions, and real-world experience.</p>
+            <div class="interview-feature-row">
+              <div><strong>Resume-grounded</strong><span>Questions based on your evidence</span></div>
+              <div><strong>Live evaluation</strong><span>Instant strengths and gaps</span></div>
+              <div><strong>Final report</strong><span>Scorecard and next steps</span></div>
             </div>
           </div>
-        </div>
 
-        <div class="prompt-chips-grid" style="max-width: 100%;">
-          <div class="prompt-chip" onclick="triggerStudioPrompt('4', 'Generate 5 deep-dive technical questions about the architecture, choices, and tradeoffs in my resume projects.')">
-            <div class="chip-tag">Technical Deep-Dive</div>
-            <div class="chip-title">Project Architecture Questions</div>
-            <div class="chip-desc">System design, database decisions & scaling challenges</div>
+          <div class="interview-config-card">
+            <div class="config-heading">
+              <div><span>Interview configuration</span><h3>Prepare your session</h3></div>
+              <div class="config-avatar"><span id="interview-avatar-name">C</span></div>
+            </div>
+            <label>Target role
+              <input id="interview-role" type="text" placeholder="e.g. Data Analyst, Full Stack Developer">
+            </label>
+            <div class="config-grid">
+              <label>Interview style
+                <select id="interview-type"><option>Mixed</option><option>Technical</option><option>Behavioral</option><option>Project Deep-Dive</option></select>
+              </label>
+              <label>Difficulty
+                <select id="interview-difficulty"><option>Beginner</option><option selected>Intermediate</option><option>Advanced</option></select>
+              </label>
+            </div>
+            <div class="config-grid">
+              <label>Questions
+                <select id="interview-count"><option value="3">3 questions</option><option value="5" selected>5 questions</option><option value="8">8 questions</option></select>
+              </label>
+              <label>Response mode
+                <select id="interview-response-mode"><option value="text">Text + voice</option><option value="text_only">Text only</option></select>
+              </label>
+            </div>
+            <label>Job description <span class="optional-label">Optional</span>
+              <textarea id="interview-jd" rows="3" placeholder="Paste the role requirements for a tighter interview..."></textarea>
+            </label>
+            <button class="interview-start-btn" id="interview-start-btn"><span>Start interview</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
           </div>
+        </section>
 
-          <div class="prompt-chip" onclick="triggerStudioPrompt('4', 'Generate 4 STAR-method behavioral interview questions based on the team/leadership experience on my resume.')">
-            <div class="chip-tag">Behavioral & STAR</div>
-            <div class="chip-title">Leadership & Conflict Scenarios</div>
-            <div class="chip-desc">Structured STAR format questions and answer strategies</div>
+        <section class="interview-session hidden" id="interview-session">
+          <div class="interview-session-header">
+            <div><span class="session-label">LIVE INTERVIEW</span><h3 id="interview-session-title">Interview for your target role</h3></div>
+            <div class="interview-session-actions"><span id="interview-progress-label">Question 1 of 5</span><button id="interview-end-btn" class="interview-end-btn">End session</button></div>
           </div>
+          <div class="interview-progress-track"><div id="interview-progress-bar"></div></div>
 
-          <div class="prompt-chip" onclick="triggerStudioPrompt('4', 'Conduct a mock interview: Ask me 1 challenging question about my strongest skills and evaluate my answers.')">
-            <div class="chip-tag">Mock Interview</div>
-            <div class="chip-title">Interactive Mock Interviewer</div>
-            <div class="chip-desc">Step-by-step interactive question and evaluation flow</div>
+          <div class="interview-room">
+            <aside class="interviewer-panel">
+              <div class="interviewer-avatar"><span>AI</span><div class="avatar-pulse"></div></div>
+              <div><strong>CampusOS Interviewer</strong><span>Career intelligence</span></div>
+              <div class="resume-focus"><span>Resume in focus</span><strong id="interview-active-resume">—</strong></div>
+            </aside>
+
+            <main class="question-panel">
+              <div class="question-meta"><span class="question-category" id="interview-question-category">Technical</span><div class="timer-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="interview-timer">01:00</span></div></div>
+              <div class="question-focus" id="interview-question-focus">Technical confidence</div>
+              <h2 id="interview-question-text">Preparing your first resume-grounded question...</h2>
+
+              <div class="answer-box">
+                <textarea id="interview-answer" rows="7" placeholder="Structure your answer clearly: context, your action, and the measurable result..."></textarea>
+                <div class="answer-toolbar"><button id="interview-voice-btn" class="voice-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg><span>Use microphone</span></button><span id="interview-word-count">0 words</span><button id="interview-submit-btn" class="submit-answer-btn">Submit answer <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+              </div>
+              <div class="answer-feedback hidden" id="interview-answer-feedback"></div>
+            </main>
           </div>
-        </div>
+        </section>
+
+        <section class="interview-report hidden" id="interview-report"></section>
       </div>
     </div>
 

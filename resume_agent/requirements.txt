@@ -27,3 +27,9 @@ chromadb
 # Web search / scraping
 tavily-python
 apify-client
+
+# Web application
+fastapi
+uvicorn
+jinja2
+python-multipart
